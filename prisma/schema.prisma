@@ -1,0 +1,711 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  /// 고유 식별자 (UUID v4)
+  id              String                @id @default(uuid())
+  /// 로그인용 이메일 (고유)
+  email           String                @unique
+  /// 해시된 비밀번호 (bcrypt)
+  password        String                @default("")
+  /// 사용자 이름
+  name            String?
+  /// 구독 플랜 등급 — 기본값 FREE
+  planType        PlanType              @default(FREE) @map("plan_type")
+  /// AI 기능 호출에 사용되는 크레딧 잔액 — 가입 시 50 지급
+  creditBalance   Int                   @default(50) @map("credit_balance")
+  createdAt       DateTime              @default(now()) @map("created_at")
+  updatedAt       DateTime              @updatedAt @map("updated_at")
+  /// 사용자 유형 — 로그인 후 설정
+  userType        UserType?             @map("user_type")
+  /// 비밀번호 재설정 토큰 (1회용, 1시간 유효)
+  passwordResetToken  String?           @map("password_reset_token")
+  passwordResetExpiry DateTime?         @map("password_reset_expiry")
+  acBookmarks       AcceleratorBookmark[]
+  communityPosts    CommunityPost[]
+  creditLedgers     CreditLedger[]
+  postComments      PostComment[]
+  postLikes         PostLike[]
+  projectPolicies   ProjectPolicy[]
+  subscriptions     Subscription[]
+  caseUnlocks       UserCaseUnlock[]
+  teamMemberships   ProjectTeamMember[]
+  hostedMeetings    ProjectMeeting[]
+
+  @@map("users")
+}
+
+model ProjectPolicy {
+  /// 고유 식별자 (UUID v4)
+  id                String             @id @default(uuid())
+  /// 프로젝트명
+  title             String
+  /// 목표 시장 유형 (B2B / B2C / B2B2C)
+  targetMarket      TargetMarket       @map("target_market")
+  /// 가용 예산 (KRW 기준, nullable)
+  budgetLimit       BigInt?            @map("budget_limit")
+  /// 목표 기간 (예: "6개월", "2025-Q3까지")
+  targetDuration    String?            @map("target_duration")
+  /// 보유 역량 태그 배열 (예: ["Flutter","AI/ML","마케팅"])
+  /// JSON 타입으로 유연하게 저장
+  coreCompetencies  Json?              @map("core_competencies")
+  /// 관심 산업 분야 (복수 선택) ["FinTech", "HealthTech", "EdTech", ...]
+  industries        Json?              @map("industries")
+  /// 해결하고 싶은 문제/관심사 자유 서술
+  problemKeywords   String?            @map("problem_keywords")
+  /// 초기 투자금 구간
+  budgetRange       BudgetRange?       @map("budget_range")
+  /// 팀 규모
+  teamSize          TeamSize?          @map("team_size")
+  /// 월 목표 매출 (자유 서술, 예: "월 500만원", "월 3000만원")
+  revenueGoal       String?            @map("revenue_goal")
+  /// 시간 투자 수준
+  commitment        Commitment?        @map("commitment")
+  /// 목표 런칭 타임라인
+  launchTimeline    LaunchTimeline?    @map("launch_timeline")
+  /// 보유 기술 역량 ["개발", "디자인", "마케팅", "영업", ...]
+  technicalSkills   Json?              @map("technical_skills")
+  /// 도메인 전문성 ["의료", "금융", "교육", "부동산", ...]
+  domainExpertise   Json?              @map("domain_expertise")
+  /// 기존 보유 자원 ["고객DB", "네트워크", "특허", "오프라인매장", ...]
+  existingAssets    Json?              @map("existing_assets")
+  /// 타겟 고객 연령대 (예: "20~30대", "전 연령")
+  targetCustomerAge String?            @map("target_customer_age")
+  /// 선호 수익 모델 ["SaaS", "Marketplace", "Subscription", "Ad-based", ...]
+  revenueModelPref  Json?              @map("revenue_model_pref")
+  /// 리스크 성향
+  riskTolerance     RiskTolerance?     @map("risk_tolerance")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  userId            String             @map("user_id")
+  /// 현재 직업 / 역할 (예: "개발자", "마케터", "의사", "자영업")
+  currentJob        String?            @map("current_job")
+  /// Slack Incoming Webhook URL (알림 전송용)
+  slackWebhookUrl   String?            @map("slack_webhook_url")
+  /// Discord Webhook URL (알림 전송용)
+  discordWebhookUrl String?            @map("discord_webhook_url")
+  ideaMatchSessions IdeaMatchSession[]
+  kBlueprints       KBlueprint[]
+  teamMembers       ProjectTeamMember[]
+  meetings          ProjectMeeting[]
+  user              User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("project_policies")
+}
+
+model GlobalCaseMeta {
+  /// 고유 식별자 (UUID v4)
+  id                    String                  @id @default(uuid())
+  /// Vector DB 내 상세 분석 문서 ID (Pinecone 매핑용, 고유)
+  vectorDbId            String                  @unique @map("vector_db_id")
+  /// 기업명
+  companyName           String                  @map("company_name")
+  /// 산업군 (예: "FinTech", "HealthTech", "EdTech")
+  industry              String
+  /// 설립 연도
+  foundedYear           Int?                    @map("founded_year")
+  /// 투자 단계 (예: "Seed", "Series A", "Series B", "IPO")
+  fundingStage          String?                 @map("funding_stage")
+  /// 수익 모델 (예: "SaaS", "Marketplace", "Freemium", "Ad-based")
+  revenueModel          String?                 @map("revenue_model")
+  createdAt             DateTime                @default(now()) @map("created_at")
+  updatedAt             DateTime                @updatedAt @map("updated_at")
+  /// 회사 확인 출처 URL
+  companySource         String?                 @map("company_source")
+  /// 추정 연간 반복 매출 (예: "$1B+", "$100M-1B")
+  estimatedARR          String?                 @map("estimated_arr")
+  /// 출신 지역 (예: "US", "EU", "SEA", "KR")
+  geographicOrigin      String?                 @map("geographic_origin")
+  /// 성장 단계 (Early / Growth / Mature / Declining)
+  growthStage           String?                 @map("growth_stage")
+  /// 현재 사업 운영 중인가? (폐업/인수 케이스 구분)
+  isActive              Boolean                 @default(true) @map("is_active")
+  /// 한국 진출 상태 (진출완료 / 미진출 / 실패후철수)
+  koreaPresence         String?                 @map("korea_presence")
+  /// 성장 정점 연도
+  peakYear              Int?                    @map("peak_year")
+  /// 규제 복잡도 (LOW / MEDIUM / HIGH)
+  regulatoryComplexity  String?                 @map("regulatory_complexity")
+  /// 핵심 타겟 고객 페르소나 (예: "중소기업 HR 담당자")
+  targetCustomerProfile String?                 @map("target_customer_profile")
+  /// B2B / B2C / B2B2C — Pinecone 벡터 검색 필터링용
+  targetMarket          TargetMarket?           @map("target_market")
+  /// 런칭 시점 팀 규모
+  teamSizeAtLaunch      Int?                    @map("team_size_at_launch")
+  /// 데이터 품질 점수 (0-100, AI 보강 완료도)
+  dataQualityScore      Int                     @default(0) @map("data_quality_score")
+  /// 복제 난이도 레벨
+  difficultyLevel       DifficultyLevel?        @map("difficulty_level")
+  /// 시작 최소 자본 추정 (KRW, 한국 기준)
+  minCapitalKRW         BigInt?                 @map("min_capital_krw")
+  /// 한 줄 소개 (100자 이내, 카드 UI용)
+  shortDescription      String?                 @map("short_description")
+  /// 검색/필터용 태그 배열 (예: ["AI", "No-code", "PLG"])
+  tags                  Json?
+  /// 조회수 (인기도 기반 노출 가중치용)
+  viewCount             Int                     @default(0) @map("view_count")
+  deepAnalysis          GlobalCaseDeepAnalysis?
+  kBlueprints           KBlueprint[]
+
+  @@index([industry])
+  @@index([targetMarket])
+  @@index([geographicOrigin])
+  @@index([isActive])
+  @@index([difficultyLevel])
+  @@index([dataQualityScore])
+  @@map("global_case_meta")
+}
+
+model GlobalCaseDeepAnalysis {
+  /// 고유 식별자 (UUID v4)
+  id                   String         @id @default(uuid())
+  /// 창업자가 해결하려 했던 핵심 문제 (2~4문장)
+  problemStatement     String?        @map("problem_statement")
+  /// 기술/UX/운영 관점의 핵심 솔루션
+  solutionCore         String?        @map("solution_core")
+  /// 초기 첫 고객 확보 전략 (Initial Wedge)
+  initialWedge         String?        @map("initial_wedge")
+  /// 경쟁사가 복제하기 어려운 핵심 우위 (Moat)
+  unfairAdvantage      String?        @map("unfair_advantage")
+  /// 수익 단위 경제학 (CAC, LTV, 가격 구조, ARR)
+  unitEconomics        String?        @map("unit_economics")
+  /// 핵심 성장 트리거 / 시그니처 전략 무브
+  signatureMoves       String?        @map("signature_moves")
+  /// 한국 시장 적용 시 이슈/성공 포인트 (기존 노트)
+  koreaAdaptNotes      String?        @map("korea_adapt_notes")
+  createdAt            DateTime       @default(now()) @map("created_at")
+  updatedAt            DateTime       @updatedAt @map("updated_at")
+  globalCaseMetaId     String         @unique @map("global_case_meta_id")
+  /// 경쟁 환경 분석
+  /// {
+  /// directCompetitors: {name: string, weakness: string}[]
+  /// indirectCompetitors: string[]
+  /// competitivePositioning: string  — 경쟁 포지셔닝 전략
+  /// moatStrength: string            — WEAK / MODERATE / STRONG / FORTRESS
+  /// defensibility: string           — 해자 방어력 상세
+  /// blueOceanElements: string       — 블루오션 요소
+  /// }
+  competitiveLandscape Json?          @map("competitive_landscape")
+  /// 글로벌 확장 플레이북
+  /// {
+  /// expansionOrder: string[]        — 진출 순서 (국가/지역)
+  /// localizationStrategy: string    — 현지화 전략
+  /// geoAdaptations: string          — 지역별 핵심 변경사항
+  /// failedMarkets: string[]         — 실패한 시장 & 이유
+  /// expansionLessons: string        — 확장 과정에서 배운 것
+  /// asiaStrategy: string            — 아시아 시장 전략 (한국 참고용)
+  /// }
+  expansionPlaybook    Json?          @map("expansion_playbook")
+  /// 창업팀 구성 및 역량
+  /// {
+  /// founderBackgrounds: string      — 창업자 배경 (경력, 도메인)
+  /// whyFounders: string             — 왜 이 창업자들이 적임인가
+  /// criticalSkills: string[]        — 초기에 반드시 필요한 역량
+  /// gameChangingHires: string       — 궤도를 바꾼 핵심 채용
+  /// founderMarketFit: string        — 창업자-시장 적합성 분석
+  /// teamCulture: string             — 팀 문화 / 운영 방식
+  /// }
+  founderDNA           Json?          @map("founder_dna")
+  /// 성장 궤적 상세
+  /// {
+  /// first100Customers: string       — 첫 100명 고객 확보 방법
+  /// first1000Customers: string      — 1000명 돌파 전략
+  /// keyInflectionPoints: string[]   — 핵심 성장 변곡점 (연도+사건)
+  /// productEvolution: string        — 제품 진화 타임라인
+  /// failuresAndPivots: string       — 실패 & 피벗 경험
+  /// viralMechanism: string          — 바이럴/입소문 메커니즘
+  /// channelBreakdown: string        — 채널별 성장 기여도
+  /// }
+  growthStory          Json?          @map("growth_story")
+  /// 투자자 / 심사역 관점 분석
+  /// {
+  /// keyMetrics: string[]            — 투자자가 추적한 핵심 지표
+  /// narrativeArc: string            — 펀딩 스토리 (어떤 비전을 팔았나)
+  /// notableInvestors: string[]      — 주요 투자자 / 기관
+  /// valuationDrivers: string        — 밸류에이션 근거
+  /// investorRedFlags: string        — 투자자가 우려했던 리스크
+  /// exitStrategy: string            — 예상 / 실제 엑싯 전략
+  /// koreanVCAppeal: string          — 한국 VC 어필 포인트
+  /// }
+  investorPOV          Json?          @map("investor_pov")
+  /// 한국 시장 진출 플레이북
+  /// {
+  /// marketSizeEstKRW: string        — 한국 시장 규모 추정 (원화)
+  /// localCompetitors: string[]      — 국내 경쟁사 목록
+  /// directAdaptable: string[]       — 직접 적용 가능한 전략
+  /// mustChange: string[]            — 반드시 바꿔야 할 것
+  /// regulatoryBarriers: string[]    — 구체적 규제/인허가 장벽
+  /// culturalInsights: string        — 한국 특유 문화적 고려사항
+  /// partnershipTargets: string[]    — 국내 전략적 파트너 후보
+  /// successScore: number            — 한국 성공 가능성 (0-100)
+  /// successScoreReason: string      — 점수 산정 근거
+  /// bestLaunchCity: string          — 한국 내 최적 첫 런칭 도시/채널
+  /// }
+  koreaStrategy        Json?          @map("korea_strategy")
+  /// 타이밍 분석
+  /// {
+  /// enablingMacroTrend: string      — 이 사업을 가능하게 한 메가트렌드
+  /// whyThisTiming: string           — 왜 이 시점이었는가
+  /// precedentFailures: string       — 이전에 실패한 시도들
+  /// futureThreat: string            — 미래 위협 요인
+  /// opportunityWindow: string       — 기회 창 (얼마나 남았나)
+  /// koreaTimingNote: string         — 한국 기준 현재 타이밍 평가
+  /// }
+  marketTiming         Json?          @map("market_timing")
+  /// 네트워크 효과 및 고착 메커니즘
+  /// {
+  /// hasNetworkEffect: boolean
+  /// effectType: string              — DIRECT / INDIRECT / DATA / PLATFORM / NONE
+  /// flywheel: string                — 플라이휠 메커니즘 설명
+  /// lockInMechanism: string         — 고착 메커니즘
+  /// switchingCosts: string          — 전환 비용 (HIGH / MEDIUM / LOW)
+  /// dataNetwork: string             — 데이터 네트워크 효과
+  /// }
+  networkEffects       Json?          @map("network_effects")
+  /// 한국에서 이 모델을 복제하기 위한 실행 가이드
+  /// {
+  /// minCapitalKRW: number           — 최소 필요 자본 (원화, 숫자)
+  /// idealCapitalKRW: number         — 이상적 자본 (원화, 숫자)
+  /// minTeamSize: number             — 최소 팀 규모
+  /// idealTeamComposition: string[]  — 이상적 팀 구성 (역할)
+  /// monthsToMVP: number             — MVP까지 소요 기간
+  /// monthsToRevenue: number         — 첫 매출까지 소요 기간
+  /// keyDependencies: string[]       — 핵심 의존성 (파트너/API/라이선스)
+  /// criticalSuccessFactors: string[] — 성공의 절대 필요 조건
+  /// commonFailureModes: string[]    — 흔한 실패 패턴
+  /// difficultyScore: number         — 복제 난이도 (1-10)
+  /// difficultyReason: string        — 난이도 판단 근거
+  /// }
+  replicationGuide     Json?          @map("replication_guide")
+  /// 수익 구조 심층 분석
+  /// {
+  /// primaryStream: string           — 주요 수익원
+  /// secondaryStreams: string[]       — 보조 수익원
+  /// pricingStrategy: string         — 가격 전략 (Freemium, Usage, Seat...)
+  /// estimatedCAC: string            — 추정 고객 획득 비용
+  /// estimatedLTV: string            — 추정 고객 생애 가치
+  /// ltvCacRatio: string             — LTV/CAC 비율
+  /// estimatedGrossMargin: string    — 추정 총이익률
+  /// paybackPeriod: string           — 투자 회수 기간
+  /// unitEconomicsHealth: string     — POOR / FAIR / GOOD / EXCELLENT
+  /// koreaPricingAdapt: string       — 한국 시장 가격 적용 방안
+  /// }
+  revenueDeepDive      Json?          @map("revenue_deep_dive")
+  /// 기술 차별화 요소
+  /// {
+  /// coreTechStack: string           — 핵심 기술 스택
+  /// dataAdvantage: string           — 데이터 자산 우위
+  /// platformStrategy: string        — 플랫폼/API 전략
+  /// keyIntegrations: string[]       — 핵심 외부 연동
+  /// techDifferentiator: string      — 기술적 해자 요약
+  /// aiUsage: string                 — AI 활용 방식
+  /// }
+  technologyDNA        Json?          @map("technology_dna")
+  globalCaseMeta       GlobalCaseMeta @relation(fields: [globalCaseMetaId], references: [id], onDelete: Cascade)
+
+  @@map("global_case_deep_analysis")
+}
+
+model KBlueprint {
+  /// 고유 식별자 (UUID v4)
+  id                String             @id @default(uuid())
+  /// AI가 산출한 실현가능성 점수 (0 ~ 100)
+  feasibilityScore  Int                @map("feasibility_score")
+  /// 규제/인허가, 개인정보 요건 분석 내용 (JSON)
+  regulations       Json?
+  /// 국내 채널 구조, 가격·결제 관행 분석 (JSON)
+  localization      Json?
+  /// 한국 시장 대체 설계안 요약
+  altDesign         String?            @map("alt_design")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  projectPolicyId   String             @map("project_policy_id")
+  globalCaseMetaId  String             @map("global_case_meta_id")
+  globalCaseMeta    GlobalCaseMeta     @relation(fields: [globalCaseMetaId], references: [id], onDelete: Cascade)
+  projectPolicy     ProjectPolicy      @relation(fields: [projectPolicyId], references: [id], onDelete: Cascade)
+  validationLedgers ValidationLedger[]
+
+  @@index([projectPolicyId])
+  @@index([globalCaseMetaId])
+  @@map("k_blueprints")
+}
+
+model ValidationLedger {
+  /// 고유 식별자 (UUID v4)
+  id             String         @id @default(uuid())
+  /// 스프린트 회차 번호 (KBlueprint 내 순번)
+  sprintRound    Int            @map("sprint_round")
+  /// 검증할 가설 내용
+  hypothesis     String
+  /// 구체적 실험 내용 (예: "랜딩페이지 A/B 테스트 200명 대상")
+  actionItem     String?        @map("action_item")
+  /// 가설 판정 상태 — 기본값 PENDING
+  decisionStatus DecisionStatus @default(PENDING) @map("decision_status")
+  /// 검증 수치 및 메모 (JSON)
+  /// 예: { "conversionRate": 3.2, "sampleSize": 200, "memo": "..." }
+  resultData     Json?          @map("result_data")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+  kBlueprintId   String         @map("k_blueprint_id")
+  kBlueprint     KBlueprint     @relation(fields: [kBlueprintId], references: [id], onDelete: Cascade)
+
+  @@unique([kBlueprintId, sprintRound])
+  @@index([decisionStatus])
+  @@map("validation_ledgers")
+}
+
+model IdeaMatchSession {
+  /// 고유 식별자 (UUID v4)
+  id                String          @id @default(uuid())
+  /// AI가 구성한 검색 쿼리 텍스트 (디버깅용)
+  searchQuery       String          @map("search_query")
+  /// 매칭된 글로벌 사례 ID + 유사도 점수 (JSON)
+  /// [{ "globalCaseMetaId": "...", "companyName": "...", "score": 0.87 }, ...]
+  matchedCases      Json            @map("matched_cases")
+  /// AI가 생성한 한국 맞춤 아이디어 (JSON)
+  /// { "ideas": [{ "title": "...", "summary": "...", "whyKorea": "...", ... }] }
+  localizedIdeas    Json            @map("localized_ideas")
+  createdAt         DateTime        @default(now()) @map("created_at")
+  projectPolicyId   String          @map("project_policy_id")
+  locale            String          @default("ko-KR")
+  generationVersion String?         @map("generation_version")
+  generatedIdeas    GeneratedIdea[]
+  projectPolicy     ProjectPolicy   @relation(fields: [projectPolicyId], references: [id], onDelete: Cascade)
+
+  @@index([projectPolicyId])
+  @@map("idea_match_sessions")
+}
+
+model GeneratedIdea {
+  id               String           @id @default(uuid())
+  sessionId        String           @map("session_id")
+  rank             Int
+  status           IdeaStatus       @default(DRAFT)
+  titleKo          String           @map("title_ko")
+  oneLinerKo       String?          @map("one_liner_ko")
+  summaryKo        String?          @map("summary_ko")
+  whyNowInKoreaKo  String?          @map("why_now_in_korea_ko")
+  marketFitScore   Int?             @map("market_fit_score")
+  confidenceScore  Int?             @map("confidence_score")
+  sourceBenchmarks Json?            @map("source_benchmarks")
+  targetCustomer   Json?            @map("target_customer")
+  problemDetail    Json?            @map("problem_detail")
+  businessModel    Json?            @map("business_model")
+  mvpScope         Json?            @map("mvp_scope")
+  goToMarket       Json?            @map("go_to_market")
+  executionPlan    Json?            @map("execution_plan")
+  estimatedCost    Json?            @map("estimated_cost")
+  risks            Json?
+  rawIdea          Json             @map("raw_idea")
+  /// 기획·설계 탭 저장 데이터 { plan, customSections, checked }
+  planData         Json?            @map("plan_data")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+  /// 크레딧 필요 여부 (true = 블러 처리, false = 무료 공개)
+  requiresCredit   Boolean          @default(false) @map("requires_credit")
+  /// 벤치마크 사례의 평균 유사도 점수 (0.0 ~ 1.0) — Top3/Bottom2 결정용
+  similarityScore  Float            @default(0) @map("similarity_score")
+  session          IdeaMatchSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, rank])
+  @@index([sessionId])
+  @@index([status])
+  @@index([marketFitScore])
+  @@index([requiresCredit])
+  @@map("generated_ideas")
+}
+
+model Subscription {
+  id             String    @id @default(uuid())
+  /// 구독 플랜
+  planType       PlanType  @map("plan_type")
+  /// 구독 시작일
+  startedAt      DateTime  @default(now()) @map("started_at")
+  /// 구독 만료일 (null = 무기한/FREE)
+  expiresAt      DateTime? @map("expires_at")
+  /// 활성 여부
+  active         Boolean   @default(true)
+  /// 결제 금액 (KRW, 0 = FREE)
+  amountPaid     Int       @default(0) @map("amount_paid")
+  /// 이 구독으로 부여된 크레딧
+  creditsGranted Int       @default(0) @map("credits_granted")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  userId         String    @map("user_id")
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("subscriptions")
+}
+
+model CreditLedger {
+  id           String       @id @default(uuid())
+  /// 변동 유형
+  action       CreditAction
+  /// 변동량 (양수: 충전, 음수: 소모)
+  amount       Int
+  /// 변동 후 잔액
+  balanceAfter Int          @map("balance_after")
+  /// 사유 (예: "idea-match", "subscription:PRO", "signup-bonus")
+  reason       String
+  createdAt    DateTime     @default(now()) @map("created_at")
+  userId       String       @map("user_id")
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([action])
+  @@map("credit_ledgers")
+}
+
+model CommunityPost {
+  id          String                @id @default(uuid())
+  /// 제목
+  title       String
+  /// 본문 (Markdown)
+  content     String
+  /// 카테고리
+  category    PostCategory          @default(FREE_TALK)
+  /// 조회수
+  viewCount   Int                   @default(0) @map("view_count")
+  createdAt   DateTime              @default(now()) @map("created_at")
+  updatedAt   DateTime              @updatedAt @map("updated_at")
+  authorId    String                @map("author_id")
+  acBookmarks AcceleratorBookmark[]
+  author      User                  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments    PostComment[]
+  likes       PostLike[]
+
+  @@index([authorId])
+  @@index([category])
+  @@index([createdAt])
+  @@map("community_posts")
+}
+
+model PostComment {
+  id        String        @id @default(uuid())
+  /// 댓글 내용
+  content   String
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+  authorId  String        @map("author_id")
+  postId    String        @map("post_id")
+  author    User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@index([postId])
+  @@index([authorId])
+  @@map("post_comments")
+}
+
+model PostLike {
+  id        String        @id @default(uuid())
+  createdAt DateTime      @default(now()) @map("created_at")
+  userId    String        @map("user_id")
+  postId    String        @map("post_id")
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@index([postId])
+  @@map("post_likes")
+}
+
+model AcceleratorBookmark {
+  id        String        @id @default(uuid())
+  createdAt DateTime      @default(now()) @map("created_at")
+  userId    String        @map("user_id")
+  postId    String        @map("post_id")
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, postId])
+  @@index([userId])
+  @@map("accelerator_bookmarks")
+}
+
+/// 사용자가 크레딧을 소모해서 잠금 해제한 Discovery 케이스
+model UserCaseUnlock {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  caseId     String   @map("case_id")
+  unlockedAt DateTime @default(now()) @map("unlocked_at")
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, caseId])
+  @@index([userId])
+  @@map("user_case_unlocks")
+}
+
+/// 프로젝트 팀원 — 이메일 초대 또는 기존 유저 연결
+model ProjectTeamMember {
+  id          String            @id @default(uuid())
+  /// 초대 대상 이메일 (가입 여부 무관)
+  email       String
+  /// 가입된 유저면 연결 (미가입이면 null)
+  userId      String?           @map("user_id")
+  projectId   String            @map("project_id")
+  role        TeamMemberRole    @default(MEMBER)
+  status      TeamMemberStatus  @default(INVITED)
+  /// 초대 수락 토큰 (일회용 UUID)
+  inviteToken String?           @unique @map("invite_token")
+  /// 팀에서의 소개 (예: "iOS 개발 담당")
+  bio         String?
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+  project     ProjectPolicy     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user        User?             @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@unique([projectId, email])
+  @@index([projectId])
+  @@index([userId])
+  @@map("project_team_members")
+}
+
+/// 프로젝트 회의실 — Jitsi 기반 개인 서버 회의 링크
+model ProjectMeeting {
+  id          String        @id @default(uuid())
+  title       String
+  /// Jitsi room 고유 ID (UUID 기반)
+  roomId      String        @unique @map("room_id")
+  /// 예정 일시 (없으면 즉시 회의)
+  scheduledAt DateTime?     @map("scheduled_at")
+  /// 회의 메모 / 아젠다
+  agenda      String?
+  projectId   String        @map("project_id")
+  createdById String        @map("created_by_id")
+  createdAt   DateTime      @default(now()) @map("created_at")
+  project     ProjectPolicy @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdBy   User          @relation(fields: [createdById], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@map("project_meetings")
+}
+
+/// 구독 플랜 등급
+enum PlanType {
+  FREE
+  STARTER
+  PRO
+  TEAM
+  ENTERPRISE
+}
+
+/// 사용자 유형
+enum UserType {
+  INVESTOR
+  ACCELERATOR
+  FOUNDER
+}
+
+/// 프로젝트 타겟 시장 유형
+enum TargetMarket {
+  B2B
+  B2C
+  B2B2C
+}
+
+/// 검증 스프린트 가설 판정 상태
+enum DecisionStatus {
+  GO
+  PIVOT
+  HOLD
+  PENDING
+}
+
+/// 시간 투자 수준
+enum Commitment {
+  FULL_TIME
+  PART_TIME
+  SIDE_PROJECT
+}
+
+/// 리스크 성향
+enum RiskTolerance {
+  CONSERVATIVE
+  BALANCED
+  AGGRESSIVE
+}
+
+/// 초기 투자금 구간 (KRW)
+enum BudgetRange {
+  UNDER_5M
+  FIVE_TO_10M
+  TEN_TO_30M
+  THIRTY_TO_50M
+  FIFTY_TO_100M
+  OVER_100M
+}
+
+/// 팀 규모
+enum TeamSize {
+  SOLO
+  TWO_TO_THREE
+  FOUR_TO_TEN
+  OVER_TEN
+}
+
+/// 목표 런칭 타임라인
+enum LaunchTimeline {
+  ONE_MONTH
+  THREE_MONTHS
+  SIX_MONTHS
+  ONE_YEAR
+  OVER_ONE_YEAR
+}
+
+enum IdeaStatus {
+  DRAFT
+  SHORTLISTED
+  SELECTED
+  ARCHIVED
+}
+
+/// 크레딧 변동 유형
+enum CreditAction {
+  GRANT
+  CONSUME
+  REFUND
+  EXPIRE
+}
+
+/// 게시글 카테고리
+enum PostCategory {
+  IDEA_SHARE
+  QUESTION
+  CASE_STUDY
+  TEAM_RECRUIT
+  FREE_TALK
+  OUTSOURCE_REQUEST
+  AC_REQUEST
+}
+
+/// 글로벌 케이스 복제 난이도
+enum DifficultyLevel {
+  EASY
+  MEDIUM
+  HARD
+  EXPERT
+}
+
+/// 프로젝트 팀원 역할
+enum TeamMemberRole {
+  OWNER
+  DEVELOPER
+  DESIGNER
+  MARKETER
+  ADVISOR
+  MEMBER
+}
+
+/// 팀원 초대 상태
+enum TeamMemberStatus {
+  INVITED
+  ACTIVE
+  LEFT
+}
