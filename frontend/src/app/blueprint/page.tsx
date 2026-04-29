@@ -141,7 +141,7 @@ export default function BlueprintPage() {
     <AuthGuard>
       <div className="workspace-grid fade-up">
         <PageHeader
-          eyebrow="Localized execution"
+          eyebrow="한국형 실행 전략"
           title="Blueprint"
           description="Discovery에서 찾은 글로벌 사례를 한국 시장에 맞는 실행 계획으로 바꿉니다. 최근 결과를 바로 이어서 사용할 수 있습니다."
         />
@@ -149,7 +149,7 @@ export default function BlueprintPage() {
         <div className="grid gap-4 xl:grid-cols-[0.88fr_1.12fr]">
           <Surface className="space-y-5">
             <div>
-              <p className="eyebrow">Blueprint setup</p>
+              <p className="eyebrow">블루프린트 설정</p>
               <h2 className="text-2xl font-semibold tracking-[-0.04em] text-gray-900">
                 벤치마크 사례와 프로젝트 연결
               </h2>
@@ -322,7 +322,7 @@ export default function BlueprintPage() {
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <p className="eyebrow">Recent discovery</p>
+                <p className="eyebrow">최근 탐색</p>
                 <span className="badge badge-neutral">{recentCases.length} cases</span>
               </div>
               {recentCases.length === 0 ? (
@@ -361,7 +361,7 @@ export default function BlueprintPage() {
           <Surface className="space-y-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="eyebrow">Generated strategy</p>
+                <p className="eyebrow">생성된 전략</p>
                 <h2 className="text-2xl font-semibold tracking-[-0.04em] text-gray-900">
                   한국형 실행 Blueprint
                 </h2>
@@ -391,7 +391,7 @@ export default function BlueprintPage() {
                     </p>
                   </div>
                   <div className="rounded-xl border border-gray-100 bg-white p-4">
-                    <p className="text-xs uppercase tracking-wider text-gray-400">Revenue model</p>
+                    <p className="text-xs uppercase tracking-wider text-gray-400">수익 모델</p>
                     <p className="mt-2 text-lg font-semibold text-gray-900">
                       {result.benchmarkCase.revenueModel || "미상"}
                     </p>

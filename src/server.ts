@@ -14,6 +14,10 @@ import { registerIdeaMatchRoutes } from "./routes/ideaMatch.js";
 import { registerValidationLedgerRoutes } from "./routes/validationLedger.js";
 import { registerAdminRoutes } from "./routes/admin.js";
 import { registerCollabRoutes } from "./routes/collab.js";
+import { registerGovProgramRoutes } from "./routes/govPrograms.js";
+import { registerWorkspaceRoutes } from "./routes/workspace.js";
+import { registerShowRoutes } from "./routes/show.js";
+import { registerMeetingRoutes } from "./routes/meetings.js";
 import { getEnv } from "./lib/env.js";
 import { getCorsConfig, createApiLimiter, createAiOpLimiter, createAuthLimiter, errorHandler } from "./lib/middleware.js";
 
@@ -35,6 +39,11 @@ app.use(cors(getCorsConfig()));
 
 // Middleware: JSON parsing
 app.use(express.json());
+
+// Health check (운영 헬스체크용 — Railway/Fly 등이 이 경로를 ping)
+app.get("/api/health", (_req, res) => {
+  res.json({ status: "ok", time: new Date().toISOString() });
+});
 
 // Middleware: General API rate limiting (100 req per 15 min)
 app.use("/api/", createApiLimiter());
@@ -65,6 +74,10 @@ registerIdeaMatchRoutes(app, { prisma, groq });
 registerValidationLedgerRoutes(app, { prisma });
 registerAdminRoutes(app, { prisma });
 registerCollabRoutes(app, { prisma });
+registerGovProgramRoutes(app, { prisma, groq });
+registerWorkspaceRoutes(app, { prisma });
+registerShowRoutes(app, { prisma });
+registerMeetingRoutes(app, { prisma });
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

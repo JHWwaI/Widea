@@ -450,7 +450,7 @@ export default function ProjectsPage() {
     <AuthGuard>
       <div className="workspace-grid fade-up">
         <PageHeader
-          eyebrow="Project workspace"
+          eyebrow="프로젝트 워크스페이스"
           title="프로젝트"
           description="설문을 작성하면 AI가 나에게 맞는 창업 아이디어를 찾아드립니다."
         />

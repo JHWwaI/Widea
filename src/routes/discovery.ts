@@ -322,7 +322,7 @@ export function registerDiscoveryRoutes(
     async (req: Request, res: Response): Promise<void> => {
       try {
         const { userId } = getAuthedUser(req);
-        const { id } = req.params;
+        const id = String(req.params.id);
 
         const meta = await prisma.globalCaseMeta.findUnique({
           where: { id },

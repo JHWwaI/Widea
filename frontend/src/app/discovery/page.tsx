@@ -16,7 +16,6 @@ import {
   UNLOCK_CREDIT_COST,
 } from "@/lib/types";
 
-// ── 개별 결과 카드 ──────────────────────────────────────────────────────────────
 function CaseCard({
   item,
   projectId,
@@ -34,12 +33,17 @@ function CaseCard({
 
   if (isLocked) {
     return (
-      <div className="relative rounded-2xl border border-gray-100 bg-white p-5 overflow-hidden">
-        {/* 블러 오버레이 */}
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white/80 backdrop-blur-sm rounded-2xl">
+      <div
+        className="relative overflow-hidden rounded-2xl p-5"
+        style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)" }}
+      >
+        <div
+          className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-2xl backdrop-blur-sm"
+          style={{ background: "rgba(7,6,15,0.82)" }}
+        >
           <div className="text-center space-y-1">
-            <p className="text-sm font-semibold text-gray-700">잠긴 케이스</p>
-            <p className="text-xs text-gray-500">
+            <p className="text-sm font-semibold" style={{ color: "var(--ink)" }}>잠긴 케이스</p>
+            <p className="text-xs" style={{ color: "var(--ink-3)" }}>
               {UNLOCK_CREDIT_COST}크레딧을 사용해 전체 분석을 확인하세요
             </p>
           </div>
@@ -52,23 +56,19 @@ function CaseCard({
               {isUnlocking ? "잠금 해제 중..." : `잠금 해제 (${UNLOCK_CREDIT_COST} 크레딧)`}
             </button>
           ) : (
-            <span className="text-xs text-gray-400">케이스 ID 없음</span>
+            <span className="text-xs" style={{ color: "var(--ink-4)" }}>케이스 ID 없음</span>
           )}
         </div>
 
-        {/* 배경 (블러 처리될 더미 콘텐츠) */}
         <div className="blur-sm select-none pointer-events-none">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-lg font-semibold tracking-[-0.03em] text-gray-900">
+              <p className="text-lg font-semibold tracking-[-0.03em]" style={{ color: "var(--ink)" }}>
                 {item.rank}. {item.companyName || "???"}
               </p>
-              <p className="mt-2 text-sm leading-7 text-gray-500">
+              <p className="mt-2 text-sm leading-7" style={{ color: "var(--ink-3)" }}>
                 {item.industry || "업종 미상"} · {item.targetMarket}
               </p>
-              {item.shortDescription && (
-                <p className="mt-1 text-sm text-gray-400">{item.shortDescription}</p>
-              )}
             </div>
             <span className="badge badge-neutral">
               similarity {(item.similarityScore * 100).toFixed(1)}%
@@ -78,7 +78,12 @@ function CaseCard({
             {["설립연도", "투자단계", "상세분석"].map((label) => (
               <div
                 key={label}
-                className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-gray-300"
+                className="rounded-xl px-4 py-3 text-sm"
+                style={{
+                  border: "1px solid rgba(255,255,255,0.06)",
+                  background: "rgba(255,255,255,0.03)",
+                  color: "var(--ink-4)",
+                }}
               >
                 {label}: ─────
               </div>
@@ -89,13 +94,15 @@ function CaseCard({
     );
   }
 
-  // 공개 카드
   return (
-    <div className="rounded-2xl border border-gray-100 bg-white p-5">
+    <div
+      className="rounded-2xl p-5"
+      style={{ border: "1px solid rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.04)" }}
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <p className="text-lg font-semibold tracking-[-0.03em] text-gray-900">
+            <p className="text-lg font-semibold tracking-[-0.03em]" style={{ color: "var(--ink)" }}>
               {item.rank}. {item.companyName}
             </p>
             {item.rank === 1 && (
@@ -103,9 +110,9 @@ function CaseCard({
             )}
           </div>
           {item.shortDescription && (
-            <p className="mt-1 text-sm text-gray-600">{item.shortDescription}</p>
+            <p className="mt-1 text-sm" style={{ color: "var(--ink-2)" }}>{item.shortDescription}</p>
           )}
-          <p className="mt-1 text-sm leading-7 text-gray-400">
+          <p className="mt-1 text-sm leading-7" style={{ color: "var(--ink-3)" }}>
             {item.industry || "업종 미상"} · {item.targetMarket} · {item.revenueModel ?? item.businessModel ?? "-"}
           </p>
         </div>
@@ -115,21 +122,40 @@ function CaseCard({
       </div>
 
       <div className="mt-4 grid gap-2 sm:grid-cols-3">
-        <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-gray-500">
-          설립: {item.foundedYear || "-"}
-        </div>
-        <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-gray-500">
-          투자: {item.fundingStage || "-"}
-        </div>
-        <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-gray-500">
-          출처: {item.geographicOrigin || "-"}
-        </div>
+        {[
+          { label: "설립", value: item.foundedYear || "-" },
+          { label: "투자", value: item.fundingStage || "-" },
+          { label: "출처", value: item.geographicOrigin || "-" },
+        ].map((stat) => (
+          <div
+            key={stat.label}
+            className="rounded-xl px-4 py-3 text-sm"
+            style={{
+              border: "1px solid rgba(255,255,255,0.06)",
+              background: "rgba(255,255,255,0.03)",
+              color: "var(--ink-3)",
+            }}
+          >
+            <span style={{ color: "var(--ink-4)" }}>{stat.label}: </span>{stat.value}
+          </div>
+        ))}
       </div>
 
       {typeof item.analysis?.problemStatement === "string" && item.analysis.problemStatement && (
-        <div className="mt-4 rounded-xl bg-blue-50 border border-blue-100 px-4 py-3">
-          <p className="text-xs font-medium text-blue-600 uppercase tracking-wider mb-1">핵심 문제</p>
-          <p className="text-sm text-blue-900 leading-relaxed line-clamp-3">
+        <div
+          className="mt-4 rounded-xl px-4 py-3"
+          style={{
+            background: "rgba(79,110,247,0.07)",
+            border: "1px solid rgba(79,110,247,0.18)",
+          }}
+        >
+          <p
+            className="text-xs font-semibold uppercase tracking-wider mb-1"
+            style={{ color: "var(--accent)" }}
+          >
+            핵심 문제
+          </p>
+          <p className="text-sm leading-relaxed line-clamp-3" style={{ color: "var(--ink-2)" }}>
             {item.analysis.problemStatement}
           </p>
         </div>
@@ -138,9 +164,7 @@ function CaseCard({
       {Array.isArray(item.tags) && item.tags.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
           {(item.tags as string[]).map((tag) => (
-            <span key={tag} className="badge badge-neutral text-xs">
-              {tag}
-            </span>
+            <span key={tag} className="badge badge-neutral text-xs">{tag}</span>
           ))}
         </div>
       )}
@@ -161,7 +185,6 @@ function CaseCard({
   );
 }
 
-// ── 메인 페이지 ─────────────────────────────────────────────────────────────────
 export default function DiscoveryPage() {
   const searchParams = useSearchParams();
   const { token, user, updateCredit } = useAuth();
@@ -172,7 +195,6 @@ export default function DiscoveryPage() {
   const [error, setError] = useState("");
   const [creditError, setCreditError] = useState<ReturnType<typeof getCreditErrorDetails>>(null);
   const [projectId, setProjectId] = useState(searchParams.get("projectId") || "");
-  // 잠금 해제 상태: caseId → 잠금 해제된 전체 데이터
   const [unlockedCases, setUnlockedCases] = useState<Record<string, DiscoveryUnlockResponse>>({});
   const [unlockingId, setUnlockingId] = useState<string | null>(null);
   const [unlockError, setUnlockError] = useState("");
@@ -217,7 +239,6 @@ export default function DiscoveryPage() {
         { keyword, targetMarket },
         token,
       );
-
       setResult(response);
       updateCredit(response.credit.balance);
       localStorage.setItem("widea_recent_discovery", JSON.stringify(response.results.slice(0, 6)));
@@ -257,34 +278,30 @@ export default function DiscoveryPage() {
     }
   }
 
-  // 잠금 해제된 케이스 데이터를 결과에 병합
   function mergeWithUnlocked(item: DiscoveryCase): DiscoveryCase {
     if (!item.caseId || !unlockedCases[item.caseId]) return item;
     const unlocked = unlockedCases[item.caseId];
-    return {
-      ...item,
-      ...unlocked,
-      rank: item.rank,
-      similarityScore: item.similarityScore,
-      locked: false,
-    };
+    return { ...item, ...unlocked, rank: item.rank, similarityScore: item.similarityScore, locked: false };
   }
 
   return (
     <AuthGuard>
       <div className="workspace-grid fade-up">
         <PageHeader
-          eyebrow="Benchmark intelligence"
+          eyebrow="글로벌 케이스 탐색"
           title="Discovery"
           description="키워드와 타깃 시장을 입력하면 유사한 글로벌 성공 사례 3개를 찾아드립니다. 첫 번째 결과는 무료, 나머지 2개는 크레딧으로 잠금 해제할 수 있습니다."
         />
 
         <div className="grid gap-4 xl:grid-cols-[0.86fr_1.14fr]">
-          {/* ── 검색 폼 ── */}
+          {/* 검색 폼 */}
           <Surface className="space-y-5">
             <div>
-              <p className="eyebrow">Search input</p>
-              <h2 className="text-2xl font-semibold tracking-[-0.04em] text-gray-900">
+              <p className="eyebrow">검색 입력</p>
+              <h2
+                className="text-2xl font-semibold tracking-[-0.04em]"
+                style={{ color: "var(--ink)" }}
+              >
                 어떤 시장을 탐색할까요?
               </h2>
             </div>
@@ -292,18 +309,23 @@ export default function DiscoveryPage() {
             {activeCreditError ? (
               <div
                 role="alert"
-                className="space-y-3 rounded-xl border border-amber-100 bg-amber-50 px-4 py-4 text-sm text-amber-800"
+                className="space-y-3 rounded-xl px-4 py-4 text-sm"
+                style={{
+                  background: "rgba(251,191,36,0.08)",
+                  border: "1px solid rgba(251,191,36,0.2)",
+                  color: "#FCD34D",
+                }}
               >
                 <div className="space-y-1">
                   <p className="font-semibold">크레딧이 부족합니다</p>
-                  <p>
+                  <p style={{ color: "var(--ink-3)" }}>
                     Discovery는 1회 실행에 {activeCreditError.required} 크레딧이 필요합니다.
                     {activeCreditError.creditBalance !== null
                       ? ` 현재 잔액: ${activeCreditError.creditBalance} 크레딧`
                       : ""}
                   </p>
                 </div>
-                <Link href="/pricing" className="btn-secondary">
+                <Link href="/pricing" className="btn-secondary inline-flex">
                   크레딧 충전하러 가기
                 </Link>
               </div>
@@ -312,7 +334,12 @@ export default function DiscoveryPage() {
             {error && !activeCreditError ? (
               <div
                 role="alert"
-                className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700"
+                className="rounded-xl px-4 py-3 text-sm"
+                style={{
+                  background: "rgba(248,113,113,0.08)",
+                  border: "1px solid rgba(248,113,113,0.2)",
+                  color: "#FCA5A5",
+                }}
               >
                 {error}
               </div>
@@ -320,9 +347,7 @@ export default function DiscoveryPage() {
 
             <form onSubmit={handleSearch} className="grid gap-4">
               <div>
-                <label htmlFor="keyword" className="field-label">
-                  탐색 키워드
-                </label>
+                <label htmlFor="keyword" className="field-label">탐색 키워드</label>
                 <textarea
                   id="keyword"
                   value={keyword}
@@ -334,9 +359,7 @@ export default function DiscoveryPage() {
               </div>
 
               <div>
-                <label htmlFor="market" className="field-label">
-                  타깃 마켓
-                </label>
+                <label htmlFor="market" className="field-label">타깃 마켓</label>
                 <select
                   id="market"
                   value={targetMarket}
@@ -344,17 +367,13 @@ export default function DiscoveryPage() {
                   className="select"
                 >
                   {targetMarketOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
+                    <option key={option.value} value={option.value}>{option.label}</option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label htmlFor="projectId" className="field-label">
-                  연결 프로젝트 ID
-                </label>
+                <label htmlFor="projectId" className="field-label">연결 프로젝트 ID</label>
                 <input
                   id="projectId"
                   value={projectId}
@@ -364,18 +383,23 @@ export default function DiscoveryPage() {
                 />
               </div>
 
-              {/* 크레딧 정보 */}
-              <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-4">
+              <div
+                className="rounded-xl px-4 py-4"
+                style={{
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  background: "rgba(255,255,255,0.03)",
+                }}
+              >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="space-y-0.5">
-                    <p className="text-xs uppercase tracking-wider text-gray-400">Credit</p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-xs uppercase tracking-wider" style={{ color: "var(--ink-4)" }}>크레딧</p>
+                    <p className="text-sm" style={{ color: "var(--ink-3)" }}>
                       검색 {DISCOVERY_CREDIT_COST}크레딧 · 잠금 해제 {UNLOCK_CREDIT_COST}크레딧/개
                     </p>
                   </div>
                   <div className="text-right">
-                    <p className="text-xs uppercase tracking-wider text-gray-400">잔액</p>
-                    <p className="text-lg font-semibold text-gray-900">
+                    <p className="text-xs uppercase tracking-wider" style={{ color: "var(--ink-4)" }}>잔액</p>
+                    <p className="text-lg font-semibold" style={{ color: "var(--ink)" }}>
                       {user?.isAdmin ? "Unlimited" : `${currentCreditBalance ?? "-"} credits`}
                     </p>
                   </div>
@@ -396,21 +420,22 @@ export default function DiscoveryPage() {
             </form>
           </Surface>
 
-          {/* ── 결과 영역 ── */}
+          {/* 결과 영역 */}
           <Surface className="space-y-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="eyebrow">Results</p>
-                <h2 className="text-2xl font-semibold tracking-[-0.04em] text-gray-900">
+                <p className="eyebrow">검색 결과</p>
+                <h2
+                  className="text-2xl font-semibold tracking-[-0.04em]"
+                  style={{ color: "var(--ink)" }}
+                >
                   발견된 글로벌 사례
                 </h2>
               </div>
               {result ? (
-                <div className="flex items-center gap-2">
-                  <span className="badge badge-accent">
-                    {result.matchCount}개 · credit {result.credit.used}
-                  </span>
-                </div>
+                <span className="badge badge-accent">
+                  {result.matchCount}개 · credit {result.credit.used}
+                </span>
               ) : null}
             </div>
 
@@ -429,10 +454,15 @@ export default function DiscoveryPage() {
                 {unlockError && (
                   <div
                     role="alert"
-                    className="rounded-xl border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+                    className="rounded-xl px-4 py-3 text-sm"
+                    style={{
+                      background: "rgba(251,191,36,0.08)",
+                      border: "1px solid rgba(251,191,36,0.2)",
+                      color: "#FCD34D",
+                    }}
                   >
                     {unlockError}
-                    <Link href="/pricing" className="ml-2 underline">
+                    <Link href="/pricing" className="ml-2 underline" style={{ color: "var(--accent)" }}>
                       크레딧 충전
                     </Link>
                   </div>
@@ -454,10 +484,19 @@ export default function DiscoveryPage() {
                   })}
                 </div>
 
-                <div className="rounded-xl border border-gray-100 bg-gray-50 px-4 py-3 text-sm text-gray-500">
-                  <span className="font-medium text-gray-700">DB 전체:</span> {result.totalCasesInDB.toLocaleString()}개 케이스
+                <div
+                  className="rounded-xl px-4 py-3 text-sm"
+                  style={{
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    background: "rgba(255,255,255,0.025)",
+                    color: "var(--ink-3)",
+                  }}
+                >
+                  <span style={{ color: "var(--ink-2)", fontWeight: 500 }}>DB 전체:</span>{" "}
+                  {result.totalCasesInDB.toLocaleString()}개 케이스
                   &nbsp;·&nbsp;
-                  <span className="font-medium text-gray-700">검색어:</span> {result.keyword}
+                  <span style={{ color: "var(--ink-2)", fontWeight: 500 }}>검색어:</span>{" "}
+                  {result.keyword}
                 </div>
               </>
             )}

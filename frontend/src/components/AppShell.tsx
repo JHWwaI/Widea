@@ -11,14 +11,20 @@ const PUBLIC_ROUTES = ["/", "/login", "/register", "/select-type", "/billing/suc
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { user, loading } = useAuth();
-  const [sidebarOpen, setSidebarOpen] = useState(false);      // mobile drawer
-  const [sidebarVisible, setSidebarVisible] = useState(false); // desktop: hidden by default
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  // 데스크탑(≥1024px)에서는 기본 노출, 모바일은 닫힘
+  const [sidebarVisible, setSidebarVisible] = useState(true);
 
-  // 페이지 이동 시 모바일 drawer 닫기 (데스크탑 상태는 유지)
   useEffect(() => {
+    // 모바일 오버레이만 페이지 이동 시 닫기
     setSidebarOpen(false);
-    setSidebarVisible(false); // 페이지 이동 시 사이드바 닫힘
   }, [pathname]);
+
+  useEffect(() => {
+    // localStorage에 저장된 사용자 선호 복원 (있다면)
+    const saved = typeof window !== "undefined" ? localStorage.getItem("widea_sidebar_visible") : null;
+    if (saved !== null) setSidebarVisible(saved === "1");
+  }, []);
 
   const isPublicPage = PUBLIC_ROUTES.includes(pathname);
 
@@ -26,10 +32,28 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-6 py-4 shadow-sm">
-          <span className="inline-flex h-2.5 w-2.5 animate-pulse rounded-full bg-blue-500" />
-          <span className="text-sm text-gray-500">Widea 워크스페이스를 불러오는 중입니다...</span>
+      <div
+        className="flex min-h-screen items-center justify-center"
+        style={{ background: "var(--bg)" }}
+      >
+        <div
+          className="flex items-center gap-3 rounded-2xl px-6 py-4"
+          style={{
+            background: "rgba(255,255,255,0.04)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            backdropFilter: "blur(20px)",
+          }}
+        >
+          <span
+            className="inline-flex h-2 w-2 rounded-full"
+            style={{
+              background: "linear-gradient(135deg, #7C3AED, #6366F1)",
+              animation: "pulse-glow 1.5s ease infinite",
+            }}
+          />
+          <span className="text-sm" style={{ color: "var(--ink-3)" }}>
+            Widea 워크스페이스를 불러오는 중...
+          </span>
         </div>
       </div>
     );
@@ -37,11 +61,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   const handleMenuToggle = user
     ? () => {
-        // 모바일: drawer 토글 / 데스크탑: sidebarVisible 토글
         if (window.innerWidth < 1024) {
           setSidebarOpen((v) => !v);
         } else {
-          setSidebarVisible((v) => !v);
+          setSidebarVisible((v) => {
+            const next = !v;
+            localStorage.setItem("widea_sidebar_visible", next ? "1" : "0");
+            return next;
+          });
         }
       }
     : undefined;
@@ -52,24 +79,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
+    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
       <Navbar onMenuToggle={handleMenuToggle} />
       {user ? (
-        <Sidebar
-          open={sidebarOpen}
-          visible={sidebarVisible}
-          onClose={handleNavClick}
-        />
+        <Sidebar open={sidebarOpen} visible={sidebarVisible} onClose={handleNavClick} />
       ) : null}
       <main
         className={[
-          "px-4 pb-12 pt-[calc(var(--navbar-height)+1.25rem)] sm:px-6",
+          "px-4 pb-16 pt-[calc(var(--navbar-height)+1.5rem)] sm:px-6 md:px-8",
           user && sidebarVisible
-            ? "lg:pl-[calc(var(--sidebar-width)+2rem)] lg:pr-8 transition-[padding] duration-300"
-            : "lg:px-8 transition-[padding] duration-300",
+            ? "lg:pl-[calc(var(--sidebar-width)+2.5rem)] lg:pr-10 transition-[padding] duration-300"
+            : "lg:px-10 transition-[padding] duration-300",
         ].join(" ")}
       >
-        <div className="mx-auto max-w-[1180px]">{children}</div>
+        <div className="mx-auto w-full max-w-[1280px]">{children}</div>
       </main>
     </div>
   );

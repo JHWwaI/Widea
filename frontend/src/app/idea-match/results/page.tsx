@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
-import { Badge, EmptyState, LoadingState, Surface } from "@/components/ProductUI";
+import { EmptyState, LoadingState } from "@/components/ProductUI";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
 import { readError } from "@/lib/product";
@@ -13,10 +13,9 @@ import type {
   IdeaCard,
   IdeaMatchCase,
   IdeaMatchSessionDetailResponse,
-  UpdateGeneratedIdeaStatusResponse,
 } from "@/lib/types";
 
-/* ── Helper functions ── */
+/* ── Helpers ── */
 
 function toIdeaCardFromGeneratedIdea(idea: GeneratedIdea): IdeaCard {
   const sourceBenchmark = Array.isArray(idea.sourceBenchmarks)
@@ -64,51 +63,51 @@ function getIdeaHighlight(idea: IdeaCard) {
   return idea.summary || "";
 }
 
-function getIdeaBenchmarks(idea: IdeaCard, fallback: string[]) {
-  const source = typeof idea.sourceBenchmark === "string" ? idea.sourceBenchmark : "";
-  const parsed = source.split(/,|\/|&|\|/).map((s) => s.trim()).filter(Boolean);
-  return (parsed.length > 0 ? parsed : fallback).slice(0, 2);
+/* ── Score ring ── */
+function ScoreRing({ score, size = 48 }: { score: string; size?: number }) {
+  const numScore = parseFloat(score);
+  const pct = numScore / 10;
+  const r = (size / 2) - 5;
+  const circ = 2 * Math.PI * r;
+  const dash = circ * pct;
+
+  const color = numScore >= 8.5 ? "#10B981" : numScore >= 7 ? "#4F6EF7" : "#F59E0B";
+
+  return (
+    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+      <svg width={size} height={size} style={{ transform: "rotate(-90deg)", position: "absolute" }}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="3" />
+        <circle
+          cx={size / 2} cy={size / 2} r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth="3"
+          strokeDasharray={`${dash} ${circ - dash}`}
+          strokeLinecap="round"
+          style={{ transition: "stroke-dasharray 0.6s ease" }}
+        />
+      </svg>
+      <span className="relative text-xs font-bold" style={{ color }}>{score}</span>
+    </div>
+  );
 }
 
-function isRecord(v: unknown): v is Record<string, unknown> {
-  return Boolean(v) && typeof v === "object" && !Array.isArray(v);
-}
-
-function readRecordText(source: unknown, keys: string[]): string | null {
-  if (typeof source === "string" && source.trim()) return source.trim();
-  if (!isRecord(source)) return null;
-  for (const key of keys) {
-    const v = source[key];
-    if (typeof v === "string" && v.trim()) return v.trim();
-  }
+/* ── Status pill ── */
+function StatusPill({ status }: { status: string }) {
+  if (status === "SELECTED") return (
+    <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.6875rem] font-semibold"
+      style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)", color: "#6EE7B7" }}>
+      <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />대표안
+    </span>
+  );
+  if (status === "SHORTLISTED") return (
+    <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.6875rem] font-semibold"
+      style={{ background: "rgba(79,110,247,0.1)", border: "1px solid rgba(79,110,247,0.25)", color: "#93AFFE" }}>
+      <span className="h-1.5 w-1.5 rounded-full" style={{ background: "#4F6EF7" }} />Shortlist
+    </span>
+  );
   return null;
 }
-
-function buildMetrics(source: unknown, config: Array<{ label: string; keys: string[] }>): Array<{ label: string; value: string }> {
-  if (typeof source === "string" && source.trim()) return [{ label: "상세 내용", value: source.trim() }];
-  if (!isRecord(source)) return [];
-  return config
-    .map((e) => { const v = readRecordText(source, e.keys); return v ? { label: e.label, value: v } : null; })
-    .filter((e): e is { label: string; value: string } => Boolean(e));
-}
-
-function resolveBlueprintCaseId(idea: GeneratedIdea | null, matchedCases: IdeaMatchCase[]): string | null {
-  if (idea && Array.isArray(idea.sourceBenchmarks)) {
-    for (const entry of idea.sourceBenchmarks) {
-      if (entry && typeof entry === "object" && "globalCaseId" in entry) {
-        const id = (entry as { globalCaseId?: unknown }).globalCaseId;
-        if (typeof id === "string" && id.trim()) return id.trim();
-      }
-    }
-  }
-  return matchedCases.find((e) => Boolean(e.globalCaseMetaId))?.globalCaseMetaId ?? null;
-}
-
-const CARD_COLORS = [
-  { bg: "from-blue-50 to-white", border: "border-blue-200", accent: "text-blue-700", icon: "bg-blue-100 text-blue-600" },
-  { bg: "from-violet-50 to-white", border: "border-violet-200", accent: "text-violet-700", icon: "bg-violet-100 text-violet-600" },
-  { bg: "from-amber-50 to-white", border: "border-amber-200", accent: "text-amber-700", icon: "bg-amber-100 text-amber-600" },
-];
 
 /* ── Page ── */
 
@@ -119,12 +118,9 @@ export default function IdeaMatchResultsPage() {
   const [session, setSession] = useState<IdeaMatchSessionDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [selectedIndex, setSelectedIndex] = useState(0);
   const [unlockedIndexes, setUnlockedIndexes] = useState<Set<number>>(new Set([0]));
   const [unlockingIndex, setUnlockingIndex] = useState<number | null>(null);
   const [unlockError, setUnlockError] = useState("");
-  const [statusUpdating, setStatusUpdating] = useState(false);
-  const [statusMessage, setStatusMessage] = useState("");
 
   useEffect(() => {
     if (!token || !sessionId) return;
@@ -135,14 +131,12 @@ export default function IdeaMatchResultsPage() {
       .then((data) => {
         if (cancelled) return;
         setSession(data);
-        // DB에서 requiresCredit: false 인 아이디어는 이미 언락된 것으로 처리
         const unlockedSet = new Set<number>(
           (data.generatedIdeas ?? []).reduce<number[]>((acc, idea, i) => {
             if (!idea.requiresCredit) acc.push(i);
             return acc;
           }, []),
         );
-        // 최소한 첫 번째는 항상 열림
         unlockedSet.add(0);
         setUnlockedIndexes(unlockedSet);
       })
@@ -155,24 +149,7 @@ export default function IdeaMatchResultsPage() {
   const generatedIdeas = session?.generatedIdeas ?? [];
   const ideaCards = generatedIdeas.map(toIdeaCardFromGeneratedIdea);
   const matchedCases: IdeaMatchCase[] = Array.isArray(session?.matchedCases) ? session.matchedCases : [];
-  const activeIdea = ideaCards[selectedIndex] ?? null;
-  const activeGenerated = generatedIdeas[selectedIndex] ?? null;
-  const projectId = session?.projectPolicy?.id ?? "";
   const projectTitle = session?.projectPolicy?.title ?? "";
-  const blueprintCaseId = resolveBlueprintCaseId(activeGenerated, matchedCases);
-
-  const businessModelItems = activeIdea
-    ? buildMetrics(activeGenerated?.businessModel ?? activeIdea.businessModel, [
-        { label: "수익 모델", keys: ["modelKo", "type"] },
-        { label: "가격 가설", keys: ["pricingKo", "pricing"] },
-      ])
-    : [];
-  const targetCustomerItems = activeIdea
-    ? buildMetrics(activeGenerated?.targetCustomer ?? activeIdea.targetCustomer, [
-        { label: "핵심 페르소나", keys: ["personaKo", "persona"] },
-        { label: "주요 문제", keys: ["corePainKo", "pain"] },
-      ])
-    : [];
 
   async function handleUnlock(index: number) {
     const ideaId = generatedIdeas[index]?.id;
@@ -185,40 +162,10 @@ export default function IdeaMatchResultsPage() {
       );
       updateCredit(res.creditBalance);
       setUnlockedIndexes((prev) => new Set([...prev, index]));
-      setSelectedIndex(index);
     } catch (caught) {
       setUnlockError(readError(caught, "잠금 해제에 실패했습니다."));
     } finally {
       setUnlockingIndex(null);
-    }
-  }
-
-  async function handleStatusChange(status: "SELECTED" | "SHORTLISTED") {
-    if (!token || !activeGenerated) return;
-    try {
-      setStatusUpdating(true);
-      setStatusMessage("");
-      const response = await api<UpdateGeneratedIdeaStatusResponse>(
-        "PATCH",
-        `/api/idea-match/ideas/${activeGenerated.id}/status`,
-        { status },
-        token,
-      );
-      setSession((prev) =>
-        prev
-          ? {
-              ...prev,
-              generatedIdeas: prev.generatedIdeas?.map((idea) =>
-                idea.id === response.idea.id ? { ...idea, status: response.idea.status } : idea,
-              ),
-            }
-          : prev,
-      );
-      setStatusMessage(status === "SELECTED" ? "프로젝트 대표안으로 저장됨" : "Shortlist에 저장됨");
-    } catch (caught) {
-      setError(readError(caught, "상태 저장에 실패했습니다."));
-    } finally {
-      setStatusUpdating(false);
     }
   }
 
@@ -236,7 +183,7 @@ export default function IdeaMatchResultsPage() {
     return (
       <AuthGuard>
         <div className="mx-auto max-w-2xl space-y-4 py-20 text-center">
-          <p className="text-red-600">{error || "세션을 찾을 수 없습니다."}</p>
+          <p style={{ color: "#F87171" }}>{error || "세션을 찾을 수 없습니다."}</p>
           <Link href="/idea-match" className="btn-primary">다시 탐색하기</Link>
         </div>
       </AuthGuard>
@@ -245,226 +192,127 @@ export default function IdeaMatchResultsPage() {
 
   return (
     <AuthGuard>
-      <div className="fade-up mx-auto max-w-5xl space-y-8">
-        {/* Header */}
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div className="space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">추천 결과</p>
-            <h1 className="text-2xl font-bold text-gray-900">
-              {projectTitle || "아이디어 탐색 결과"}
-            </h1>
-            <p className="text-sm text-gray-500">
-              해외 성공 사례 {matchedCases.length}건을 분석해 맞춤 아이디어를 생성했습니다
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <Link href="/idea-match" className="btn-secondary text-sm">새 탐색</Link>
-            <Link href="/mypage" className="btn-ghost text-sm">My Page</Link>
-          </div>
-        </div>
+      <div className="fade-up mx-auto max-w-5xl space-y-8 pb-12">
 
-        {/* Idea Cards */}
+        {/* 헤더 */}
+        <header className="space-y-3">
+          <p className="text-xs font-semibold uppercase tracking-wider text-indigo-300">
+            아이디어 매칭 결과
+          </p>
+          <h1 className="text-2xl font-bold tracking-tight text-white sm:text-3xl">
+            {projectTitle || "AI가 추천한 창업 아이디어"}
+          </h1>
+          <p className="text-base leading-7 text-zinc-300">
+            글로벌 사례 <span className="font-semibold text-white">{matchedCases.length}건</span>을 분석해 한국 시장 맞춤 아이디어 <span className="font-semibold text-white">{ideaCards.length}개</span>를 생성했습니다.
+            <br className="hidden sm:block" />
+            마음에 드는 카드를 선택하면 실행 전략과 정부지원사업 매칭까지 한번에 볼 수 있어요.
+          </p>
+          <div className="flex flex-wrap gap-2 pt-1">
+            <Link href="/idea-match" className="btn-secondary text-sm">새로 탐색하기</Link>
+            <Link href="/mypage" className="btn-ghost text-sm">내 아이디어 보기</Link>
+          </div>
+        </header>
+
+        {unlockError ? (
+          <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
+            {unlockError}
+          </div>
+        ) : null}
+
+        {/* 카드 그리드 */}
         {ideaCards.length === 0 ? (
           <EmptyState title="생성된 아이디어가 없습니다" description="다시 탐색을 시도해보세요." />
         ) : (
-          <div className="grid gap-5 md:grid-cols-3">
+          <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {ideaCards.map((idea, index) => {
-              const color = CARD_COLORS[index % CARD_COLORS.length];
               const isUnlocked = unlockedIndexes.has(index);
-              const isActive = index === selectedIndex;
-              const status = generatedIdeas[index]?.status ?? "DRAFT";
+              const generated = generatedIdeas[index];
+              const status = generated?.status ?? "DRAFT";
               const unlockCost = 5;
               const canUnlock = (user?.creditBalance ?? 0) >= unlockCost || user?.isAdmin;
+              const score = getIdeaScoreLabel(idea, index);
 
-              return (
-                <div
-                  key={`idea-${index}`}
-                  className={`relative overflow-hidden rounded-2xl border bg-gradient-to-b ${color.bg} p-6 shadow-sm transition ${
-                    isActive && isUnlocked ? `${color.border} ring-2 ring-blue-100` : "border-gray-200"
-                  }`}
-                >
-                  {/* Blur overlay for locked cards */}
+              const cardBody = (
+                <>
+                  {/* 잠금 오버레이 */}
                   {!isUnlocked ? (
-                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-white/70 backdrop-blur-md">
-                      <div className="rounded-full bg-gray-100 p-3">
-                        <svg className="h-6 w-6 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
-                        </svg>
-                      </div>
-                      <p className="text-sm font-semibold text-gray-700">잠긴 아이디어</p>
-                      <p className="text-xs text-gray-500">{unlockCost} 크레딧으로 열기</p>
+                    <div
+                      className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 backdrop-blur-md"
+                      style={{ background: "rgba(7,6,15,0.85)" }}
+                    >
+                      <svg className="h-7 w-7 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
+                      </svg>
+                      <p className="text-sm font-semibold text-white">잠긴 아이디어</p>
                       {canUnlock ? (
-                        <button
-                          type="button"
-                          onClick={() => handleUnlock(index)}
-                          disabled={unlockingIndex === index}
-                          className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60"
+                        <span
+                          role="button"
+                          tabIndex={0}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleUnlock(index); }}
+                          onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); handleUnlock(index); } }}
+                          className="btn-primary cursor-pointer px-4 py-2 text-xs"
                         >
-                          {unlockingIndex === index ? "처리 중..." : `잠금 해제 (${unlockCost} cr)`}
-                        </button>
+                          {unlockingIndex === index ? "처리 중..." : `${unlockCost} 크레딧으로 열기`}
+                        </span>
                       ) : (
-                        <Link href="/pricing" className="rounded-lg bg-gray-200 px-5 py-2 text-sm font-semibold text-gray-600 hover:bg-gray-300">
+                        <Link href="/pricing" onClick={(e) => e.stopPropagation()} className="btn-secondary px-4 py-2 text-xs">
                           크레딧 충전
                         </Link>
                       )}
                     </div>
                   ) : null}
 
-                  {/* Score */}
+                  {/* 상단: 번호 + 점수 */}
                   <div className="flex items-start justify-between">
-                    <span className={`inline-flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold ${color.icon}`}>
-                      {index + 1}
+                    <span className="text-3xl font-bold tracking-tight text-zinc-600">
+                      {String(index + 1).padStart(2, "0")}
                     </span>
-                    <div className="text-right">
-                      <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400">Market fit</p>
-                      <p className="text-xl font-bold text-emerald-600">{getIdeaScoreLabel(idea, index)}</p>
+                    <ScoreRing score={score} size={48} />
+                  </div>
+
+                  {/* 타이틀 */}
+                  <h3 className="mt-4 text-lg font-bold leading-snug text-white">
+                    {idea.title || `아이디어 ${index + 1}`}
+                  </h3>
+
+                  {/* 한 줄 요약 */}
+                  <p className="mt-2 line-clamp-3 text-sm leading-6 text-zinc-300">
+                    {getIdeaHighlight(idea) || idea.summary || "핵심 가치 제안"}
+                  </p>
+
+                  {/* 상태 */}
+                  {status !== "DRAFT" ? (
+                    <div className="mt-4">
+                      <StatusPill status={status} />
                     </div>
-                  </div>
-
-                  {/* Content */}
-                  <div className="mt-4 space-y-2">
-                    <h3 className="text-base font-bold text-gray-900">{idea.title || `Idea ${index + 1}`}</h3>
-                    <p className="line-clamp-3 text-sm leading-relaxed text-gray-500">
-                      {getIdeaHighlight(idea) || "핵심 가치 제안"}
-                    </p>
-                  </div>
-
-                  {/* Benchmarks */}
-                  <div className="mt-4 flex flex-wrap gap-1.5">
-                    {status === "SELECTED" ? <Badge tone="accent">Selected</Badge> : null}
-                    {status === "SHORTLISTED" ? <Badge tone="success">Shortlisted</Badge> : null}
-                    {getIdeaBenchmarks(idea, []).map((b) => (
-                      <span key={b} className="rounded bg-gray-100 px-2 py-0.5 text-[0.6875rem] text-gray-500">{b}</span>
-                    ))}
-                  </div>
-
-                  {/* Select button */}
-                  {isUnlocked ? (
-                    <button
-                      type="button"
-                      onClick={() => setSelectedIndex(index)}
-                      className={`mt-4 w-full rounded-lg px-4 py-2 text-sm font-medium transition ${
-                        isActive ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                    >
-                      {isActive ? "선택됨" : "자세히 보기"}
-                    </button>
                   ) : null}
+
+                  {/* 액션 라벨 */}
+                  {isUnlocked ? (
+                    <p className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-indigo-300">
+                      자세히 보기 →
+                    </p>
+                  ) : null}
+                </>
+              );
+
+              const baseClass = "group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-left transition-all hover:border-indigo-400/40 hover:bg-white/[0.05] hover:shadow-[0_0_24px_rgba(93,93,255,0.12)]";
+
+              if (isUnlocked && generated?.id) {
+                return (
+                  <Link key={`idea-${index}`} href={`/ideas/${generated.id}`} className={baseClass}>
+                    {cardBody}
+                  </Link>
+                );
+              }
+              return (
+                <div key={`idea-${index}`} className={baseClass}>
+                  {cardBody}
                 </div>
               );
             })}
-          </div>
+          </section>
         )}
-
-        {/* Selected idea detail */}
-        {activeIdea && !loading ? (
-          <Surface className="space-y-6">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">상세 분석</p>
-                <h2 className="text-xl font-bold text-gray-900">{activeIdea.title}</h2>
-                <p className="max-w-2xl text-sm text-gray-500">
-                  {activeIdea.summary || getIdeaHighlight(activeIdea)}
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Badge tone="accent">Fit {getIdeaScoreLabel(activeIdea, selectedIndex)} / 10</Badge>
-                {typeof activeIdea.confidenceScore === "number" ? (
-                  <Badge tone="success">Confidence {(activeIdea.confidenceScore / 10).toFixed(1)}</Badge>
-                ) : null}
-              </div>
-            </div>
-
-            {/* Key metrics */}
-            {targetCustomerItems.length > 0 || businessModelItems.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-2">
-                {targetCustomerItems.length > 0 ? (
-                  <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">타깃 고객</p>
-                    <div className="mt-2 space-y-2">
-                      {targetCustomerItems.map((item) => (
-                        <div key={item.label}>
-                          <p className="text-xs text-gray-400">{item.label}</p>
-                          <p className="text-sm text-gray-900">{item.value}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-                {businessModelItems.length > 0 ? (
-                  <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">수익 모델</p>
-                    <div className="mt-2 space-y-2">
-                      {businessModelItems.map((item) => (
-                        <div key={item.label}>
-                          <p className="text-xs text-gray-400">{item.label}</p>
-                          <p className="text-sm text-gray-900">{item.value}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            ) : null}
-
-            {/* Why Korea */}
-            {getIdeaHighlight(activeIdea) ? (
-              <div className="rounded-xl border border-blue-100 bg-blue-50/50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">왜 지금 한국에서 맞는가</p>
-                <p className="mt-2 text-sm leading-relaxed text-gray-900">{getIdeaHighlight(activeIdea)}</p>
-              </div>
-            ) : null}
-
-            {/* Actions */}
-            <div className="rounded-xl border border-gray-100 bg-gray-50 p-5">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">다음 단계</p>
-              {unlockError ? (
-                <div className="mb-3 rounded-lg border border-red-100 bg-red-50 px-3 py-2 text-sm text-red-700">{unlockError}</div>
-              ) : null}
-              {statusMessage ? (
-                <div className="mb-3 flex flex-wrap items-center gap-3">
-                  <p className="text-sm font-medium text-emerald-600">{statusMessage}</p>
-                  {activeGenerated ? (
-                    <Link href={`/ideas/${activeGenerated.id}`} className="btn-primary text-sm">
-                      아이디어 워크스페이스 열기 →
-                    </Link>
-                  ) : null}
-                </div>
-              ) : null}
-              <div className="flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleStatusChange("SELECTED")}
-                  disabled={statusUpdating || activeGenerated?.status === "SELECTED"}
-                  className="btn-primary text-sm"
-                >
-                  {activeGenerated?.status === "SELECTED" ? "대표안 저장됨" : "프로젝트 대표안으로 저장"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleStatusChange("SHORTLISTED")}
-                  disabled={statusUpdating}
-                  className="btn-secondary text-sm"
-                >
-                  Shortlist 저장
-                </button>
-                {activeGenerated ? (
-                  <Link href={`/ideas/${activeGenerated.id}`} className="btn-secondary text-sm">
-                    아이디어 워크스페이스
-                  </Link>
-                ) : null}
-                {projectId && blueprintCaseId ? (
-                  <Link
-                    href={`/blueprint?projectId=${encodeURIComponent(projectId)}&caseId=${encodeURIComponent(blueprintCaseId)}`}
-                    className="btn-ghost text-sm"
-                  >
-                    Blueprint 만들기
-                  </Link>
-                ) : null}
-              </div>
-            </div>
-          </Surface>
-        ) : null}
       </div>
     </AuthGuard>
   );

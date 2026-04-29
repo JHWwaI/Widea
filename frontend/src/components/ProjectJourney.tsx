@@ -18,90 +18,93 @@ export default function ProjectJourney({
   return (
     <Surface className="space-y-5">
       <SectionHeader
-        eyebrow="Workflow map"
-        title="Where this project stands"
+        eyebrow="워크플로우 진행도"
+        title="이 프로젝트 현재 위치"
         description={workflow.summary}
         action={
           <div className="flex flex-wrap items-center gap-2">
             <Badge tone="accent">{workflow.stageLabel}</Badge>
-            <Badge>{workflow.completionPercent}% complete</Badge>
+            <Badge>{workflow.completionPercent}% 완료</Badge>
           </div>
         }
       />
 
+      {/* 현재 진행 카드 */}
       <div
-        className="rounded-[20px] border border-[var(--line)] bg-white/70 p-4"
+        className="rounded-2xl border border-white/10 bg-white/[0.04] p-5"
         role="progressbar"
-        aria-label="Project workflow completion"
+        aria-label="프로젝트 워크플로우 진행률"
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={workflow.completionPercent}
       >
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-xs uppercase tracking-[0.24em] text-[var(--muted)]">Current focus</p>
-            <p className="mt-2 text-base font-semibold tracking-[-0.03em] text-[var(--ink)]">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <p className="text-[0.7rem] font-semibold uppercase tracking-wider text-zinc-500">
+              현재 집중할 단계
+            </p>
+            <p className="mt-1.5 text-base font-semibold text-white">
               {currentStep.title}
             </p>
-            <p className="mt-1 text-sm leading-7 text-[var(--muted-strong)]">
+            <p className="mt-1.5 text-sm leading-6 text-zinc-300">
               {currentStep.description}
             </p>
           </div>
-          <p className="text-sm font-semibold text-[var(--ink)]">
-            {workflow.completedCount} / {workflow.steps.length} complete
+          <p className="shrink-0 text-sm font-semibold text-indigo-300">
+            {workflow.completedCount} / {workflow.steps.length} 완료
           </p>
         </div>
-        <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-[rgba(29,42,36,0.08)]">
+        <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
           <div
-            className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-300"
-            style={{ width: `${workflow.completionPercent}%` }}
+            className="h-full rounded-full transition-[width] duration-300"
+            style={{
+              width: `${workflow.completionPercent}%`,
+              background: "linear-gradient(90deg, #5D5DFF, #A855F7)",
+            }}
           />
         </div>
       </div>
 
+      {/* 단계 목록 */}
       <ol className={compact ? "grid gap-3 sm:grid-cols-2" : "grid gap-3 xl:grid-cols-4"}>
         {workflow.steps.map((step, index) => {
           const statusLabel =
             step.status === "done"
-              ? "Done"
+              ? "완료"
               : step.status === "current"
-                ? "Now"
-                : "Next";
+                ? "진행 중"
+                : "예정";
 
           return (
             <li
               key={step.key}
               aria-current={step.status === "current" ? "step" : undefined}
               className={cx(
-                "rounded-[20px] border p-4 transition",
-                step.status === "done" &&
-                  "border-[rgba(15,139,122,0.2)] bg-[rgba(236,248,245,0.72)]",
-                step.status === "current" &&
-                  "border-[rgba(231,140,71,0.24)] bg-[rgba(255,245,236,0.82)] shadow-[0_8px_24px_rgba(36,42,34,0.08)]",
-                step.status === "upcoming" && "border-[var(--line)] bg-white/60",
+                "rounded-2xl border p-4 transition-colors",
+                step.status === "done" && "border-emerald-500/30 bg-emerald-500/[0.06]",
+                step.status === "current" && "border-amber-500/40 bg-amber-500/[0.08] shadow-[0_0_24px_rgba(251,191,36,0.12)]",
+                step.status === "upcoming" && "border-white/10 bg-white/[0.03]",
               )}
             >
               <div className="flex items-center justify-between gap-3">
-                <p className="text-xs uppercase tracking-[0.24em] text-[var(--muted)]">
+                <p className="text-[0.65rem] font-semibold uppercase tracking-wider text-zinc-500">
                   Step {index + 1}
                 </p>
                 <span
                   className={cx(
-                    "rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em]",
-                    step.status === "done" &&
-                      "bg-[rgba(15,139,122,0.12)] text-[var(--accent-deep)]",
-                    step.status === "current" &&
-                      "bg-[rgba(231,140,71,0.14)] text-[rgb(152,95,39)]",
-                    step.status === "upcoming" && "bg-[rgba(29,42,36,0.08)] text-[var(--muted)]",
+                    "rounded-full px-2 py-0.5 text-[0.65rem] font-semibold uppercase tracking-wider",
+                    step.status === "done" && "bg-emerald-500/15 text-emerald-300",
+                    step.status === "current" && "bg-amber-500/15 text-amber-300",
+                    step.status === "upcoming" && "bg-white/10 text-zinc-400",
                   )}
                 >
                   {statusLabel}
                 </span>
               </div>
-              <p className="mt-3 text-lg font-semibold tracking-[-0.03em] text-[var(--ink)]">
+              <p className="mt-3 text-base font-semibold text-white">
                 {step.title}
               </p>
-              <p className="mt-2 text-sm leading-7 text-[var(--muted-strong)]">
+              <p className="mt-1.5 text-sm leading-6 text-zinc-300">
                 {step.description}
               </p>
             </li>
@@ -109,19 +112,22 @@ export default function ProjectJourney({
         })}
       </ol>
 
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-[20px] border border-[var(--line)] bg-white/60 p-4">
-        <div>
-          <p className="text-xs uppercase tracking-[0.24em] text-[var(--muted)]">Next action</p>
-          <p className="mt-2 text-base font-semibold tracking-[-0.03em] text-[var(--ink)]">
+      {/* 다음 액션 */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-indigo-400/30 bg-indigo-500/[0.08] p-5">
+        <div className="min-w-0 flex-1">
+          <p className="text-[0.7rem] font-semibold uppercase tracking-wider text-indigo-300">
+            다음 액션
+          </p>
+          <p className="mt-1.5 text-base font-semibold text-white">
             {workflow.nextAction.label}
           </p>
-          <p id="project-next-action-description" className="mt-1 text-sm leading-7 text-[var(--muted-strong)]">
+          <p id="project-next-action-description" className="mt-1.5 text-sm leading-6 text-zinc-300">
             {workflow.nextAction.description}
           </p>
         </div>
         <Link
           href={workflow.nextAction.href}
-          className="btn-secondary"
+          className="btn-primary px-5"
           aria-describedby="project-next-action-description"
         >
           {workflow.nextAction.label}

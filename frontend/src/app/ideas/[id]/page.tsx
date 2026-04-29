@@ -5,6 +5,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
 import { Badge, EmptyState, LoadingState, PageHeader, Surface } from "@/components/ProductUI";
+import GovProgramMatcher from "@/components/GovProgramMatcher";
+import DeepReportTab from "@/components/DeepReportTab";
+import OverviewTeaser from "@/components/OverviewTeaser";
+import ArtifactsPanel from "@/components/ArtifactsPanel";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
 import { readError, teamMemberRoleLabels, teamMemberRoleOptions } from "@/lib/product";
@@ -99,17 +103,17 @@ function InlineEdit({ label, value, placeholder, onSave, onDelete, multiline = t
 
   if (editing) {
     return (
-      <div className="rounded-xl border border-blue-200 bg-blue-50/40 p-4 space-y-2">
+      <div className="rounded-xl border border-indigo-400/40 bg-indigo-500/15 p-4 space-y-2">
         <div className="flex items-center justify-between">
-          <p className="text-xs font-semibold text-blue-600 uppercase tracking-wider">{label}</p>
+          <p className="text-xs font-semibold text-indigo-300 uppercase tracking-wider">{label}</p>
           <div className="flex gap-2">
-            <button type="button" onClick={commit} className="rounded-md bg-blue-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-blue-700">저장</button>
-            <button type="button" onClick={() => { setDraft(value); setEditing(false); }} className="rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-gray-500 border border-gray-200 hover:bg-gray-50">취소</button>
+            <button type="button" onClick={commit} className="rounded-md bg-indigo-500 px-2.5 py-1 text-xs font-semibold text-white hover:bg-indigo-400">저장</button>
+            <button type="button" onClick={() => { setDraft(value); setEditing(false); }} className="rounded-md bg-white/[0.04] px-2.5 py-1 text-xs font-semibold text-zinc-400 border border-white/15 hover:bg-white/[0.04]/5">취소</button>
           </div>
         </div>
         <textarea
           autoFocus
-          className="w-full resize-none rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-blue-300 min-h-[80px]"
+          className="w-full resize-none rounded-lg border border-indigo-400/40 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-indigo-400 min-h-[80px]"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -123,19 +127,19 @@ function InlineEdit({ label, value, placeholder, onSave, onDelete, multiline = t
     <button
       type="button"
       onClick={() => { setDraft(value); setEditing(true); }}
-      className="group w-full rounded-xl border border-gray-100 bg-white p-4 text-left hover:border-blue-200 hover:bg-blue-50/30 transition-colors"
+      className="group w-full rounded-xl border border-white/10 bg-white/[0.04] p-4 text-left hover:border-indigo-400/40 hover:bg-indigo-500/10 transition-colors"
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider group-hover:text-blue-500">{label}</p>
+        <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider group-hover:text-indigo-300">{label}</p>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <span className="rounded px-1.5 py-0.5 text-[0.65rem] text-blue-500 bg-blue-50">편집</span>
+          <span className="rounded px-1.5 py-0.5 text-[0.65rem] text-indigo-300 bg-indigo-500/15">편집</span>
           {onDelete ? (
             <span
               role="button"
               tabIndex={0}
               onClick={(e) => { e.stopPropagation(); onDelete(); }}
               onKeyDown={(e) => e.key === "Enter" && (e.stopPropagation(), onDelete?.())}
-              className="rounded px-1.5 py-0.5 text-[0.65rem] text-red-400 bg-red-50 hover:bg-red-100"
+              className="rounded px-1.5 py-0.5 text-[0.65rem] text-rose-400 bg-rose-500/15 hover:bg-rose-500/25"
             >
               삭제
             </span>
@@ -143,9 +147,9 @@ function InlineEdit({ label, value, placeholder, onSave, onDelete, multiline = t
         </div>
       </div>
       {value ? (
-        <p className="mt-1.5 text-sm text-gray-700 whitespace-pre-wrap leading-6">{value}</p>
+        <p className="mt-1.5 text-sm text-zinc-200 whitespace-pre-wrap leading-6">{value}</p>
       ) : (
-        <p className="mt-1.5 text-sm text-gray-300 italic">{placeholder}</p>
+        <p className="mt-1.5 text-sm text-zinc-600 italic">{placeholder}</p>
       )}
     </button>
   );
@@ -168,12 +172,12 @@ function InlineEditCustom({
   const [draftContent, setDraftContent] = useState(content);
 
   return (
-    <div className="group rounded-xl border border-gray-100 bg-white p-4 space-y-2 hover:border-blue-100 transition-colors">
+    <div className="group rounded-xl border border-white/10 bg-white/[0.04] p-4 space-y-2 hover:border-indigo-400/40 transition-colors">
       <div className="flex items-center justify-between gap-2">
         {editingTitle ? (
           <input
             autoFocus
-            className="flex-1 rounded-lg border border-blue-200 bg-blue-50/40 px-2 py-1 text-sm font-semibold text-gray-900 outline-none focus:ring-2 focus:ring-blue-300"
+            className="flex-1 rounded-lg border border-indigo-400/40 bg-indigo-500/15 px-2 py-1 text-sm font-semibold text-white outline-none focus:ring-2 focus:ring-indigo-400"
             value={draftTitle}
             onChange={(e) => setDraftTitle(e.target.value)}
             onBlur={() => { onSaveTitle(draftTitle); setEditingTitle(false); }}
@@ -188,7 +192,7 @@ function InlineEditCustom({
           <button
             type="button"
             onClick={() => { setDraftTitle(title); setEditingTitle(true); }}
-            className="text-xs font-semibold text-gray-400 uppercase tracking-wider hover:text-blue-500 transition-colors"
+            className="text-xs font-semibold text-zinc-500 uppercase tracking-wider hover:text-indigo-300 transition-colors"
           >
             {title}
           </button>
@@ -196,7 +200,7 @@ function InlineEditCustom({
         <button
           type="button"
           onClick={onDelete}
-          className="opacity-0 group-hover:opacity-100 rounded px-1.5 py-0.5 text-[0.65rem] text-red-400 bg-red-50 hover:bg-red-100 transition-opacity"
+          className="opacity-0 group-hover:opacity-100 rounded px-1.5 py-0.5 text-[0.65rem] text-rose-400 bg-rose-500/15 hover:bg-rose-500/25 transition-opacity"
         >
           삭제
         </button>
@@ -206,15 +210,15 @@ function InlineEditCustom({
         <div className="space-y-2">
           <textarea
             autoFocus
-            className="w-full resize-none rounded-lg border border-blue-200 bg-blue-50/20 px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-blue-300 min-h-[80px]"
+            className="w-full resize-none rounded-lg border border-indigo-400/40 bg-indigo-500/10 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-indigo-400 min-h-[80px]"
             value={draftContent}
             onChange={(e) => setDraftContent(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Escape") { onSaveContent(draftContent); setEditingContent(false); } }}
             placeholder="내용을 입력하세요..."
           />
           <div className="flex gap-2">
-            <button type="button" onClick={() => { onSaveContent(draftContent); setEditingContent(false); }} className="rounded-md bg-blue-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-blue-700">저장</button>
-            <button type="button" onClick={() => { setDraftContent(content); setEditingContent(false); }} className="rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-gray-500 border border-gray-200 hover:bg-gray-50">취소</button>
+            <button type="button" onClick={() => { onSaveContent(draftContent); setEditingContent(false); }} className="rounded-md bg-indigo-500 px-2.5 py-1 text-xs font-semibold text-white hover:bg-indigo-400">저장</button>
+            <button type="button" onClick={() => { setDraftContent(content); setEditingContent(false); }} className="rounded-md bg-white/[0.04] px-2.5 py-1 text-xs font-semibold text-zinc-400 border border-white/15 hover:bg-white/[0.04]/5">취소</button>
           </div>
         </div>
       ) : (
@@ -224,9 +228,9 @@ function InlineEditCustom({
           className="w-full text-left"
         >
           {content ? (
-            <p className="text-sm text-gray-700 whitespace-pre-wrap leading-6">{content}</p>
+            <p className="text-sm text-zinc-200 whitespace-pre-wrap leading-6">{content}</p>
           ) : (
-            <p className="text-sm text-gray-300 italic">클릭해서 내용 입력...</p>
+            <p className="text-sm text-zinc-600 italic">클릭해서 내용 입력...</p>
           )}
         </button>
       )}
@@ -236,22 +240,39 @@ function InlineEditCustom({
 
 /* ── 탭 ─────────────────────────────────────────────── */
 
-type Tab = "overview" | "plan" | "docs" | "team" | "outsource" | "validation";
+type Tab = "overview" | "deep" | "launch" | "plan" | "docs" | "team" | "outsource" | "validation";
 
+// 3개 탭: 개요 (잠금) → 심층 리포트 (분석) → 실행 (도구 + 워크스페이스)
 const TABS: { id: Tab; label: string }[] = [
-  { id: "overview",   label: "개요" },
-  { id: "plan",       label: "기획 · 설계" },
-  { id: "docs",       label: "서류 체크리스트" },
-  { id: "team",       label: "팀 · 회의" },
-  { id: "outsource",  label: "외주 · 컨설팅" },
-  { id: "validation", label: "가설 검증" },
+  { id: "overview", label: "개요" },
+  { id: "deep",     label: "심층 리포트" },
+  { id: "launch",   label: "실행" },
+];
+
+/* ── 한국 외주 평균 시세 (출처: 크몽/위시켓 2024 공개 데이터) ── */
+const OUTSOURCE_RATES = [
+  { item: "MVP 웹 개발 (페이지 5–10개)", range: "8,000,000 – 25,000,000원", source: "크몽/위시켓 평균" },
+  { item: "iOS/Android 앱 (네이티브)",   range: "20,000,000 – 60,000,000원", source: "위시켓 평균" },
+  { item: "UI/UX 풀 디자인 (앱+웹)",     range: "3,000,000 – 12,000,000원", source: "크몽 평균" },
+  { item: "랜딩 페이지 + 카피",          range: "500,000 – 2,500,000원", source: "크몽 평균" },
+  { item: "퍼포먼스 마케팅 셋업",        range: "1,500,000 – 5,000,000원/월", source: "위시켓 평균" },
+  { item: "법인 설립 대행",              range: "300,000 – 700,000원", source: "법무사 평균" },
+];
+
+/* (정적 정부지원사업 리스트는 GovProgramMatcher 컴포넌트가 동적 매칭으로 대체) */
+const _GOVERNMENT_PROGRAMS_DEPRECATED = [
+  { name: "예비창업패키지", agency: "중소벤처기업부", amount: "최대 1억원", url: "https://www.k-startup.go.kr/main.do", note: "창업 3년 이내 예비창업자" },
+  { name: "초기창업패키지", agency: "중소벤처기업부", amount: "최대 1억원", url: "https://www.k-startup.go.kr/main.do", note: "창업 3년 이상 7년 이내" },
+  { name: "TIPS 프로그램",  agency: "중소벤처기업부", amount: "최대 5억원", url: "https://www.jointips.or.kr/", note: "민간 투자 매칭형 R&D" },
+  { name: "사업화 자금",    agency: "창업진흥원",     amount: "최대 7천만원", url: "https://www.k-startup.go.kr/main.do", note: "기술 기반 창업기업 대상" },
+  { name: "청년창업사관학교", agency: "중소벤처기업부", amount: "최대 1억원", url: "https://start.kosmes.or.kr/", note: "만 39세 이하 창업 3년 이내" },
 ];
 
 const DECISION_META: Record<string, { label: string; cls: string }> = {
-  PENDING: { label: "검증 중",  cls: "bg-yellow-50 text-yellow-700 border-yellow-200" },
-  GO:      { label: "GO ✓",    cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  PIVOT:   { label: "PIVOT ↻", cls: "bg-blue-50 text-blue-700 border-blue-200" },
-  HOLD:    { label: "HOLD ✗",  cls: "bg-red-50 text-red-700 border-red-200" },
+  PENDING: { label: "검증 중",  cls: "bg-amber-500/10 text-amber-300 border-amber-500/30" },
+  GO:      { label: "GO ✓",    cls: "bg-emerald-500/10 text-emerald-300 border-emerald-500/30" },
+  PIVOT:   { label: "PIVOT ↻", cls: "bg-indigo-500/15 text-indigo-300 border-indigo-400/40" },
+  HOLD:    { label: "HOLD ✗",  cls: "bg-rose-500/15 text-rose-300 border-rose-500/30" },
 };
 
 /* ── page ────────────────────────────────────────────── */
@@ -582,13 +603,63 @@ export default function IdeaWorkspacePage() {
   );
 
   const sl = statusMeta(idea.status);
-  const benchmarks: string[] = Array.isArray(idea.sourceBenchmarks)
-    ? idea.sourceBenchmarks.flatMap((b) =>
-        typeof b === "string" ? [b]
-        : isRec(b) && typeof b.companyName === "string" ? [b.companyName]
-        : []
-      )
+
+  // 출처 카드용: sourceBenchmarks(이유 포함) × matchedCases(메타데이터) 조인
+  const matchedCaseList: Array<{
+    companyName?: string;
+    industry?: string | null;
+    foundedYear?: number | null;
+    fundingStage?: string | null;
+    revenueModel?: string | null;
+    score?: number;
+  }> = Array.isArray(idea.matchedCases) ? (idea.matchedCases as Array<Record<string, unknown>>).map((c) => ({
+    companyName: typeof c.companyName === "string" ? c.companyName : undefined,
+    industry: typeof c.industry === "string" ? c.industry : null,
+    foundedYear: typeof c.foundedYear === "number" ? c.foundedYear : null,
+    fundingStage: typeof c.fundingStage === "string" ? c.fundingStage : null,
+    revenueModel: typeof c.revenueModel === "string" ? c.revenueModel : null,
+    score: typeof c.score === "number" ? c.score : undefined,
+  })) : [];
+
+  const sourceCards: Array<{
+    companyName: string;
+    why?: string;
+    industry?: string | null;
+    foundedYear?: number | null;
+    fundingStage?: string | null;
+    revenueModel?: string | null;
+    score?: number;
+  }> = Array.isArray(idea.sourceBenchmarks)
+    ? idea.sourceBenchmarks.flatMap((b) => {
+        const name = typeof b === "string" ? b : (isRec(b) && typeof b.companyName === "string" ? b.companyName : "");
+        if (!name) return [];
+        const why = isRec(b) && typeof b.whyReferencedKo === "string" ? b.whyReferencedKo : undefined;
+        const meta = matchedCaseList.find((c) => c.companyName === name);
+        return [{
+          companyName: name,
+          why,
+          industry: meta?.industry ?? null,
+          foundedYear: meta?.foundedYear ?? null,
+          fundingStage: meta?.fundingStage ?? null,
+          revenueModel: meta?.revenueModel ?? null,
+          score: meta?.score,
+        }];
+      })
     : [];
+
+  // 출처 회사명 리스트 (현재 미사용, 향후 메타데이터/공유에 사용)
+  void sourceCards.map((s) => s.companyName);
+
+  // Confidence 점수 분해 (시연용 휴리스틱: 출처 풍부도 + 매칭 점수 평균)
+  const avgMatchScore = matchedCaseList.length > 0
+    ? matchedCaseList.reduce((s, c) => s + (typeof c.score === "number" ? c.score : 0), 0) / matchedCaseList.length
+    : 0;
+  const confidenceBreakdown = {
+    sourceCount: sourceCards.length,
+    matchAvg: Math.round(avgMatchScore * 100),
+    riskCount: Array.isArray(idea.risks) ? idea.risks.length : 0,
+    hasExecution: Array.isArray(idea.executionPlan) && idea.executionPlan.length > 0,
+  };
 
   const blueprintCases: { id: string; name: string }[] = Array.isArray(idea.sourceBenchmarks)
     ? idea.sourceBenchmarks.reduce<{ id: string; name: string }[]>((acc, b) => {
@@ -620,21 +691,27 @@ export default function IdeaWorkspacePage() {
     <AuthGuard>
       <div className="workspace-grid fade-up">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-2 text-sm text-gray-400">
-          <Link href="/mypage" className="hover:text-gray-600">My Page</Link>
+        <div className="flex items-center gap-2 text-sm text-zinc-500">
+          <Link href="/mypage" className="hover:text-zinc-300">My Page</Link>
           <span>/</span>
-          <Link href={`/projects/${idea.projectPolicy.id}`} className="hover:text-gray-600">{idea.projectPolicy.title}</Link>
+          <Link href={`/projects/${idea.projectPolicy.id}`} className="hover:text-zinc-300">{idea.projectPolicy.title}</Link>
           <span>/</span>
-          <span className="text-gray-600 truncate max-w-[200px]">{idea.titleKo}</span>
+          <span className="text-zinc-300 truncate max-w-[200px]">{idea.titleKo}</span>
         </div>
 
         <PageHeader
-          eyebrow="Idea workspace"
+          eyebrow="아이디어 워크스페이스"
           title={idea.titleKo}
           description={idea.oneLinerKo || idea.summaryKo || ""}
           badge={<Badge tone={sl.tone}>{sl.text}</Badge>}
           actions={
             <div className="flex flex-wrap gap-2">
+              <Link
+                href={`/workspace/${idea.id}`}
+                className="rounded-md border border-violet-400/40 bg-violet-500/10 px-4 py-2 text-sm font-semibold text-violet-200 hover:bg-violet-500/20"
+              >
+                🗂 워크스페이스 →
+              </Link>
               <button type="button" disabled={saving || idea.status === "SELECTED"} onClick={() => handleStatus("SELECTED")} className="btn-primary px-4 py-2 text-sm">
                 {idea.status === "SELECTED" ? "대표 아이디어 ✓" : "대표 아이디어로 선정"}
               </button>
@@ -648,35 +725,10 @@ export default function IdeaWorkspacePage() {
           }
         />
 
-        {saveMsg ? <Surface className="border-emerald-100 bg-emerald-50 text-emerald-700 py-3">{saveMsg}</Surface> : null}
-
-        {/* 진행 현황 요약 */}
-        <div className="grid gap-3 sm:grid-cols-3">
-          <button type="button" onClick={() => setTab("plan")} className="group rounded-xl border border-gray-100 bg-white p-4 text-left shadow-sm hover:border-blue-200 hover:shadow">
-            <p className="eyebrow">기획 · 설계</p>
-            <p className="mt-1 text-2xl font-bold text-gray-900">{planFilled} / {PLAN_FIELDS.length}</p>
-            <p className="text-xs text-gray-400">항목 작성 완료</p>
-            <div className="mt-2 h-1.5 w-full rounded-full bg-gray-100">
-              <div className="h-1.5 rounded-full bg-blue-500 transition-all" style={{ width: `${(planFilled / PLAN_FIELDS.length) * 100}%` }} />
-            </div>
-          </button>
-          <button type="button" onClick={() => setTab("docs")} className="group rounded-xl border border-gray-100 bg-white p-4 text-left shadow-sm hover:border-blue-200 hover:shadow">
-            <p className="eyebrow">서류 체크리스트</p>
-            <p className="mt-1 text-2xl font-bold text-gray-900">{doneCount} / {totalDocs}</p>
-            <p className="text-xs text-gray-400">서류 완료</p>
-            <div className="mt-2 h-1.5 w-full rounded-full bg-gray-100">
-              <div className="h-1.5 rounded-full bg-emerald-500 transition-all" style={{ width: `${(doneCount / totalDocs) * 100}%` }} />
-            </div>
-          </button>
-          <button type="button" onClick={() => setTab("team")} className="group rounded-xl border border-gray-100 bg-white p-4 text-left shadow-sm hover:border-blue-200 hover:shadow">
-            <p className="eyebrow">팀</p>
-            <p className="mt-1 text-2xl font-bold text-gray-900">{teamMembers.length}</p>
-            <p className="text-xs text-gray-400">팀원 수 (회의 {meetings.length}개)</p>
-          </button>
-        </div>
+        {saveMsg ? <Surface className="border-emerald-500/30 bg-emerald-500/10 text-emerald-300 py-3">{saveMsg}</Surface> : null}
 
         {/* 탭 */}
-        <div className="border-b border-gray-200">
+        <div className="border-b border-white/15" data-print="hide">
           <div className="flex gap-1 overflow-x-auto">
             {TABS.map((t) => (
               <button
@@ -685,8 +737,8 @@ export default function IdeaWorkspacePage() {
                 onClick={() => setTab(t.id)}
                 className={`shrink-0 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
                   tab === t.id
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700"
+                    ? "border-indigo-400 text-indigo-300"
+                    : "border-transparent text-zinc-400 hover:text-zinc-200"
                 }`}
               >
                 {t.label}
@@ -695,159 +747,16 @@ export default function IdeaWorkspacePage() {
           </div>
         </div>
 
-        {/* ── 탭: 개요 ──────────────────────────────────── */}
+        {/* ── 탭: 개요 (야무진 요약 + 심층 리포트 진입) ──────── */}
         {tab === "overview" && (
-          <div className="space-y-4">
-            {/* 점수 */}
-            <Surface className="space-y-3">
-              <p className="eyebrow">AI 분석 요약</p>
-              <div className="flex flex-wrap gap-6">
-                {typeof idea.marketFitScore === "number" ? (
-                  <div>
-                    <p className="text-3xl font-bold text-emerald-600">{idea.marketFitScore}</p>
-                    <p className="text-xs text-gray-400">Market Fit Score</p>
-                  </div>
-                ) : null}
-                {typeof idea.confidenceScore === "number" ? (
-                  <div>
-                    <p className="text-3xl font-bold text-blue-600">{idea.confidenceScore}</p>
-                    <p className="text-xs text-gray-400">Confidence Score</p>
-                  </div>
-                ) : null}
-              </div>
-              {benchmarks.length > 0 ? (
-                <div>
-                  <p className="mb-2 text-xs text-gray-400 uppercase tracking-wider">참고 벤치마크</p>
-                  <div className="flex flex-wrap gap-2">
-                    {benchmarks.map((n) => <span key={n} className="chip">{n}</span>)}
-                  </div>
-                </div>
-              ) : null}
-            </Surface>
-
-            {idea.whyNowInKoreaKo ? (
-              <Surface className="space-y-2">
-                <p className="eyebrow">Why now in Korea</p>
-                <p className="text-sm leading-7 text-gray-700">{idea.whyNowInKoreaKo}</p>
-              </Surface>
-            ) : null}
-
-            <div className="grid gap-4 md:grid-cols-2">
-              {idea.targetCustomer ? (
-                <Surface className="space-y-3">
-                  <p className="eyebrow">Target customer</p>
-                  <dl className="space-y-2">
-                    {[
-                      { label: "페르소나",    value: str(idea.targetCustomer, "personaKo", "persona") },
-                      { label: "연령대",      value: str(idea.targetCustomer, "ageGroupKo", "age") },
-                      { label: "핵심 문제",   value: str(idea.targetCustomer, "corePainKo", "pain") },
-                      { label: "구매 트리거", value: str(idea.targetCustomer, "buyingTriggerKo") },
-                    ].filter((r) => r.value).map(({ label, value }) => (
-                      <div key={label} className="rounded-lg border border-gray-100 bg-white px-3 py-2.5">
-                        <dt className="text-xs text-gray-400">{label}</dt>
-                        <dd className="mt-0.5 text-sm font-medium text-gray-900">{value}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                </Surface>
-              ) : null}
-
-              {idea.businessModel ? (
-                <Surface className="space-y-3">
-                  <p className="eyebrow">Business model</p>
-                  <dl className="space-y-2">
-                    {[
-                      { label: "수익 모델",  value: str(idea.businessModel, "modelKo", "type") },
-                      { label: "가격 전략",  value: str(idea.businessModel, "pricingKo", "pricing") },
-                      { label: "예상 MRR",   value: str(idea.businessModel, "estimatedMRR") },
-                      { label: "확장 전략",  value: str(idea.businessModel, "expansionKo") },
-                    ].filter((r) => r.value).map(({ label, value }) => (
-                      <div key={label} className="rounded-lg border border-gray-100 bg-white px-3 py-2.5">
-                        <dt className="text-xs text-gray-400">{label}</dt>
-                        <dd className="mt-0.5 text-sm font-medium text-gray-900">{value}</dd>
-                      </div>
-                    ))}
-                  </dl>
-                </Surface>
-              ) : null}
-            </div>
-
-            {execSteps.length > 0 ? (
-              <Surface className="space-y-4">
-                <p className="eyebrow">Execution roadmap</p>
-                <div className="space-y-3">
-                  {execSteps.map((step, i) => {
-                    const phase   = str(step, "phase") ?? `Phase ${i + 1}`;
-                    const title   = str(step, "title", "goalKo");
-                    const duration = str(step, "duration");
-                    const kpi     = str(step, "kpiKo", "kpi");
-                    const actions = Array.isArray(step.actionsKo) ? (step.actionsKo as string[])
-                      : Array.isArray(step.actions) ? (step.actions as string[]) : [];
-                    return (
-                      <div key={i} className="rounded-xl border border-gray-100 bg-white p-4">
-                        <div className="flex flex-wrap items-start justify-between gap-2">
-                          <div>
-                            <span className="badge badge-accent">{phase}</span>
-                            {title ? <h3 className="mt-1.5 text-sm font-semibold text-gray-900">{title}</h3> : null}
-                          </div>
-                          <div className="flex gap-2">
-                            {duration ? <Badge tone="neutral">{duration}</Badge> : null}
-                            {kpi ? <Badge tone="success">KPI: {kpi}</Badge> : null}
-                          </div>
-                        </div>
-                        {actions.length > 0 ? (
-                          <ul className="mt-2 space-y-1">
-                            {actions.map((a, j) => (
-                              <li key={j} className="flex items-start gap-2 text-sm text-gray-600">
-                                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
-                                {a}
-                              </li>
-                            ))}
-                          </ul>
-                        ) : null}
-                      </div>
-                    );
-                  })}
-                </div>
-              </Surface>
-            ) : null}
-
-            {risks.length > 0 ? (
-              <Surface className="space-y-3">
-                <p className="eyebrow">Risk analysis</p>
-                <div className="space-y-2">
-                  {risks.map((risk, i) => (
-                    <div key={i} className="rounded-xl border border-orange-100 bg-orange-50/50 p-3">
-                      <div className="flex flex-wrap items-start justify-between gap-2">
-                        <p className="text-sm font-semibold text-gray-900">{str(risk, "riskKo", "risk")}</p>
-                        {str(risk, "impact") ? <Badge tone="warning">{str(risk, "impact")}</Badge> : null}
-                      </div>
-                      {str(risk, "mitigationKo", "mitigation") ? (
-                        <p className="mt-1.5 text-sm text-gray-600">
-                          <span className="font-medium text-emerald-700">대응: </span>
-                          {str(risk, "mitigationKo", "mitigation")}
-                        </p>
-                      ) : null}
-                    </div>
-                  ))}
-                </div>
-              </Surface>
-            ) : null}
-
-            {/* 다음 단계 */}
-            <Surface className="space-y-3">
-              <p className="eyebrow">Next steps</p>
-              <div className="flex flex-wrap gap-2">
-                <button type="button" onClick={() => setTab("plan")} className="btn-primary px-4 py-2 text-sm">기획 설계 작성하기</button>
-                <button type="button" onClick={() => setTab("docs")} className="btn-secondary px-4 py-2 text-sm">서류 체크리스트</button>
-                <button type="button" onClick={() => setTab("team")} className="btn-secondary px-4 py-2 text-sm">팀원 모집</button>
-                <Link href={blueprintUrl} className="btn-secondary px-4 py-2 text-sm">
-                  Blueprint 만들기
-                </Link>
-              </div>
-            </Surface>
-          </div>
+          <OverviewTeaser
+            idea={idea}
+            sourceCards={sourceCards}
+            confidenceBreakdown={confidenceBreakdown}
+            onOpenDeep={() => setTab("deep")}
+          />
         )}
+
 
         {/* ── 탭: 기획 · 설계 ───────────────────────────── */}
         {tab === "plan" && (
@@ -855,21 +764,21 @@ export default function IdeaWorkspacePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="eyebrow">기획 · 설계</p>
-                <h2 className="text-lg font-semibold text-gray-900">사업 기획서</h2>
+                <h2 className="text-lg font-semibold text-white">사업 기획서</h2>
               </div>
-              <p className="text-xs text-gray-400">클릭해서 편집 · 자동 저장</p>
+              <p className="text-xs text-zinc-500">클릭해서 편집 · 자동 저장</p>
             </div>
 
             {/* AI 참고 자료 요약 */}
-            <details className="group rounded-xl border border-gray-100 bg-gray-50 px-5 py-3">
-              <summary className="cursor-pointer text-sm font-medium text-gray-600 group-open:text-gray-900">
+            <details className="group rounded-xl border border-white/10 bg-white/[0.04]/5 px-5 py-3">
+              <summary className="cursor-pointer text-sm font-medium text-zinc-300 group-open:text-white">
                 AI 분석 참고 자료 펼치기 →
               </summary>
-              <div className="mt-3 grid gap-2 text-xs text-gray-500">
-                {idea.oneLinerKo ? <p><span className="font-semibold text-gray-700">One-liner: </span>{idea.oneLinerKo}</p> : null}
-                {idea.whyNowInKoreaKo ? <p><span className="font-semibold text-gray-700">Why now: </span>{idea.whyNowInKoreaKo}</p> : null}
-                {str(idea.targetCustomer, "personaKo", "persona") ? <p><span className="font-semibold text-gray-700">고객: </span>{str(idea.targetCustomer, "personaKo", "persona")}</p> : null}
-                {str(idea.businessModel, "modelKo", "type") ? <p><span className="font-semibold text-gray-700">수익: </span>{str(idea.businessModel, "modelKo", "type")}</p> : null}
+              <div className="mt-3 grid gap-2 text-xs text-zinc-400">
+                {idea.oneLinerKo ? <p><span className="font-semibold text-zinc-200">One-liner: </span>{idea.oneLinerKo}</p> : null}
+                {idea.whyNowInKoreaKo ? <p><span className="font-semibold text-zinc-200">지금 해야 하는 이유: </span>{idea.whyNowInKoreaKo}</p> : null}
+                {str(idea.targetCustomer, "personaKo", "persona") ? <p><span className="font-semibold text-zinc-200">고객: </span>{str(idea.targetCustomer, "personaKo", "persona")}</p> : null}
+                {str(idea.businessModel, "modelKo", "type") ? <p><span className="font-semibold text-zinc-200">수익: </span>{str(idea.businessModel, "modelKo", "type")}</p> : null}
               </div>
             </details>
 
@@ -902,7 +811,7 @@ export default function IdeaWorkspacePage() {
             <button
               type="button"
               onClick={addCustomSection}
-              className="flex w-full items-center gap-2 rounded-xl border border-dashed border-gray-200 px-4 py-3 text-sm text-gray-400 hover:border-blue-300 hover:text-blue-500 transition-colors"
+              className="flex w-full items-center gap-2 rounded-xl border border-dashed border-white/15 px-4 py-3 text-sm text-zinc-500 hover:border-indigo-400/60 hover:text-indigo-300 transition-colors"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -923,39 +832,39 @@ export default function IdeaWorkspacePage() {
           <div className="space-y-4">
             <Surface className="space-y-2">
               <p className="eyebrow">서류 체크리스트</p>
-              <h2 className="text-lg font-semibold text-gray-900">필요 서류 준비 현황</h2>
-              <p className="text-sm text-gray-500">
+              <h2 className="text-lg font-semibold text-white">필요 서류 준비 현황</h2>
+              <p className="text-sm text-zinc-400">
                 창업에 필요한 서류를 단계별로 확인하세요. 체크 상태는 브라우저에 저장됩니다.
               </p>
               <div className="flex items-center gap-3 pt-1">
-                <div className="h-2 flex-1 rounded-full bg-gray-100">
+                <div className="h-2 flex-1 rounded-full bg-white/[0.04]/10">
                   <div
-                    className="h-2 rounded-full bg-emerald-500 transition-all"
+                    className="h-2 rounded-full bg-emerald-400 transition-all"
                     style={{ width: `${(doneCount / totalDocs) * 100}%` }}
                   />
                 </div>
-                <span className="text-sm font-semibold text-gray-700">{doneCount} / {totalDocs}</span>
+                <span className="text-sm font-semibold text-zinc-200">{doneCount} / {totalDocs}</span>
               </div>
             </Surface>
 
             {DOC_GROUPS.map((group) => (
               <Surface key={group.label} className="space-y-3">
-                <p className="text-sm font-bold text-gray-700">{group.label}</p>
+                <p className="text-sm font-bold text-zinc-200">{group.label}</p>
                 <ul className="space-y-2">
                   {group.items.map((item) => (
                     <li key={item}>
-                      <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-gray-100 bg-gray-50 px-4 py-3 hover:bg-white">
+                      <label className="flex cursor-pointer items-center gap-3 rounded-lg border border-white/10 bg-white/[0.04]/5 px-4 py-3 hover:bg-white/[0.04]">
                         <input
                           type="checkbox"
                           checked={!!checked[item]}
                           onChange={() => toggleDoc(item)}
-                          className="h-4 w-4 rounded accent-blue-600"
+                          className="h-4 w-4 rounded accent-indigo-500"
                         />
-                        <span className={`text-sm ${checked[item] ? "text-gray-400 line-through" : "text-gray-800"}`}>
+                        <span className={`text-sm ${checked[item] ? "text-zinc-500 line-through" : "text-zinc-100"}`}>
                           {item}
                         </span>
                         {checked[item] ? (
-                          <span className="ml-auto text-xs font-semibold text-emerald-600">완료</span>
+                          <span className="ml-auto text-xs font-semibold text-emerald-300">완료</span>
                         ) : null}
                       </label>
                     </li>
@@ -976,29 +885,29 @@ export default function IdeaWorkspacePage() {
         {tab === "team" && (
           <div className="space-y-4">
             {collabError ? (
-              <Surface className="border-red-100 bg-red-50 py-3 text-red-700">{collabError}</Surface>
+              <Surface className="border-rose-500/30 bg-rose-500/15 py-3 text-rose-300">{collabError}</Surface>
             ) : null}
 
             {/* 팀원 목록 */}
             <Surface className="space-y-4">
               <div>
-                <p className="eyebrow">Team</p>
-                <h2 className="text-lg font-semibold text-gray-900">팀원 관리</h2>
+                <p className="eyebrow">팀 관리</p>
+                <h2 className="text-lg font-semibold text-white">팀원 관리</h2>
               </div>
 
               {teamMembers.length > 0 ? (
-                <div className="divide-y divide-gray-50">
+                <div className="divide-y divide-white/5">
                   {teamMembers.map((member) => (
                     <div key={member.id} className="flex items-center justify-between gap-3 py-3">
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{member.user?.name || member.email}</p>
-                        <p className="text-xs text-gray-400">
+                        <p className="text-sm font-medium text-white">{member.user?.name || member.email}</p>
+                        <p className="text-xs text-zinc-500">
                           {member.email} · {teamMemberRoleLabels[member.role] || member.role}
                           {member.status === "INVITED" ? " · 초대 대기 중" : " · 합류됨"}
                         </p>
-                        {member.bio ? <p className="text-xs text-gray-500">{member.bio}</p> : null}
+                        {member.bio ? <p className="text-xs text-zinc-400">{member.bio}</p> : null}
                       </div>
-                      <button type="button" onClick={() => handleRemoveMember(member.id)} className="btn-ghost px-3 py-1 text-xs text-red-400">제거</button>
+                      <button type="button" onClick={() => handleRemoveMember(member.id)} className="btn-ghost px-3 py-1 text-xs text-rose-400">제거</button>
                     </div>
                   ))}
                 </div>
@@ -1009,8 +918,8 @@ export default function IdeaWorkspacePage() {
                 />
               )}
 
-              <form onSubmit={handleInvite} className="space-y-3 border-t border-gray-100 pt-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">팀원 초대</p>
+              <form onSubmit={handleInvite} className="space-y-3 border-t border-white/10 pt-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">팀원 초대</p>
                 <div className="flex gap-2">
                   <input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} className="input flex-1" placeholder="이메일" required />
                   <select value={inviteRole} onChange={(e) => setInviteRole(e.target.value)} className="select w-32">
@@ -1026,34 +935,34 @@ export default function IdeaWorkspacePage() {
             {/* 회의실 */}
             <Surface className="space-y-4">
               <div>
-                <p className="eyebrow">Meetings</p>
-                <h2 className="text-lg font-semibold text-gray-900">회의실 · 미팅 링크</h2>
-                <p className="mt-1 text-sm text-gray-400">Jitsi 기반 — 링크를 공유하면 누구든 바로 입장할 수 있습니다.</p>
+                <p className="eyebrow">회의·미팅</p>
+                <h2 className="text-lg font-semibold text-white">회의실 · 미팅 링크</h2>
+                <p className="mt-1 text-sm text-zinc-500">Jitsi 기반 — 링크를 공유하면 누구든 바로 입장할 수 있습니다.</p>
               </div>
 
               {meetings.length > 0 ? (
                 <div className="space-y-2">
                   {meetings.map((meeting) => (
-                    <div key={meeting.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-gray-100 bg-white p-4">
+                    <div key={meeting.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-4">
                       <div>
-                        <p className="text-sm font-semibold text-gray-900">{meeting.title}</p>
-                        {meeting.agenda ? <p className="text-xs text-gray-500">{meeting.agenda}</p> : null}
+                        <p className="text-sm font-semibold text-white">{meeting.title}</p>
+                        {meeting.agenda ? <p className="text-xs text-zinc-400">{meeting.agenda}</p> : null}
                         {meeting.scheduledAt ? (
-                          <p className="text-xs text-gray-400">예정: {new Date(meeting.scheduledAt).toLocaleString("ko-KR")}</p>
+                          <p className="text-xs text-zinc-500">예정: {new Date(meeting.scheduledAt).toLocaleString("ko-KR")}</p>
                         ) : null}
                       </div>
                       <div className="flex gap-2">
                         <a href={meeting.roomUrl} target="_blank" rel="noopener noreferrer" className="btn-primary px-4 py-1.5 text-sm">입장</a>
                         <button type="button" onClick={() => navigator.clipboard.writeText(meeting.roomUrl)} className="btn-secondary px-4 py-1.5 text-sm">링크 복사</button>
-                        <button type="button" onClick={() => handleDeleteMeeting(meeting.id)} className="btn-ghost px-3 py-1.5 text-sm text-red-400">삭제</button>
+                        <button type="button" onClick={() => handleDeleteMeeting(meeting.id)} className="btn-ghost px-3 py-1.5 text-sm text-rose-400">삭제</button>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : null}
 
-              <form onSubmit={handleCreateMeeting} className="space-y-3 border-t border-gray-100 pt-4">
-                <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">새 회의 개설</p>
+              <form onSubmit={handleCreateMeeting} className="space-y-3 border-t border-white/10 pt-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-zinc-400">새 회의 개설</p>
                 <input value={meetingTitle} onChange={(e) => setMeetingTitle(e.target.value)} className="input" placeholder="회의 제목" required />
                 <textarea value={meetingAgenda} onChange={(e) => setMeetingAgenda(e.target.value)} className="textarea" placeholder="아젠다 (선택)" rows={2} />
                 <input type="datetime-local" value={meetingSchedule} onChange={(e) => setMeetingSchedule(e.target.value)} className="input" />
@@ -1066,8 +975,8 @@ export default function IdeaWorkspacePage() {
             {/* Slack/Discord */}
             <Surface className="space-y-4">
               <div>
-                <p className="eyebrow">Integrations</p>
-                <h2 className="text-lg font-semibold text-gray-900">Slack / Discord 알림</h2>
+                <p className="eyebrow">알림 연동</p>
+                <h2 className="text-lg font-semibold text-white">Slack / Discord 알림</h2>
               </div>
               <form onSubmit={handleSaveWebhooks} className="space-y-3">
                 <div>
@@ -1080,10 +989,22 @@ export default function IdeaWorkspacePage() {
                 </div>
                 <div className="flex items-center gap-3">
                   <button type="submit" disabled={savingWebhooks} className="btn-primary px-5 py-2.5">{savingWebhooks ? "저장 중..." : "저장"}</button>
-                  {(webhooks.slackWebhookUrl || webhooks.discordWebhookUrl) ? <span className="text-xs text-emerald-600">연동 설정됨 ✓</span> : null}
+                  {(webhooks.slackWebhookUrl || webhooks.discordWebhookUrl) ? <span className="text-xs text-emerald-300">연동 설정됨 ✓</span> : null}
                 </div>
               </form>
             </Surface>
+          </div>
+        )}
+
+        {/* ── 탭: 심층 리포트 ─────────────────────────────── */}
+        {tab === "deep" && (
+          <DeepReportTab ideaId={idea.id} onLaunch={() => setTab("launch")} />
+        )}
+
+        {/* ── 탭: 실행 (도구 3종 + 워크스페이스 배포) ───── */}
+        {tab === "launch" && (
+          <div className="mx-auto max-w-3xl py-4">
+            <ArtifactsPanel ideaId={idea.id} />
           </div>
         )}
 
@@ -1092,13 +1013,13 @@ export default function IdeaWorkspacePage() {
         {tab === "validation" && (
           <div className="space-y-4" ref={(el) => { if (el) loadValidationTab(); }}>
             <Surface className="space-y-2">
-              <p className="eyebrow">Validation Ledger</p>
-              <h2 className="text-lg font-semibold text-gray-900">가설 검증 트래커</h2>
-              <p className="text-sm text-gray-500">블루프린트별 핵심 가설을 스프린트 단위로 검증하고 GO / PIVOT / HOLD를 기록합니다.</p>
+              <p className="eyebrow">가설 검증 트래커</p>
+              <h2 className="text-lg font-semibold text-white">가설 검증 트래커</h2>
+              <p className="text-sm text-zinc-400">블루프린트별 핵심 가설을 스프린트 단위로 검증하고 GO / PIVOT / HOLD를 기록합니다.</p>
             </Surface>
 
             {vlError ? (
-              <Surface className="border-red-100 bg-red-50 text-sm text-red-700">{vlError}</Surface>
+              <Surface className="border-rose-500/30 bg-rose-500/15 text-sm text-rose-300">{vlError}</Surface>
             ) : null}
 
             {vlBlueprints.length === 0 && !vlLoading ? (
@@ -1118,7 +1039,7 @@ export default function IdeaWorkspacePage() {
                 {/* 블루프린트 선택 */}
                 {vlBlueprints.length > 1 && (
                   <Surface className="space-y-2">
-                    <p className="text-sm font-medium text-gray-700">블루프린트 선택</p>
+                    <p className="text-sm font-medium text-zinc-200">블루프린트 선택</p>
                     <div className="flex flex-wrap gap-2">
                       {vlBlueprints.map((bp) => (
                         <button
@@ -1139,7 +1060,7 @@ export default function IdeaWorkspacePage() {
 
                 {/* 가설 추가 폼 */}
                 <Surface className="space-y-3">
-                  <p className="text-sm font-semibold text-gray-800">새 가설 추가</p>
+                  <p className="text-sm font-semibold text-zinc-100">새 가설 추가</p>
                   <form onSubmit={handleVlAdd} className="grid gap-3">
                     <div>
                       <label className="field-label">가설 (Hypothesis)</label>
@@ -1174,7 +1095,7 @@ export default function IdeaWorkspacePage() {
                   <Surface><EmptyState title="등록된 가설이 없습니다" description="위 폼으로 첫 가설을 추가해보세요." /></Surface>
                 ) : (
                   <Surface className="space-y-3">
-                    <p className="text-sm font-semibold text-gray-800">검증 목록 ({validations.length}건)</p>
+                    <p className="text-sm font-semibold text-zinc-100">검증 목록 ({validations.length}건)</p>
                     <div className="divide-y divide-gray-100">
                       {validations.map((v) => {
                         const meta = DECISION_META[v.decisionStatus] ?? DECISION_META.PENDING;
@@ -1184,15 +1105,15 @@ export default function IdeaWorkspacePage() {
                             <div className="flex items-start justify-between gap-3">
                               <div className="space-y-1 min-w-0 flex-1">
                                 <div className="flex items-center gap-2 flex-wrap">
-                                  <span className="text-xs text-gray-400">Sprint {v.sprintRound}</span>
+                                  <span className="text-xs text-zinc-500">Sprint {v.sprintRound}</span>
                                   <span className={`rounded border px-2 py-0.5 text-xs font-medium ${meta.cls}`}>{meta.label}</span>
                                 </div>
-                                <p className="text-sm font-medium text-gray-900">{v.hypothesis}</p>
+                                <p className="text-sm font-medium text-white">{v.hypothesis}</p>
                                 {v.actionItem && (
-                                  <p className="text-xs text-gray-500">액션: {v.actionItem}</p>
+                                  <p className="text-xs text-zinc-400">액션: {v.actionItem}</p>
                                 )}
                                 {v.resultData && typeof (v.resultData as Record<string, unknown>).note === "string" && (
-                                  <p className="text-xs text-gray-600 bg-gray-50 rounded p-2 mt-1">
+                                  <p className="text-xs text-zinc-300 bg-white/[0.04]/5 rounded p-2 mt-1">
                                     결과: {String((v.resultData as Record<string, unknown>).note)}
                                   </p>
                                 )}
@@ -1200,7 +1121,7 @@ export default function IdeaWorkspacePage() {
                               <button
                                 type="button"
                                 onClick={() => handleVlDelete(v.id)}
-                                className="shrink-0 text-xs text-gray-300 hover:text-red-400"
+                                className="shrink-0 text-xs text-zinc-600 hover:text-rose-400"
                               >
                                 삭제
                               </button>
@@ -1242,7 +1163,7 @@ export default function IdeaWorkspacePage() {
                                   setVlEditId(v.id);
                                   setVlEditResult(String((v.resultData as Record<string, unknown> | null)?.note ?? ""));
                                 }}
-                                className="text-xs text-blue-500 hover:underline"
+                                className="text-xs text-indigo-300 hover:underline"
                               >
                                 {v.resultData ? "결과 수정" : "+ 결과 메모 추가"}
                               </button>
@@ -1261,32 +1182,128 @@ export default function IdeaWorkspacePage() {
         {tab === "outsource" && (
           <div className="space-y-4">
             <Surface className="space-y-2">
-              <p className="eyebrow">외주 · 컨설팅</p>
-              <h2 className="text-lg font-semibold text-gray-900">외주 구인 · AC 컨설팅 요청</h2>
-              <p className="text-sm text-gray-500">
-                커뮤니티에 글을 올려 외주 개발자·디자이너를 구하거나, 액셀러레이터 컨설팅을 요청하세요.
+              <p className="eyebrow">실행 지원</p>
+              <h2 className="text-lg font-semibold text-white">서류 · 외주 시세 · 정부지원 · 컨설팅</h2>
+              <p className="text-sm text-zinc-400">
+                MVP 출시까지 필요한 비용 견적, 매칭 가능한 정부지원사업, 외주·AC 매칭 채널을 한 화면에서 확인합니다.
               </p>
+              <div className="flex flex-wrap gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="btn-primary px-4 py-2 text-sm"
+                >
+                  📄 창업 설계서 PDF 다운로드
+                </button>
+                <Link
+                  href={`/community/new?category=OUTSOURCE_REQUEST&ref=${idea.id}&title=${encodeURIComponent(`[외주구인] ${idea.titleKo}`)}`}
+                  className="btn-secondary px-4 py-2 text-sm"
+                >
+                  외주 구인 글 작성
+                </Link>
+                <Link
+                  href={`/community/new?category=AC_REQUEST&ref=${idea.id}&title=${encodeURIComponent(`[AC컨설팅] ${idea.titleKo}`)}`}
+                  className="btn-secondary px-4 py-2 text-sm"
+                >
+                  AC 컨설팅 요청
+                </Link>
+              </div>
             </Surface>
 
+            {/* AI 추정 예산 (idea.estimatedCost) */}
+            {idea.estimatedCost && isRec(idea.estimatedCost) ? (
+              <Surface className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="eyebrow">AI 추정 예산</p>
+                  <Badge tone="accent">근거: 글로벌 벤치마크 + 한국 외주 시세</Badge>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {str(idea.estimatedCost, "buildKo") ? (
+                    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+                      <p className="text-xs uppercase tracking-wider text-zinc-500">초기 구축 비용</p>
+                      <p className="mt-1.5 text-sm text-zinc-200 leading-6">{str(idea.estimatedCost, "buildKo")}</p>
+                    </div>
+                  ) : null}
+                  {str(idea.estimatedCost, "opsKo") ? (
+                    <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4">
+                      <p className="text-xs uppercase tracking-wider text-zinc-500">월 운영 비용</p>
+                      <p className="mt-1.5 text-sm text-zinc-200 leading-6">{str(idea.estimatedCost, "opsKo")}</p>
+                    </div>
+                  ) : null}
+                </div>
+                {str(idea.estimatedCost, "notesKo") ? (
+                  <p className="text-xs leading-relaxed text-zinc-500">
+                    ⓘ {str(idea.estimatedCost, "notesKo")}
+                  </p>
+                ) : null}
+              </Surface>
+            ) : null}
+
+            {/* 한국 외주 평균 시세 (출처 명시) */}
+            <Surface className="space-y-3">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="eyebrow">한국 외주 평균 시세</p>
+                  <p className="mt-0.5 text-xs text-zinc-500">크몽 · 위시켓 · 법무사 공개 데이터 기반 (2024년 평균)</p>
+                </div>
+              </div>
+              <div className="overflow-x-auto rounded-xl border border-white/10">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-white/10 bg-white/[0.03] text-left text-xs uppercase tracking-wider text-zinc-500">
+                      <th className="px-4 py-2.5 font-medium">항목</th>
+                      <th className="px-4 py-2.5 font-medium">시세 범위</th>
+                      <th className="px-4 py-2.5 font-medium">출처</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {OUTSOURCE_RATES.map((row) => (
+                      <tr key={row.item} className="hover:bg-white/[0.03]">
+                        <td className="px-4 py-3 text-zinc-200">{row.item}</td>
+                        <td className="px-4 py-3 font-semibold text-indigo-200">{row.range}</td>
+                        <td className="px-4 py-3 text-xs text-zinc-500">{row.source}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="flex flex-wrap gap-2 pt-1">
+                <a
+                  href="https://kmong.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-medium text-indigo-300 hover:text-indigo-200"
+                >
+                  크몽에서 견적 받기 →
+                </a>
+                <a
+                  href="https://www.wishket.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs font-medium text-indigo-300 hover:text-indigo-200"
+                >
+                  위시켓에서 견적 받기 →
+                </a>
+              </div>
+            </Surface>
+
+            {/* 🆕 정부지원사업 자동 매칭 + AI 신청서 작성 */}
+            <GovProgramMatcher ideaId={idea.id} />
+
+            {/* 외주 구인 + AC 컨설팅 */}
             <div className="grid gap-4 sm:grid-cols-2">
-              {/* 외주 구인 */}
-              <Surface className="space-y-4">
+              <Surface className="space-y-3">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-50">
-                    <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-500/15">
+                    <svg className="h-5 w-5 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">외주 구인</h3>
-                    <p className="text-sm text-gray-500">개발·디자인·마케팅 등 프리랜서·외주 업체를 찾습니다.</p>
+                    <h3 className="font-semibold text-white">외주 구인</h3>
+                    <p className="text-sm text-zinc-400">커뮤니티에 글을 올려 프리랜서·외주 업체를 찾습니다.</p>
                   </div>
                 </div>
-                <ul className="space-y-1.5 text-sm text-gray-600">
-                  <li className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-blue-400" />MVP 개발 외주</li>
-                  <li className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-blue-400" />UI/UX 디자인 외주</li>
-                  <li className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-blue-400" />마케팅·퍼포먼스 외주</li>
-                </ul>
                 <Link
                   href={`/community/new?category=OUTSOURCE_REQUEST&ref=${idea.id}&title=${encodeURIComponent(`[외주구인] ${idea.titleKo}`)}`}
                   className="btn-primary w-full text-center"
@@ -1298,24 +1315,18 @@ export default function IdeaWorkspacePage() {
                 </Link>
               </Surface>
 
-              {/* AC 컨설팅 */}
-              <Surface className="space-y-4">
+              <Surface className="space-y-3">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-50">
-                    <svg className="h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/15">
+                    <svg className="h-5 w-5 text-amber-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 0 0 6 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0 1 18 16.5h-2.25m-7.5 0h7.5m-7.5 0-1 3m8.5-3 1 3m0 0 .5 1.5m-.5-1.5h-9.5m0 0-.5 1.5M9 11.25v1.5M12 9v3.75m3-6v6" />
                     </svg>
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">AC 컨설팅 요청</h3>
-                    <p className="text-sm text-gray-500">액셀러레이터·멘토에게 피드백과 투자 연결을 요청합니다.</p>
+                    <h3 className="font-semibold text-white">AC 컨설팅 요청</h3>
+                    <p className="text-sm text-zinc-400">액셀러레이터·멘토에게 피드백과 투자 연결을 요청합니다.</p>
                   </div>
                 </div>
-                <ul className="space-y-1.5 text-sm text-gray-600">
-                  <li className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-amber-400" />사업 모델 피드백</li>
-                  <li className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-amber-400" />피치덱 리뷰</li>
-                  <li className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-amber-400" />투자 연결 요청</li>
-                </ul>
                 <Link
                   href={`/community/new?category=AC_REQUEST&ref=${idea.id}&title=${encodeURIComponent(`[AC컨설팅] ${idea.titleKo}`)}`}
                   className="btn-primary w-full text-center"
@@ -1327,7 +1338,6 @@ export default function IdeaWorkspacePage() {
                 </Link>
               </Surface>
             </div>
-
           </div>
         )}
       </div>

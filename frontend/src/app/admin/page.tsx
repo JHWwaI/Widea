@@ -217,7 +217,7 @@ export default function AdminPage() {
     <AuthGuard>
       <div className="workspace-grid fade-up">
         <PageHeader
-          eyebrow="Admin"
+          eyebrow="관리자"
           title="관리자 대시보드"
           description="서비스 전체 현황을 확인하고 유저·크레딧을 관리합니다."
         />

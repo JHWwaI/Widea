@@ -2,6 +2,7 @@ import { type Express, type Request, type Response } from "express";
 import { IdeaStatus, type PrismaClient } from "@prisma/client";
 import { requireAuth } from "../lib/auth.js";
 import { getAuthedUser, handleRouteError } from "../lib/http.js";
+import { ensureWorkspaceForIdea } from "../lib/workspace.js";
 
 type RegisterIdeaMatchSessionRoutesOptions = {
   prisma: PrismaClient;
@@ -243,6 +244,8 @@ export function registerIdeaMatchSessionRoutes(
               status: IdeaStatus.SHORTLISTED,
             },
           });
+          // 대표 아이디어 선정 시 워크스페이스 자동 셸 생성 (idempotent)
+          await ensureWorkspaceForIdea(tx, idea.id);
         }
 
         return tx.generatedIdea.update({

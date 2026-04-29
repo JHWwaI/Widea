@@ -44,7 +44,7 @@ export default function BillingHistoryPage() {
     <AuthGuard>
       <div className="workspace-grid fade-up">
         <PageHeader
-          eyebrow="Billing / Credit history"
+          eyebrow="크레딧 사용 이력"
           title="크레딧 이력"
           description="충전, 사용, 환불 내역을 확인하세요."
           actions={
@@ -61,19 +61,19 @@ export default function BillingHistoryPage() {
         {/* 요약 */}
         <div className="grid gap-4 sm:grid-cols-3">
           <Surface className="space-y-1 surface-card-accent">
-            <p className="eyebrow">Credit balance</p>
+            <p className="eyebrow">크레딧 잔액</p>
             <p className="text-3xl font-bold text-gray-900">
               {user?.isAdmin ? "∞" : (user?.creditBalance ?? 0).toLocaleString()}
             </p>
             <p className="text-xs text-gray-400">현재 잔액</p>
           </Surface>
           <Surface className="space-y-1">
-            <p className="eyebrow">Total used</p>
+            <p className="eyebrow">총 사용</p>
             <p className="text-3xl font-bold text-gray-900">{totalUsed.toLocaleString()}</p>
             <p className="text-xs text-gray-400">총 사용 크레딧</p>
           </Surface>
           <Surface className="space-y-1">
-            <p className="eyebrow">Total granted</p>
+            <p className="eyebrow">총 충전</p>
             <p className="text-3xl font-bold text-gray-900">{totalGranted.toLocaleString()}</p>
             <p className="text-xs text-gray-400">총 충전 크레딧</p>
           </Surface>
@@ -83,7 +83,7 @@ export default function BillingHistoryPage() {
         <Surface className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="eyebrow">Credit ledger</p>
+              <p className="eyebrow">크레딧 거래 내역</p>
               <h2 className="text-xl font-semibold text-gray-900">전체 이력</h2>
             </div>
             <span className="rounded-lg bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">

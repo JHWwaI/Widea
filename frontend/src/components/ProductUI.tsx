@@ -18,13 +18,18 @@ export function PageHeader({
     <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div className="max-w-3xl space-y-2">
         {eyebrow ? (
-          <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">{eyebrow}</p>
+          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#93AFFE" }}>{eyebrow}</p>
         ) : null}
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">{title}</h1>
+          <h1
+            className="font-bold text-white"
+            style={{ fontSize: "clamp(1.5rem, 2.4vw + 0.6rem, 2.25rem)", letterSpacing: "-0.02em" }}
+          >
+            {title}
+          </h1>
           {badge}
         </div>
-        <p className="max-w-2xl text-sm leading-relaxed text-gray-500 sm:text-base">
+        <p className="max-w-2xl text-sm leading-7 sm:text-base" style={{ color: "#C5CAE9" }}>
           {description}
         </p>
       </div>
@@ -50,13 +55,13 @@ export function SectionHeader({
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div className="max-w-2xl space-y-1.5">
         {eyebrow ? (
-          <p className="text-xs font-semibold uppercase tracking-wider text-blue-600">{eyebrow}</p>
+          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#93AFFE" }}>{eyebrow}</p>
         ) : null}
-        <h2 id={titleId} className="text-xl font-bold text-gray-900">
+        <h2 id={titleId} className="text-lg font-bold text-white sm:text-xl">
           {title}
         </h2>
         {description ? (
-          <p className="text-sm leading-relaxed text-gray-500">{description}</p>
+          <p className="text-sm leading-relaxed" style={{ color: "#C5CAE9" }}>{description}</p>
         ) : null}
       </div>
       {action ? <div className="flex flex-wrap items-center gap-2">{action}</div> : null}
@@ -75,13 +80,12 @@ export function Surface({
 } & ComponentPropsWithoutRef<"div">) {
   return (
     <div
-      className={cx(
-        "rounded-2xl border",
+      className={cx("rounded-2xl", className)}
+      style={
         muted
-          ? "border-gray-100 bg-gray-50/80 p-5"
-          : "border-gray-200 bg-white p-6 shadow-sm",
-        className,
-      )}
+          ? { background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)", padding: "1.25rem" }
+          : { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", padding: "1.5rem" }
+      }
       {...props}
     >
       {children}
@@ -100,20 +104,16 @@ export function StatCard({
   hint: string;
   tone?: "default" | "accent" | "warm";
 }) {
+  const styles = {
+    default: { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" },
+    accent: { background: "rgba(79,110,247,0.08)", border: "1px solid rgba(79,110,247,0.2)" },
+    warm: { background: "rgba(245,158,11,0.08)", border: "1px solid rgba(245,158,11,0.2)" },
+  };
   return (
-    <div
-      className={cx(
-        "space-y-2 rounded-2xl border p-5 shadow-sm",
-        tone === "accent"
-          ? "border-blue-100 bg-gradient-to-br from-blue-50 to-white"
-          : tone === "warm"
-            ? "border-amber-100 bg-gradient-to-br from-amber-50 to-white"
-            : "border-gray-200 bg-white",
-      )}
-    >
-      <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{label}</p>
-      <p className="text-2xl font-bold text-gray-900">{value}</p>
-      <p className="text-sm leading-relaxed text-gray-500">{hint}</p>
+    <div className="space-y-2 rounded-2xl p-5" style={styles[tone]}>
+      <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#A8AACC" }}>{label}</p>
+      <p className="text-3xl font-bold text-white tracking-tight">{value}</p>
+      <p className="text-sm leading-relaxed" style={{ color: "#C5CAE9" }}>{hint}</p>
     </div>
   );
 }
@@ -125,15 +125,17 @@ export function Badge({
   children: ReactNode;
   tone?: "neutral" | "accent" | "success" | "warning";
 }) {
-  const toneClasses = {
-    neutral: "bg-gray-100 text-gray-600",
-    accent: "bg-blue-50 text-blue-700",
-    success: "bg-emerald-50 text-emerald-700",
-    warning: "bg-amber-50 text-amber-700",
+  const styles = {
+    neutral: { background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.08)", color: "#A8AACC" },
+    accent: { background: "rgba(79,110,247,0.12)", border: "1px solid rgba(79,110,247,0.22)", color: "#93AFFE" },
+    success: { background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.22)", color: "#6EE7B7" },
+    warning: { background: "rgba(245,158,11,0.1)", border: "1px solid rgba(245,158,11,0.22)", color: "#FCD34D" },
   };
-
   return (
-    <span className={cx("inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold", toneClasses[tone])}>
+    <span
+      className="inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-semibold"
+      style={styles[tone]}
+    >
       {children}
     </span>
   );
@@ -149,10 +151,13 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-dashed border-gray-200 bg-gray-50/50 p-8 text-left">
+    <div
+      className="flex flex-col gap-3 rounded-xl p-8 text-left"
+      style={{ background: "rgba(255,255,255,0.025)", border: "1px dashed rgba(255,255,255,0.1)" }}
+    >
       <div className="space-y-1.5">
-        <h3 className="text-base font-semibold text-gray-900">{title}</h3>
-        <p className="max-w-xl text-sm leading-relaxed text-gray-500">{description}</p>
+        <h3 className="text-base font-semibold text-white">{title}</h3>
+        <p className="max-w-xl text-sm leading-relaxed" style={{ color: "var(--ink-3)" }}>{description}</p>
       </div>
       {action}
     </div>
@@ -161,16 +166,24 @@ export function EmptyState({
 
 export function LoadingState({ label = "Loading..." }: { label?: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white p-5" role="status" aria-live="polite">
-      <span className="inline-flex h-2.5 w-2.5 animate-pulse rounded-full bg-blue-500" />
-      <span className="text-sm text-gray-500">{label}</span>
+    <div
+      className="flex items-center gap-3 rounded-xl p-5"
+      role="status"
+      aria-live="polite"
+      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)" }}
+    >
+      <span
+        className="inline-flex h-2 w-2 animate-pulse rounded-full"
+        style={{ background: "linear-gradient(135deg, #4F6EF7, #6366F1)" }}
+      />
+      <span className="text-sm" style={{ color: "var(--ink-3)" }}>{label}</span>
     </div>
   );
 }
 
 export function StructuredData({ data }: { data: unknown }) {
   if (data === null || data === undefined || data === "") {
-    return <p className="text-sm text-gray-500">No data available yet.</p>;
+    return <p className="text-sm" style={{ color: "var(--ink-3)" }}>No data available yet.</p>;
   }
 
   if (Array.isArray(data)) {
@@ -187,7 +200,11 @@ export function StructuredData({ data }: { data: unknown }) {
       return (
         <div className="flex flex-wrap gap-1.5">
           {data.map((entry, index) => (
-            <span key={`${entry}-${index}`} className="rounded-md bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
+            <span
+              key={`${entry}-${index}`}
+              className="rounded-md px-2.5 py-1 text-xs font-medium"
+              style={{ background: "rgba(79,110,247,0.1)", color: "#93AFFE" }}
+            >
               {String(entry)}
             </span>
           ))}
@@ -198,8 +215,12 @@ export function StructuredData({ data }: { data: unknown }) {
     return (
       <div className="grid gap-3">
         {data.map((entry, index) => (
-          <div key={index} className="space-y-2 rounded-xl border border-gray-100 bg-gray-50/80 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          <div
+            key={index}
+            className="space-y-2 rounded-xl p-4"
+            style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)" }}
+          >
+            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--ink-4)" }}>
               Item {index + 1}
             </p>
             <StructuredData data={entry} />
@@ -213,8 +234,12 @@ export function StructuredData({ data }: { data: unknown }) {
     return (
       <div className="grid gap-3 md:grid-cols-2">
         {Object.entries(data as Record<string, unknown>).map(([key, value]) => (
-          <div key={key} className="space-y-2 rounded-xl border border-gray-100 bg-gray-50/80 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+          <div
+            key={key}
+            className="space-y-2 rounded-xl p-4"
+            style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.06)" }}
+          >
+            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--ink-4)" }}>
               {humanizeKey(key)}
             </p>
             <StructuredData data={value} />
@@ -224,5 +249,5 @@ export function StructuredData({ data }: { data: unknown }) {
     );
   }
 
-  return <p className="text-sm leading-relaxed text-gray-900">{String(data)}</p>;
+  return <p className="text-sm leading-relaxed text-white">{String(data)}</p>;
 }

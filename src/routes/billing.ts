@@ -4,6 +4,7 @@ import { requireAuth } from "../lib/auth.js";
 import { grantCredits } from "../lib/credits.js";
 import { getAuthedUser, handleRouteError } from "../lib/http.js";
 import { PLAN_CONFIG } from "../config/plans.js";
+import { isAdminEmail } from "../lib/admin.js";
 
 type RegisterBillingRoutesOptions = {
   prisma: PrismaClient;
@@ -108,6 +109,15 @@ export function registerBillingRoutes(
         return;
       }
 
+      // 결제 우회 방지: 유료 플랜은 /api/payment/toss/confirm 만 허용
+      if (PLAN_CONFIG[planType].price > 0) {
+        res.status(403).json({
+          error: "유료 플랜은 결제를 통해서만 변경할 수 있습니다.",
+          paymentRequired: true,
+        });
+        return;
+      }
+
       const config = PLAN_CONFIG[planType];
 
       await prisma.subscription.updateMany({
@@ -143,6 +153,53 @@ export function registerBillingRoutes(
       });
     } catch (err) {
       handleRouteError(res, err, "구독 변경 오류");
+    }
+  });
+
+  // 🎬 관리자 전용 — 토스 결제창 우회하여 즉시 플랜 적용 (데모 전용)
+  app.post("/api/admin/demo-subscribe", requireAuth, async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { userId } = getAuthedUser(req);
+      const { planType } = req.body;
+
+      const dbUser = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
+      if (!dbUser || !isAdminEmail(dbUser.email)) {
+        res.status(403).json({ error: "관리자 전용 기능입니다." });
+        return;
+      }
+
+      if (!planType || !PLAN_CONFIG[planType]) {
+        res.status(400).json({ error: "유효한 planType이 필요합니다." });
+        return;
+      }
+
+      const config = PLAN_CONFIG[planType];
+
+      await prisma.subscription.updateMany({
+        where: { userId, active: true },
+        data: { active: false },
+      });
+
+      const expiresAt = config.price === 0 ? null : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      const subscription = await prisma.subscription.create({
+        data: { planType, expiresAt, amountPaid: config.price, creditsGranted: config.credits, userId },
+      });
+
+      await prisma.user.update({ where: { id: userId }, data: { planType } });
+      const newBalance = await grantCredits(prisma, userId, config.credits, `demo-subscription:${planType}`);
+
+      console.log(`\n🎬 관리자 데모 구독: ${planType} (실거래 X)`);
+
+      res.json({
+        subscriptionId: subscription.id,
+        planType,
+        creditsGranted: config.credits,
+        creditBalance: newBalance,
+        expiresAt: subscription.expiresAt,
+        demo: true,
+      });
+    } catch (err) {
+      handleRouteError(res, err, "데모 구독 오류");
     }
   });
 

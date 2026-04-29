@@ -39,7 +39,7 @@ export default function ContactPage() {
     <AuthGuard>
       <div className="workspace-grid fade-up">
         <PageHeader
-          eyebrow="Support"
+          eyebrow="고객 지원"
           title="문의하기"
           description="서비스 이용 중 궁금한 점이나 문제가 있으시면 아래 양식으로 문의해주세요."
         />
@@ -47,7 +47,7 @@ export default function ContactPage() {
         <div className="grid gap-4 xl:grid-cols-[1fr_1fr]">
           <Surface className="space-y-5">
             <div>
-              <p className="eyebrow">Contact form</p>
+              <p className="eyebrow">문의 양식</p>
               <h2 className="text-2xl font-semibold text-gray-900">문의 양식</h2>
             </div>
 
@@ -106,7 +106,7 @@ export default function ContactPage() {
 
           <Surface className="space-y-5">
             <div>
-              <p className="eyebrow">Quick help</p>
+              <p className="eyebrow">빠른 도움말</p>
               <h2 className="text-2xl font-semibold text-gray-900">자주 묻는 질문</h2>
             </div>
 

@@ -98,7 +98,7 @@ export default function CommunityPage() {
     <AuthGuard>
       <div className="workspace-grid fade-up">
         <PageHeader
-          eyebrow="Community layer"
+          eyebrow="커뮤니티"
           title="커뮤니티"
           description="아이디어 공유, 질문, 팀 모집까지 한곳에서 연결합니다."
           actions={
@@ -162,14 +162,14 @@ export default function CommunityPage() {
                         <span className="text-xs text-gray-400">{formatDate(post.createdAt)}</span>
                       </div>
                       <Link href={`/community/${post.id}`}>
-                        <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600">
+                        <h3 className="text-lg font-semibold text-white hover:text-violet-200">
                           {post.title}
                         </h3>
                       </Link>
-                      <p className="text-sm leading-6 text-gray-500">
+                      <p className="text-sm leading-6 text-zinc-400">
                         {clampText(post.content, 160)}
                       </p>
-                      <div className="flex flex-wrap items-center gap-3 text-xs text-gray-400">
+                      <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-500">
                         <span>{post.author?.name || post.author?.email || "익명"}</span>
                         <span>조회 {post.viewCount}</span>
                         <span>댓글 {post._count?.comments || 0}</span>

@@ -193,6 +193,19 @@ model GlobalCaseDeepAnalysis {
   /// blueOceanElements: string       — 블루오션 요소
   /// }
   competitiveLandscape Json?          @map("competitive_landscape")
+  /// 5단계 심층 리포트 생성용 원본 시드 데이터
+  /// {
+  /// archive_link: string            — Wayback Machine 초창기 스냅샷
+  /// valuation_usd: number           — 최신 valuation
+  /// total_funding_usd: number       — 누적 펀딩
+  /// mvp_features: string[]          — 런칭 시점 핵심 기능 3개
+  /// tech_stack_hint: string[]       — 기술 스택 힌트
+  /// initial_channel: string         — 초기 고객 유입 채널
+  /// initial_method: string          — 첫 100명 확보 구체 방법
+  /// pivot_moment: string            — 결정적 피벗 순간
+  /// beachhead_market: string        — 송곳 시장
+  /// }
+  rawSeedData          Json?          @map("raw_seed_data")
   /// 글로벌 확장 플레이북
   /// {
   /// expansionOrder: string[]        — 진출 순서 (국가/지역)
@@ -412,6 +425,13 @@ model GeneratedIdea {
   requiresCredit   Boolean          @default(false) @map("requires_credit")
   /// 벤치마크 사례의 평균 유사도 점수 (0.0 ~ 1.0) — Top3/Bottom2 결정용
   similarityScore  Float            @default(0) @map("similarity_score")
+  /// 5단계 심층 리포트 (cached) — { existenceProof, mvpReality, wedgeStrategy, pivotWarning, technicalEngine }
+  /// 항상 미리 생성되어 있고, 사용자가 unlock 전엔 프론트에서 블러 처리됨
+  deepReportKo     Json?            @map("deep_report_ko")
+  /// 사용자가 8 크레딧으로 잠금 해제했는지 (블러 제거 + artifacts 무료)
+  deepReportUnlocked Boolean        @default(false) @map("deep_report_unlocked")
+  /// 실행 도구 3종 (cached) — { recruitingPost, coffeeChatTemplate, investorChecklist }
+  artifactsKo      Json?            @map("artifacts_ko")
   session          IdeaMatchSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 
   @@unique([sessionId, rank])
@@ -420,6 +440,86 @@ model GeneratedIdea {
   @@index([marketFitScore])
   @@index([requiresCredit])
   @@map("generated_ideas")
+}
+
+/// 아이디어가 SELECTED(대표)로 선정되면 6단계 워크스페이스 셸이 자동 생성됨
+model WorkspaceStage {
+  id          String               @id @default(uuid())
+  /// 어떤 idea(GeneratedIdea)에 속하는지
+  ideaId      String               @map("idea_id")
+  /// 1=서류, 2=팀, 3=기획·설계, 4=개발, 5=배포·테스트, 6=마케팅·첫100명
+  stageNumber Int                  @map("stage_number")
+  /// 단계명 (한글)
+  name        String
+  status      WorkspaceStageStatus @default(PENDING)
+  createdAt   DateTime             @default(now()) @map("created_at")
+  updatedAt   DateTime             @updatedAt @map("updated_at")
+  tasks       WorkspaceTask[]
+
+  @@unique([ideaId, stageNumber])
+  @@index([ideaId])
+  @@map("workspace_stages")
+}
+
+model WorkspaceTask {
+  id              String              @id @default(uuid())
+  stageId         String              @map("stage_id")
+  /// 태스크 본문
+  content         String
+  status          WorkspaceTaskStatus @default(PENDING)
+  /// 외주가 어울리는 task일 때, 어떤 역할인지 (예: "와이어프레임·디자인")
+  outsourceRole   String?             @map("outsource_role")
+  /// 외주 의뢰가 게시되었을 때 연결된 CommunityPost ID
+  communityPostId String?             @map("community_post_id")
+  /// default 체크리스트 vs 사용자 추가
+  isCustom        Boolean             @default(false) @map("is_custom")
+  /// 정렬 순서
+  orderIndex      Int                 @default(0) @map("order_index")
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+  completedAt     DateTime?           @map("completed_at")
+  stage           WorkspaceStage      @relation(fields: [stageId], references: [id], onDelete: Cascade)
+
+  @@index([stageId])
+  @@index([status])
+  @@map("workspace_tasks")
+}
+
+/// 회의록 — 실시간 자막 또는 녹음 파일 업로드 후 Whisper 전사 + AI 요약
+model MeetingNote {
+  id              String              @id @default(uuid())
+  userId          String              @map("user_id")
+  /// 연결된 idea (선택, 워크스페이스 컨텍스트)
+  ideaId          String?             @map("idea_id")
+  /// 회의방 코드 (Jitsi room name) — 같은 방 회의 묶기 용도
+  roomCode        String?             @map("room_code")
+  /// 사용자가 지정한 제목 (자동 생성 가능)
+  title           String              @default("회의록")
+  /// 어떻게 만들었는가
+  source          MeetingNoteSource
+  /// 음성 길이 (초)
+  durationSec     Int?                @map("duration_sec")
+  /// 원본 transcript 전체 텍스트
+  transcriptText  String              @map("transcript_text") @db.Text
+  /// AI 요약 — { keyPoints, decisions, actions[], nextSteps }
+  summary         Json?
+  createdAt       DateTime            @default(now()) @map("created_at")
+  updatedAt       DateTime            @updatedAt @map("updated_at")
+
+  @@index([userId])
+  @@index([ideaId])
+  @@index([roomCode])
+  @@map("meeting_notes")
+}
+
+/// 회의록 생성 방식
+enum MeetingNoteSource {
+  /// A. 녹음 파일 업로드 후 Whisper 전사
+  UPLOAD
+  /// B. 브라우저 실시간 자막 (Web Speech API)
+  LIVE_BROWSER
+  /// C. AI 봇이 회의에 참여 (향후)
+  BOT
 }
 
 model Subscription {
@@ -683,6 +783,23 @@ enum PostCategory {
   FREE_TALK
   OUTSOURCE_REQUEST
   AC_REQUEST
+  MENTOR_REQUEST
+  BETA_TESTER
+}
+
+/// 워크스페이스 단계 상태
+enum WorkspaceStageStatus {
+  PENDING
+  ACTIVE
+  DONE
+}
+
+/// 워크스페이스 task 상태
+enum WorkspaceTaskStatus {
+  PENDING
+  DONE
+  SKIPPED
+  OUTSOURCED
 }
 
 /// 글로벌 케이스 복제 난이도

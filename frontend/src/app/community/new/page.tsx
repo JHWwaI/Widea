@@ -71,7 +71,7 @@ export default function CommunityNewPage() {
         </div>
 
         <PageHeader
-          eyebrow="Community layer"
+          eyebrow="커뮤니티"
           title="새 글 작성"
           description="아이디어, 질문, 팀 모집 등 자유롭게 남겨보세요."
         />

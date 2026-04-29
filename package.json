@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "prisma generate && tsc",
     "start": "node dist/server.js",
+    "postinstall": "prisma generate",
     "dev": "tsx --env-file=.env src/server.ts",
     "seed": "tsx --env-file=.env scripts/seed.ts",
     "make-admin": "tsx --env-file=.env scripts/make_admin.ts",
@@ -14,6 +15,8 @@
     "sync": "tsx --env-file=.env scripts/sync_pinecone.ts",
     "enrich_cases": "tsx --env-file=.env scripts/enrich_cases.ts",
     "import_enrich": "tsx --env-file=.env scripts/import_enrich_result.ts",
+    "verify_benchmarks": "tsx --env-file=.env scripts/verify_benchmark_urls.ts",
+    "import_benchmarks": "tsx --env-file=.env scripts/import_benchmark_seed.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -25,6 +28,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/multer": "^2.1.0",
     "@types/node": "^25.5.0",
     "@types/nodemailer": "^8.0.0",
     "prisma": "^6.19.2",
@@ -43,6 +47,7 @@
     "express-rate-limit": "^8.3.2",
     "groq-sdk": "^1.1.2",
     "jsonwebtoken": "^9.0.3",
+    "multer": "^2.1.1",
     "nodemailer": "^8.0.5",
     "openai": "^6.33.0"
   }

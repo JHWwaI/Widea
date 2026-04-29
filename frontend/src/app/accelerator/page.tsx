@@ -66,7 +66,7 @@ export default function AcceleratorPage() {
     <AuthGuard>
       <div className="workspace-grid fade-up">
         <PageHeader
-          eyebrow="Accelerator pipeline"
+          eyebrow="액셀러레이터 파이프라인"
           title="유망 팀 발굴 보드"
           description="커뮤니티에서 팀 모집과 아이디어 공유 글을 모아 액셀러레이터 전용 파이프라인처럼 관리할 수 있습니다."
           badge={user?.userType ? <span className="badge badge-accent">{userTypeLabels[user.userType]}</span> : undefined}
@@ -89,17 +89,17 @@ export default function AcceleratorPage() {
           <>
             <div className="grid gap-4 md:grid-cols-3">
               <Surface className="space-y-2">
-                <p className="eyebrow">Candidates</p>
+                <p className="eyebrow">후보 팀</p>
                 <p className="text-3xl font-semibold tracking-[-0.05em] text-gray-900">{posts.length}</p>
                 <p className="text-sm text-gray-500">발굴 후보 글 수</p>
               </Surface>
               <Surface className="space-y-2 surface-card-accent">
-                <p className="eyebrow">Bookmarked</p>
+                <p className="eyebrow">북마크</p>
                 <p className="text-3xl font-semibold tracking-[-0.05em] text-gray-900">{bookmarkedCount}</p>
                 <p className="text-sm text-gray-500">후속 검토용 저장 글 수</p>
               </Surface>
               <Surface className="space-y-2">
-                <p className="eyebrow">Pipeline signal</p>
+                <p className="eyebrow">파이프라인 신호</p>
                 <p className="text-3xl font-semibold tracking-[-0.05em] text-gray-900">
                   {posts.filter((post) => post.category === "TEAM_RECRUIT").length}
                 </p>

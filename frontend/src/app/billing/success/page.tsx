@@ -62,10 +62,10 @@ export default function BillingSuccessPage() {
 
   if (status === "loading") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
-        <div className="flex items-center gap-3 rounded-xl border border-gray-200 bg-white px-8 py-6 shadow-sm">
-          <span className="inline-flex h-2.5 w-2.5 animate-pulse rounded-full bg-blue-500" />
-          <span className="text-sm text-gray-500">결제를 확인하는 중입니다...</span>
+      <div className="flex min-h-screen items-center justify-center" style={{ background: "var(--bg)" }}>
+        <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-8 py-6">
+          <span className="inline-flex h-2.5 w-2.5 animate-pulse rounded-full bg-indigo-400" />
+          <span className="text-sm text-zinc-400">결제를 확인하는 중입니다...</span>
         </div>
       </div>
     );
@@ -73,15 +73,15 @@ export default function BillingSuccessPage() {
 
   if (status === "error") {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-        <div className="w-full max-w-md rounded-2xl border border-red-100 bg-white p-8 shadow-sm text-center space-y-4">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-50">
-            <svg className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <div className="flex min-h-screen items-center justify-center px-4" style={{ background: "var(--bg)" }}>
+        <div className="w-full max-w-md rounded-2xl border border-rose-500/30 bg-white/[0.04] p-8 text-center space-y-4">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-500/15">
+            <svg className="h-6 w-6 text-rose-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
             </svg>
           </div>
-          <h1 className="text-lg font-semibold text-gray-900">결제 확인 실패</h1>
-          <p className="text-sm text-gray-500">{error}</p>
+          <h1 className="text-lg font-semibold text-white">결제 확인 실패</h1>
+          <p className="text-sm text-zinc-400">{error}</p>
           <button
             type="button"
             onClick={() => router.push("/billing")}
@@ -95,30 +95,30 @@ export default function BillingSuccessPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md rounded-2xl border border-gray-100 bg-white p-8 shadow-sm text-center space-y-5">
-        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50">
-          <svg className="h-7 w-7 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+    <div className="flex min-h-screen items-center justify-center px-4" style={{ background: "var(--bg)" }}>
+      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-white/[0.04] p-8 text-center space-y-5">
+        <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/15">
+          <svg className="h-7 w-7 text-emerald-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
           </svg>
         </div>
 
         <div className="space-y-1">
-          <h1 className="text-xl font-bold text-gray-900">결제 완료!</h1>
-          <p className="text-sm text-gray-500">
+          <h1 className="text-xl font-bold text-white">결제 완료!</h1>
+          <p className="text-sm text-zinc-400">
             {result ? `${planLabels[result.planType] || result.planType} 플랜이 시작됐습니다.` : ""}
           </p>
         </div>
 
         {result && (
-          <div className="rounded-xl bg-gray-50 p-4 space-y-2 text-sm">
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-4 space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-gray-500">충전된 크레딧</span>
-              <span className="font-semibold text-gray-900">+{result.creditsGranted.toLocaleString()} cr</span>
+              <span className="text-zinc-400">충전된 크레딧</span>
+              <span className="font-semibold text-white">+{result.creditsGranted.toLocaleString()} cr</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-500">현재 잔액</span>
-              <span className="font-semibold text-blue-600">{result.creditBalance.toLocaleString()} cr</span>
+              <span className="text-zinc-400">현재 잔액</span>
+              <span className="font-semibold text-indigo-300">{result.creditBalance.toLocaleString()} cr</span>
             </div>
           </div>
         )}

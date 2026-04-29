@@ -192,7 +192,7 @@ export default function CommunityPostDetailPage() {
 
             <Surface className="space-y-5">
               <div>
-                <p className="eyebrow">Comments</p>
+                <p className="eyebrow">댓글</p>
                 <h2 className="text-xl font-semibold text-gray-900">
                   댓글 {post.comments.length}개
                 </h2>
