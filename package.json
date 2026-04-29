@@ -6,7 +6,7 @@
   "scripts": {
     "build": "prisma generate && tsc",
     "start": "node dist/server.js",
-    "postinstall": "prisma generate",
+    "postinstall": "prisma generate && tsc",
     "dev": "tsx --env-file=.env src/server.ts",
     "seed": "tsx --env-file=.env scripts/seed.ts",
     "make-admin": "tsx --env-file=.env scripts/make_admin.ts",
