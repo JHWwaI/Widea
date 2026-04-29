@@ -20,6 +20,8 @@ export default function CommunityPage() {
   const { token } = useAuth();
   const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [category, setCategory] = useState("");
+  const [searchInput, setSearchInput] = useState("");
+  const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
@@ -33,7 +35,7 @@ export default function CommunityPage() {
 
     api<CommunityListResponse>(
       "GET",
-      buildQuery("/api/community/posts", { category, page: 1, limit: PAGE_SIZE }),
+      buildQuery("/api/community/posts", { category, q, page: 1, limit: PAGE_SIZE }),
       undefined,
       token ?? undefined,
     )
@@ -51,7 +53,16 @@ export default function CommunityPage() {
       });
 
     return () => { cancelled = true; };
-  }, [category, token]);
+  }, [category, q, token]);
+
+  function handleSearchSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setQ(searchInput.trim());
+  }
+  function handleSearchClear() {
+    setSearchInput("");
+    setQ("");
+  }
 
   async function loadMore() {
     const nextPage = page + 1;
@@ -59,7 +70,7 @@ export default function CommunityPage() {
     try {
       const response = await api<CommunityListResponse>(
         "GET",
-        buildQuery("/api/community/posts", { category, page: nextPage, limit: PAGE_SIZE }),
+        buildQuery("/api/community/posts", { category, q, page: nextPage, limit: PAGE_SIZE }),
         undefined,
         token ?? undefined,
       );
@@ -115,6 +126,34 @@ export default function CommunityPage() {
         ) : null}
 
         <Surface className="space-y-5">
+          {/* 검색창 */}
+          <form onSubmit={handleSearchSubmit} className="flex gap-2">
+            <input
+              type="search"
+              placeholder="제목·본문 검색..."
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="input flex-1"
+            />
+            <button type="submit" className="btn-primary px-4 py-2 text-sm">
+              검색
+            </button>
+            {q ? (
+              <button
+                type="button"
+                onClick={handleSearchClear}
+                className="btn-ghost px-3 py-2 text-sm"
+              >
+                초기화
+              </button>
+            ) : null}
+          </form>
+          {q ? (
+            <p className="text-xs text-zinc-500">
+              <span className="font-bold text-violet-300">"{q}"</span> 검색 결과
+            </p>
+          ) : null}
+
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"

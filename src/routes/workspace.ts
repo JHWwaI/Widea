@@ -51,6 +51,89 @@ export function registerWorkspaceRoutes(
     },
   );
 
+  /* ─── GET /api/workspace/summaries ───────────────────────
+     여러 아이디어 ID에 대한 진척 요약 (마이페이지용)
+     쿼리: ?ideaIds=id1,id2,id3 */
+  app.get(
+    "/api/workspace/summaries",
+    requireAuth,
+    async (req: Request, res: Response): Promise<void> => {
+      try {
+        const { userId } = getAuthedUser(req);
+        const idsParam = String(req.query.ideaIds ?? "");
+        const ideaIds = idsParam
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => s.length > 0);
+        if (ideaIds.length === 0) {
+          res.json({ summaries: [] });
+          return;
+        }
+
+        // 권한 확인: 사용자가 소유한 idea만
+        const ideas = await prisma.generatedIdea.findMany({
+          where: { id: { in: ideaIds } },
+          include: { session: { include: { projectPolicy: { select: { userId: true } } } } },
+        });
+        const ownedIds = new Set(
+          ideas
+            .filter((i) => i.session.projectPolicy.userId === userId)
+            .map((i) => i.id),
+        );
+
+        const stages = await prisma.workspaceStage.findMany({
+          where: { ideaId: { in: Array.from(ownedIds) } },
+          orderBy: { stageNumber: "asc" },
+          include: { tasks: { orderBy: { orderIndex: "asc" } } },
+        });
+
+        // ideaId 별로 그룹화 + 요약 계산
+        const summaries = Array.from(ownedIds).map((ideaId) => {
+          const ideaStages = stages.filter((s) => s.ideaId === ideaId);
+          const coreTasks = ideaStages.flatMap((s) =>
+            s.tasks.filter((t) => t.orderIndex < 100),
+          );
+          const total = coreTasks.length;
+          const done = coreTasks.filter(
+            (t) => t.status === "DONE" || t.status === "OUTSOURCED" || t.status === "SKIPPED",
+          ).length;
+          const pct = total === 0 ? 0 : Math.round((done / total) * 100);
+
+          // 다음 task: 단계 순서 → orderIndex 순서, 첫 PENDING (필수만)
+          let nextTaskContent: string | null = null;
+          let nextStageName: string | null = null;
+          let nextStageNumber: number | null = null;
+          for (const stage of ideaStages) {
+            const pending = stage.tasks
+              .filter((t) => t.orderIndex < 100)
+              .find((t) => t.status === "PENDING");
+            if (pending) {
+              nextTaskContent = pending.content;
+              nextStageName = stage.name;
+              nextStageNumber = stage.stageNumber;
+              break;
+            }
+          }
+
+          return {
+            ideaId,
+            total,
+            done,
+            pct,
+            stageCount: ideaStages.length,
+            nextTask: nextTaskContent,
+            nextStageName,
+            nextStageNumber,
+          };
+        });
+
+        res.json({ summaries });
+      } catch (err) {
+        handleRouteError(res, err, "Workspace 요약 오류");
+      }
+    },
+  );
+
   /* ─── POST /api/workspace/:ideaId/ensure ─────────────────
      수동으로 워크스페이스 생성 (대표 미선정 idea도 가능) */
   app.post(

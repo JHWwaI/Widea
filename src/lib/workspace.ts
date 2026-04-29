@@ -24,12 +24,13 @@ export async function ensureWorkspaceForIdea(
         status: stage.stageNumber === 1 ? "ACTIVE" : "PENDING",
       },
     });
+    // optional task는 orderIndex 100+ 로 저장 → 프론트에서 "선택" 배지 + progress 제외
     await tx.workspaceTask.createMany({
       data: stage.tasks.map((t, i) => ({
         stageId: created.id,
         content: t.content,
         outsourceRole: t.outsourceRole ?? null,
-        orderIndex: i,
+        orderIndex: t.optional ? 100 + i : i,
       })),
     });
   }

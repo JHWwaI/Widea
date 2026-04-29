@@ -106,8 +106,8 @@ export default function InvestorHome() {
       <section className="space-y-3">
         <h2 className="text-base font-semibold text-white">빠른 이동</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          <QuickLink href="/discovery" title="시장 탐색" desc="산업·단계·국가별 검색" />
-          <QuickLink href="/community" title="커뮤니티" desc="창업가 발견·산업 인사이트" />
+          <QuickLink href="/community?category=TEAM_RECRUIT" title="진행 중인 팀" desc="투자할 만한 팀 발견" />
+          <QuickLink href="/community" title="전체 커뮤니티" desc="산업 인사이트·디스커션" />
           <QuickLink href="/collab/meet" title="실시간 회의" desc="IR 미팅·창업가 면담" />
           <QuickLink href="/mypage/edit" title="프로필 편집" desc="이름·비밀번호·역할" />
           <QuickLink href="/contact" title="문의하기" desc="제휴·피드백" />

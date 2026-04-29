@@ -81,6 +81,11 @@ export const getCorsConfig = () => {
         return callback(null, true);
       }
 
+      // Cloudflare Tunnel (개발·데모용)
+      if (origin.match(/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/)) {
+        return callback(null, true);
+      }
+
       if (allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {

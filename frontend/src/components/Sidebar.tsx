@@ -7,12 +7,12 @@ import { useAuth } from "@/context/AuthContext";
 type NavItem = { href: string; label: string; icon: string };
 type NavSection = { title: string; items: NavItem[] };
 
-function getNavSections(userType: string | null): NavSection[] {
+function getNavSections(): NavSection[] {
   const community: NavSection = {
     title: "커뮤니티",
     items: [
       { href: "/community", label: "커뮤니티", icon: "users" },
-      { href: "/collab", label: "외주·팀원 모집", icon: "folder" },
+      { href: "/talent", label: "전문가 찾기", icon: "user" },
       { href: "/collab/meet", label: "실시간 회의", icon: "chat" },
     ],
   };
@@ -22,64 +22,19 @@ function getNavSections(userType: string | null): NavSection[] {
     items: [{ href: "/contact", label: "문의하기", icon: "chat" }],
   };
 
-  if (userType === "INVESTOR") {
-    return [
-      {
-        title: "서비스",
-        items: [{ href: "/discovery", label: "시장 탐색", icon: "search" }],
-      },
-      {
-        title: "내 워크스페이스",
-        items: [
-          { href: "/mypage", label: "내 아이디어", icon: "user" },
-          { href: "/projects", label: "프로젝트", icon: "folder" },
-          { href: "/mypage", label: "워크스페이스", icon: "sparkle" },
-          { href: "/billing", label: "구독·결제", icon: "credit" },
-        ],
-      },
-      community,
-      support,
-    ];
-  }
-
-  if (userType === "ACCELERATOR") {
-    return [
-      {
-        title: "서비스",
-        items: [
-          { href: "/accelerator", label: "팀 발굴 파이프라인", icon: "sparkle" },
-          { href: "/discovery", label: "시장 탐색", icon: "search" },
-        ],
-      },
-      {
-        title: "내 워크스페이스",
-        items: [
-          { href: "/mypage", label: "내 아이디어", icon: "user" },
-          { href: "/projects", label: "프로젝트", icon: "folder" },
-          { href: "/mypage", label: "워크스페이스", icon: "sparkle" },
-          { href: "/billing", label: "구독·결제", icon: "credit" },
-        ],
-      },
-      community,
-      support,
-    ];
-  }
-
-  // FOUNDER (default)
+  // 모든 역할 공통: 메인은 마이페이지·아이디어, 협업은 커뮤니티·회의로 통합
   return [
     {
       title: "메인",
       items: [
         { href: "/idea-match", label: "아이디어 만들기", icon: "sparkle" },
         { href: "/mypage", label: "내 아이디어", icon: "user" },
+        { href: "/projects", label: "프로젝트", icon: "folder" },
       ],
     },
     {
-      title: "내 워크스페이스",
-      items: [
-        { href: "/projects", label: "프로젝트", icon: "folder" },
-        { href: "/billing", label: "구독·결제", icon: "credit" },
-      ],
+      title: "결제",
+      items: [{ href: "/billing", label: "구독·결제", icon: "credit" }],
     },
     community,
     support,
@@ -224,7 +179,7 @@ export default function Sidebar({
             )}
 
             {/* Dynamic sections */}
-            {getNavSections(user.userType).map((section) => (
+            {getNavSections().map((section) => (
               <div key={section.title}>
                 <p
                   className="mb-1.5 px-3 text-[0.6875rem] font-semibold uppercase tracking-wider"

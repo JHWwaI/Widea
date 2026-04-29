@@ -1,13 +1,25 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { api } from "@/lib/api";
+import { api, buildQuery } from "@/lib/api";
 import { readError } from "@/lib/product";
 import { LoadingState } from "@/components/ProductUI";
 import type { WorkspaceTask } from "@/app/workspace/[ideaId]/page";
 
 type Draft = { titleKo: string; bodyKo: string; category: string };
+
+type MatchedExpert = {
+  id: string;
+  userId: string;
+  category: string;
+  headline: string;
+  skills: string[];
+  hourlyRateMin: number | null;
+  hourlyRateMax: number | null;
+  user: { id: string; name: string | null; email: string } | null;
+};
 
 const CATEGORY_LABEL: Record<string, string> = {
   TEAM_RECRUIT: "팀원 모집",
@@ -31,6 +43,7 @@ export default function OutsourceModal({
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState("");
   const [draft, setDraft] = useState<Draft | null>(null);
+  const [matched, setMatched] = useState<MatchedExpert[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -52,8 +65,24 @@ export default function OutsourceModal({
         if (!cancelled) setLoading(false);
       }
     })();
+    // 추천 전문가 fetch (병렬)
+    (async () => {
+      try {
+        const res = await api<{ experts: MatchedExpert[] }>(
+          "GET",
+          buildQuery("/api/experts/match", {
+            q: task.content,
+            role: task.outsourceRole ?? "",
+            limit: 3,
+          }),
+        );
+        if (!cancelled) setMatched(res.experts);
+      } catch {
+        /* 추천 실패는 무시 */
+      }
+    })();
     return () => { cancelled = true; };
-  }, [task.id, token]);
+  }, [task.id, task.content, task.outsourceRole, token]);
 
   async function publish() {
     if (!token || !draft) return;
@@ -93,7 +122,7 @@ export default function OutsourceModal({
           <header className="flex items-start justify-between gap-4 border-b border-white/10 p-5">
             <div className="min-w-0">
               <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-violet-300">
-                🛠 외주·모집 자동 작성
+                🤝 외주·AC 컨설팅·팀 모집 자동 작성
               </p>
               <p className="mt-1 text-sm text-zinc-300">{task.content}</p>
               {task.outsourceRole ? (
@@ -153,6 +182,42 @@ export default function OutsourceModal({
                   onChange={(e) => setDraft({ ...draft, bodyKo: e.target.value })}
                 />
               </div>
+
+              {/* 추천 전문가 — 게시 안 하고 직접 컨택 */}
+              {matched.length > 0 ? (
+                <div className="space-y-2 rounded-xl border border-violet-400/20 bg-violet-500/[0.04] p-4">
+                  <p className="text-xs font-bold text-violet-300">
+                    💡 이 task에 맞는 전문가 {matched.length}명 — 게시 없이 직접 컨택 가능
+                  </p>
+                  <div className="space-y-1.5">
+                    {matched.map((m) => (
+                      <Link
+                        key={m.id}
+                        href={`/u/${m.userId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-between gap-3 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2 transition-colors hover:border-violet-400/40 hover:bg-violet-500/[0.06]"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-white">
+                            {m.user?.name || "익명"}
+                          </p>
+                          <p className="truncate text-[0.7rem] text-zinc-400">{m.headline}</p>
+                          {m.skills.length > 0 ? (
+                            <p className="truncate text-[0.65rem] text-zinc-500">
+                              {m.skills.slice(0, 4).join(" · ")}
+                            </p>
+                          ) : null}
+                        </div>
+                        <span className="shrink-0 text-[0.7rem] font-semibold text-violet-300">
+                          프로필 →
+                        </span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
               {error ? <p className="text-sm text-rose-300">{error}</p> : null}
             </div>
           ) : (

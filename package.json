@@ -17,6 +17,7 @@
     "import_enrich": "tsx --env-file=.env scripts/import_enrich_result.ts",
     "verify_benchmarks": "tsx --env-file=.env scripts/verify_benchmark_urls.ts",
     "import_benchmarks": "tsx --env-file=.env scripts/import_benchmark_seed.ts",
+    "seed:marketplace": "tsx --env-file=.env scripts/seed_marketplace.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

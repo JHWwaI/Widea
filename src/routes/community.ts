@@ -44,11 +44,19 @@ export function registerCommunityRoutes(
   app.get("/api/community/posts", async (req: Request, res: Response): Promise<void> => {
     try {
       const category = req.query.category as string | undefined;
+      const q = String(req.query.q ?? "").trim();
       const page = Math.max(1, Number(req.query.page) || 1);
       const limit = Math.min(50, Math.max(1, Number(req.query.limit) || 20));
       const skip = (page - 1) * limit;
 
-      const where = category ? { category: category as any } : {};
+      const where: Record<string, unknown> = {};
+      if (category) where.category = category;
+      if (q.length > 0) {
+        where.OR = [
+          { title: { contains: q, mode: "insensitive" } },
+          { content: { contains: q, mode: "insensitive" } },
+        ];
+      }
 
       const [posts, total] = await Promise.all([
         prisma.communityPost.findMany({

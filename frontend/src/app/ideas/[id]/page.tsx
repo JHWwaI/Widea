@@ -700,18 +700,12 @@ export default function IdeaWorkspacePage() {
         </div>
 
         <PageHeader
-          eyebrow="아이디어 워크스페이스"
+          eyebrow="프로젝트 분석"
           title={idea.titleKo}
           description={idea.oneLinerKo || idea.summaryKo || ""}
           badge={<Badge tone={sl.tone}>{sl.text}</Badge>}
           actions={
             <div className="flex flex-wrap gap-2">
-              <Link
-                href={`/workspace/${idea.id}`}
-                className="rounded-md border border-violet-400/40 bg-violet-500/10 px-4 py-2 text-sm font-semibold text-violet-200 hover:bg-violet-500/20"
-              >
-                🗂 워크스페이스 →
-              </Link>
               <button type="button" disabled={saving || idea.status === "SELECTED"} onClick={() => handleStatus("SELECTED")} className="btn-primary px-4 py-2 text-sm">
                 {idea.status === "SELECTED" ? "대표 아이디어 ✓" : "대표 아이디어로 선정"}
               </button>
@@ -726,6 +720,22 @@ export default function IdeaWorkspacePage() {
         />
 
         {saveMsg ? <Surface className="border-emerald-500/30 bg-emerald-500/10 text-emerald-300 py-3">{saveMsg}</Surface> : null}
+
+        {/* 워크스페이스 진입 CTA — SELECTED 일 때 가장 prominent */}
+        {idea.status === "SELECTED" ? (
+          <Link
+            href={`/workspace/${idea.id}`}
+            className="group flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-violet-400/40 bg-gradient-to-br from-violet-500/[0.10] to-violet-500/[0.02] px-5 py-4 transition-all hover:border-violet-400/60"
+          >
+            <div>
+              <p className="text-xs font-semibold text-violet-300">실행 시작</p>
+              <p className="mt-0.5 text-base font-bold text-white">워크스페이스 열기 — 6단계 33개 작업으로 창업 진행</p>
+            </div>
+            <span className="rounded-xl bg-violet-500 px-4 py-2 text-sm font-bold text-white shadow-[0_4px_24px_-4px_rgba(124,58,237,0.5)] group-hover:bg-violet-400">
+              열기 →
+            </span>
+          </Link>
+        ) : null}
 
         {/* 탭 */}
         <div className="border-b border-white/15" data-print="hide">

@@ -31,18 +31,26 @@ export default function FocusMode({
   const [outsourceTask, setOutsourceTask] = useState<WorkspaceTask | null>(null);
 
   // 가장 먼저 처리할 task 찾기 (stage 순서 → task orderIndex 순서)
+  // 필수(orderIndex < 100) 우선, 모두 끝나면 선택(>= 100) 진행
   const sortedStages = [...stages].sort((a, b) => a.stageNumber - b.stageNumber);
   let currentTask: WorkspaceTask | null = null;
   let currentStage: WorkspaceStage | null = null;
-  for (const stage of sortedStages) {
-    const pending = [...stage.tasks]
-      .sort((a, b) => a.orderIndex - b.orderIndex)
-      .find((t) => t.status === "PENDING");
-    if (pending) {
-      currentTask = pending;
-      currentStage = stage;
-      break;
+  const findPending = (filterFn: (t: WorkspaceTask) => boolean) => {
+    for (const stage of sortedStages) {
+      const pending = [...stage.tasks]
+        .filter(filterFn)
+        .sort((a, b) => a.orderIndex - b.orderIndex)
+        .find((t) => t.status === "PENDING");
+      if (pending) return { task: pending, stage };
     }
+    return null;
+  };
+  const corePick = findPending((t) => t.orderIndex < 100);
+  const optionalPick = corePick ? null : findPending((t) => t.orderIndex >= 100);
+  const picked = corePick ?? optionalPick;
+  if (picked) {
+    currentTask = picked.task;
+    currentStage = picked.stage;
   }
 
   // 힌트(왜/어떻게) — default task만 매핑됨
@@ -84,13 +92,10 @@ export default function FocusMode({
       .map((s) => s.item);
   })();
 
-  const totalTasks = stages.reduce((acc, s) => acc + s.tasks.length, 0);
-  const doneTasks = stages.reduce(
-    (acc, s) =>
-      acc +
-      s.tasks.filter((t) => t.status !== "PENDING").length,
-    0,
-  );
+  // 필수 task만 진척에 카운트 (선택은 보너스)
+  const coreTasks = stages.flatMap((s) => s.tasks.filter((t) => t.orderIndex < 100));
+  const totalTasks = coreTasks.length;
+  const doneTasks = coreTasks.filter((t) => t.status !== "PENDING").length;
   const overallPct = totalTasks === 0 ? 0 : Math.round((doneTasks / totalTasks) * 100);
 
   // 모든 task 완료 — 축하 화면
@@ -152,8 +157,9 @@ export default function FocusMode({
           </div>
           <ol className="grid grid-cols-6 gap-1.5">
             {sortedStages.map((s) => {
-              const stageDone = s.tasks.filter((t) => t.status !== "PENDING").length;
-              const stageTotal = s.tasks.length;
+              const stageCoreTasks = s.tasks.filter((t) => t.orderIndex < 100);
+              const stageDone = stageCoreTasks.filter((t) => t.status !== "PENDING").length;
+              const stageTotal = stageCoreTasks.length;
               const pct = stageTotal === 0 ? 0 : (stageDone / stageTotal) * 100;
               const isComplete = stageTotal > 0 && stageDone === stageTotal;
               const isCurrent = s.id === currentStage?.id;
@@ -190,9 +196,16 @@ export default function FocusMode({
 
         {/* HERO: 지금 할 일 */}
         <div className="space-y-3 py-2">
-          <p className="text-xs font-semibold text-emerald-300">
-            지금 할 일{hint?.time ? ` · ${hint.time}` : ""}
-          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-xs font-semibold text-emerald-300">
+              지금 할 일{hint?.time ? ` · ${hint.time}` : ""}
+            </p>
+            {currentTask.orderIndex >= 100 ? (
+              <span className="rounded-md bg-zinc-700/40 px-1.5 py-0.5 text-[0.65rem] font-bold text-zinc-300">
+                선택
+              </span>
+            ) : null}
+          </div>
           <h1 className="text-balance text-3xl font-black leading-[1.2] tracking-tight text-white sm:text-4xl">
             {currentTask.content}
           </h1>
@@ -222,9 +235,9 @@ export default function FocusMode({
               <div className="p-5">
                 <p className="text-xs font-semibold text-zinc-400">도움되는 도구</p>
                 <div className="mt-3 grid gap-1.5 sm:grid-cols-2">
-                  {recommendedResources.map((r) => (
+                  {recommendedResources.map((r, i) => (
                     <a
-                      key={r.url}
+                      key={`${r.url}-${i}`}
                       href={r.url}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -262,7 +275,7 @@ export default function FocusMode({
               disabled={busy}
               className="w-full rounded-xl border border-violet-400/40 bg-violet-500/10 px-6 py-3.5 text-sm font-bold text-violet-200 transition-colors hover:border-violet-400/60 hover:bg-violet-500/20 disabled:opacity-60"
             >
-              🛠 외주로 의뢰할게요 (AI가 글 자동 작성)
+              🤝 도움받기 — 외주·AC 컨설팅·팀 모집 자동 작성
             </button>
           ) : null}
 

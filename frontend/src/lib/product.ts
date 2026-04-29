@@ -302,7 +302,7 @@ export function getCreditErrorDetails(error: unknown): CreditErrorDetails | null
   };
 }
 
-export type WorkflowStepKey = "brief" | "discovery" | "blueprint" | "ideaMatch";
+export type WorkflowStepKey = "brief" | "blueprint" | "ideaMatch";
 export type WorkflowStepStatus = "done" | "current" | "upcoming";
 
 export type WorkflowAction = {
@@ -334,11 +334,6 @@ const workflowBlueprint = [
     description: "Define the market, budget, and the problem shape for this project.",
   },
   {
-    key: "discovery" as const,
-    title: "Discovery",
-    description: "Find benchmark companies and narrow the market direction.",
-  },
-  {
     key: "blueprint" as const,
     title: "Blueprint",
     description: "Turn benchmark research into a Korea-ready execution plan.",
@@ -357,11 +352,9 @@ export function getProjectWorkflowState(input: {
 }): ProjectWorkflowState {
   const blueprintCount = Math.max(0, input.blueprintCount ?? 0);
   const ideaSessionCount = Math.max(0, input.ideaSessionCount ?? 0);
-  const discoveryDone = blueprintCount > 0 || ideaSessionCount > 0;
 
   const completionByKey: Record<WorkflowStepKey, boolean> = {
     brief: true,
-    discovery: discoveryDone,
     blueprint: blueprintCount > 0,
     ideaMatch: ideaSessionCount > 0,
   };
@@ -380,22 +373,6 @@ export function getProjectWorkflowState(input: {
 
   const completedCount = steps.filter((step) => step.status === "done").length;
   const completionPercent = Math.round((completedCount / steps.length) * 100);
-
-  if (!discoveryDone) {
-    return {
-      steps,
-      completedCount,
-      completionPercent,
-      stageLabel: "Discovery needed",
-      summary:
-        "This project has a basic brief, but it still needs benchmark research before the strategy can feel grounded.",
-      nextAction: {
-        href: `/discovery?projectId=${input.projectId}`,
-        label: "Start Discovery",
-        description: "Search for benchmark companies and set the market direction.",
-      },
-    };
-  }
 
   if (blueprintCount === 0) {
     return {

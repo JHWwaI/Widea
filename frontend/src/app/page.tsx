@@ -193,9 +193,9 @@ export default function Home() {
                       style={{ background:"rgba(93,93,255,0.12)", border:"1px solid rgba(93,93,255,0.2)", color:"#818CF8" }}>글로벌 시장</span>
                   </div>
                   <div className="mt-6 space-y-2">
-                    <h3 className="text-2xl font-extrabold text-white" style={{ letterSpacing:"-0.04em" }}>Discovery</h3>
-                    <p className="text-sm leading-relaxed text-zinc-500">969개의 글로벌 스타트업 사례를 벡터 검색으로 탐색하세요. 업종, 수익 모델, 투자 단계별 벤치마크를 즉시 발굴합니다.</p>
-                    <Link href="/discovery" className="inline-flex items-center gap-1.5 text-sm font-semibold transition-colors" style={{ color:"#818CF8" }}>탐색 시작 <ArrowRight size={13} /></Link>
+                    <h3 className="text-2xl font-extrabold text-white" style={{ letterSpacing:"-0.04em" }}>아이디어 매칭</h3>
+                    <p className="text-sm leading-relaxed text-zinc-500">100개의 글로벌 검증 사례를 RAG로 의미 검색해 본인 산업·예산에 맞춘 한국형 사업 아이디어 3개를 즉시 생성합니다.</p>
+                    <Link href="/idea-match" className="inline-flex items-center gap-1.5 text-sm font-semibold transition-colors" style={{ color:"#818CF8" }}>아이디어 만들기 <ArrowRight size={13} /></Link>
                   </div>
                 </div>
               </div>

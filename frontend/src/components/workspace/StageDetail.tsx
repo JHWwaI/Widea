@@ -185,6 +185,11 @@ export default function StageDetail({
                             사용자 추가
                           </span>
                         ) : null}
+                        {t.orderIndex >= 100 ? (
+                          <span className="rounded bg-zinc-700/40 px-1.5 py-0.5 text-[0.65rem] font-semibold text-zinc-300">
+                            선택
+                          </span>
+                        ) : null}
                         {t.status === "OUTSOURCED" && t.communityPostId ? (
                           <a
                             href={`/community/${t.communityPostId}`}
@@ -206,7 +211,7 @@ export default function StageDetail({
                           onClick={() => setOutsourceTask(t)}
                           className="rounded-md border border-violet-400/30 bg-violet-500/10 px-2 py-1 text-[0.7rem] font-semibold text-violet-200 hover:bg-violet-500/20"
                         >
-                          🛠 외주
+                          🤝 도움받기
                         </button>
                       ) : null}
                       {t.status !== "SKIPPED" && t.status !== "DONE" ? (
@@ -310,8 +315,8 @@ function StageResourcesBox({ stageNumber }: { stageNumber: number }) {
               ) : null}
             </div>
             <ul className="grid gap-1.5 sm:grid-cols-2">
-              {g.items.map((item) => (
-                <li key={item.url}>
+              {g.items.map((item, i) => (
+                <li key={`${item.url}-${i}`}>
                   <ResourceItem item={item} />
                 </li>
               ))}
