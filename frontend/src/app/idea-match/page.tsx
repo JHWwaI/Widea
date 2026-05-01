@@ -123,10 +123,7 @@ function StepIndicator({ current, total }: { current: number; total: number }) {
           className="h-1.5 rounded-full transition-all duration-300"
           style={{
             width: i === current - 1 ? "2rem" : i < current ? "1.5rem" : "1rem",
-            background:
-              i < current
-                ? "linear-gradient(90deg, #4F6EF7, #6366F1)"
-                : "rgba(255,255,255,0.1)",
+            background: i < current ? "#FFFFFF" : "rgba(255,255,255,0.1)",
           }}
         />
       ))}
@@ -507,7 +504,7 @@ export default function IdeaMatchPage() {
                   className="rounded-xl px-4 py-3 text-sm font-semibold"
                   style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.16)", color: "#6EE7B7" }}
                 >
-                  약 {matchEstimate}개 해외 사례 → Pinecone 벡터 검색 → AI 분석
+                  약 {matchEstimate}개 해외 사례 → 벡터 의미 검색 → 한국형 아이디어 생성
                 </div>
               )}
             </div>
@@ -543,14 +540,11 @@ export default function IdeaMatchPage() {
               type="button"
               onClick={handleSubmit}
               disabled={submitting || !hasCredits || selectedCategories.length === 0}
-              className="w-full rounded-xl py-4 text-base font-bold text-white transition-all"
+              className="w-full rounded-md py-4 text-base font-semibold transition-colors"
               style={
                 submitting || !hasCredits || selectedCategories.length === 0
                   ? { background: "rgba(255,255,255,0.08)", cursor: "not-allowed", color: "var(--ink-4)" }
-                  : {
-                      background: "linear-gradient(135deg, #4F6EF7, #6366F1)",
-                      boxShadow: "0 4px 24px rgba(79,110,247,0.4)",
-                    }
+                  : { background: "#FFFFFF", color: "#08080B" }
               }
             >
               {submitting ? (

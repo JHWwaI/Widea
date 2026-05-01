@@ -107,7 +107,7 @@ export default function UserProfilePage() {
               {user?.name || "익명 전문가"}
             </h1>
             {profile.location ? (
-              <p className="mt-1 text-sm text-zinc-400">📍 {profile.location}</p>
+              <p className="mt-1 text-sm text-zinc-400">{profile.location}</p>
             ) : null}
           </div>
           <span
@@ -143,9 +143,9 @@ export default function UserProfilePage() {
           {user?.email ? (
             <a
               href={`mailto:${user.email}`}
-              className="rounded-xl bg-violet-500 px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_24px_-4px_rgba(124,58,237,0.5)] hover:bg-violet-400"
+              className="rounded-md bg-white px-5 py-2.5 text-sm font-semibold text-zinc-950 hover:bg-zinc-100"
             >
-              💬 이메일로 컨택
+              이메일로 컨택
             </a>
           ) : null}
         </div>

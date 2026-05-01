@@ -124,12 +124,12 @@ export default function CommunityPostDetailPage() {
   return (
     <AuthGuard>
       <div className="workspace-grid fade-up">
-        <div className="flex items-center gap-2 text-sm text-gray-400">
-          <Link href="/community" className="hover:text-gray-600">
+        <div className="flex items-center gap-2 text-sm text-zinc-500">
+          <Link href="/community" className="hover:text-zinc-300">
             커뮤니티
           </Link>
           <span>/</span>
-          <span className="text-gray-600">{categoryLabel}</span>
+          <span className="text-zinc-300">{categoryLabel}</span>
         </div>
 
         {error ? (
@@ -152,7 +152,7 @@ export default function CommunityPostDetailPage() {
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="space-y-3">
                   <span className="badge badge-accent">{categoryLabel}</span>
-                  <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
+                  <h1 className="text-2xl font-bold text-white sm:text-3xl">
                     {post.title}
                   </h1>
                 </div>
@@ -167,14 +167,14 @@ export default function CommunityPostDetailPage() {
                 ) : null}
               </div>
 
-              <div className="flex flex-wrap items-center gap-4 text-xs text-gray-400">
+              <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-500">
                 <span>{post.author?.name || post.author?.email || "익명"}</span>
                 <span>{formatDate(post.createdAt)}</span>
                 <span>조회 {post.viewCount}</span>
               </div>
 
-              <div className="border-t border-gray-100 pt-5">
-                <p className="whitespace-pre-wrap text-sm leading-7 text-gray-700">
+              <div className="border-t border-white/[0.06] pt-5">
+                <p className="whitespace-pre-wrap text-sm leading-7 text-zinc-200">
                   {post.content}
                 </p>
               </div>
@@ -193,25 +193,25 @@ export default function CommunityPostDetailPage() {
             <Surface className="space-y-5">
               <div>
                 <p className="eyebrow">댓글</p>
-                <h2 className="text-xl font-semibold text-gray-900">
+                <h2 className="text-xl font-semibold text-white">
                   댓글 {post.comments.length}개
                 </h2>
               </div>
 
               {post.comments.length === 0 ? (
-                <p className="text-sm text-gray-400">아직 댓글이 없습니다. 첫 댓글을 남겨보세요.</p>
+                <p className="text-sm text-zinc-500">아직 댓글이 없습니다. 첫 댓글을 남겨보세요.</p>
               ) : (
                 <div className="divide-y divide-gray-50">
                   {post.comments.map((comment) => (
                     <div key={comment.id} className="flex items-start justify-between gap-3 py-4">
                       <div className="space-y-1.5">
-                        <div className="flex items-center gap-2 text-xs text-gray-400">
-                          <span className="font-medium text-gray-600">
+                        <div className="flex items-center gap-2 text-xs text-zinc-500">
+                          <span className="font-medium text-zinc-300">
                             {comment.author?.name || comment.author?.email || "익명"}
                           </span>
                           <span>{formatDate(comment.createdAt)}</span>
                         </div>
-                        <p className="text-sm leading-6 text-gray-700">{comment.content}</p>
+                        <p className="text-sm leading-6 text-zinc-200">{comment.content}</p>
                       </div>
                       {token && user?.id === comment.author?.id ? (
                         <button
@@ -229,7 +229,7 @@ export default function CommunityPostDetailPage() {
               )}
 
               {token ? (
-                <form onSubmit={handleAddComment} className="grid gap-3 border-t border-gray-100 pt-5">
+                <form onSubmit={handleAddComment} className="grid gap-3 border-t border-white/[0.06] pt-5">
                   <label htmlFor="comment" className="field-label">
                     댓글 작성
                   </label>
@@ -251,9 +251,9 @@ export default function CommunityPostDetailPage() {
                   </button>
                 </form>
               ) : (
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-zinc-500">
                   댓글을 작성하려면{" "}
-                  <Link href="/login" className="text-blue-600 underline">
+                  <Link href="/login" className="text-zinc-300 underline">
                     로그인
                   </Link>
                   이 필요합니다.

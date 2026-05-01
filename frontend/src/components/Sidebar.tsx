@@ -13,7 +13,6 @@ function getNavSections(): NavSection[] {
     items: [
       { href: "/community", label: "커뮤니티", icon: "users" },
       { href: "/talent", label: "전문가 찾기", icon: "user" },
-      { href: "/collab/meet", label: "실시간 회의", icon: "chat" },
     ],
   };
 

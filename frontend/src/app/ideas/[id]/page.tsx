@@ -103,17 +103,17 @@ function InlineEdit({ label, value, placeholder, onSave, onDelete, multiline = t
 
   if (editing) {
     return (
-      <div className="rounded-xl border border-indigo-400/40 bg-indigo-500/15 p-4 space-y-2">
+      <div className="rounded-xl border border-white/10 bg-white/[0.04] p-4 space-y-2">
         <div className="flex items-center justify-between">
-          <p className="text-xs font-semibold text-indigo-300 uppercase tracking-wider">{label}</p>
+          <p className="text-xs font-semibold text-zinc-300 uppercase tracking-wider">{label}</p>
           <div className="flex gap-2">
-            <button type="button" onClick={commit} className="rounded-md bg-indigo-500 px-2.5 py-1 text-xs font-semibold text-white hover:bg-indigo-400">저장</button>
+            <button type="button" onClick={commit} className="rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-white hover:bg-zinc-100">저장</button>
             <button type="button" onClick={() => { setDraft(value); setEditing(false); }} className="rounded-md bg-white/[0.04] px-2.5 py-1 text-xs font-semibold text-zinc-400 border border-white/15 hover:bg-white/[0.04]/5">취소</button>
           </div>
         </div>
         <textarea
           autoFocus
-          className="w-full resize-none rounded-lg border border-indigo-400/40 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-indigo-400 min-h-[80px]"
+          className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-white/30 min-h-[80px]"
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
           onKeyDown={handleKeyDown}
@@ -127,12 +127,12 @@ function InlineEdit({ label, value, placeholder, onSave, onDelete, multiline = t
     <button
       type="button"
       onClick={() => { setDraft(value); setEditing(true); }}
-      className="group w-full rounded-xl border border-white/10 bg-white/[0.04] p-4 text-left hover:border-indigo-400/40 hover:bg-indigo-500/10 transition-colors"
+      className="group w-full rounded-xl border border-white/10 bg-white/[0.04] p-4 text-left hover:border-white/10 hover:bg-white/[0.025] transition-colors"
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider group-hover:text-indigo-300">{label}</p>
+        <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider group-hover:text-zinc-300">{label}</p>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <span className="rounded px-1.5 py-0.5 text-[0.65rem] text-indigo-300 bg-indigo-500/15">편집</span>
+          <span className="rounded px-1.5 py-0.5 text-[0.65rem] text-zinc-300 bg-white/[0.04]">편집</span>
           {onDelete ? (
             <span
               role="button"
@@ -172,12 +172,12 @@ function InlineEditCustom({
   const [draftContent, setDraftContent] = useState(content);
 
   return (
-    <div className="group rounded-xl border border-white/10 bg-white/[0.04] p-4 space-y-2 hover:border-indigo-400/40 transition-colors">
+    <div className="group rounded-xl border border-white/10 bg-white/[0.04] p-4 space-y-2 hover:border-white/10 transition-colors">
       <div className="flex items-center justify-between gap-2">
         {editingTitle ? (
           <input
             autoFocus
-            className="flex-1 rounded-lg border border-indigo-400/40 bg-indigo-500/15 px-2 py-1 text-sm font-semibold text-white outline-none focus:ring-2 focus:ring-indigo-400"
+            className="flex-1 rounded-lg border border-white/10 bg-white/[0.04] px-2 py-1 text-sm font-semibold text-white outline-none focus:ring-2 focus:ring-white/30"
             value={draftTitle}
             onChange={(e) => setDraftTitle(e.target.value)}
             onBlur={() => { onSaveTitle(draftTitle); setEditingTitle(false); }}
@@ -192,7 +192,7 @@ function InlineEditCustom({
           <button
             type="button"
             onClick={() => { setDraftTitle(title); setEditingTitle(true); }}
-            className="text-xs font-semibold text-zinc-500 uppercase tracking-wider hover:text-indigo-300 transition-colors"
+            className="text-xs font-semibold text-zinc-500 uppercase tracking-wider hover:text-zinc-300 transition-colors"
           >
             {title}
           </button>
@@ -210,14 +210,14 @@ function InlineEditCustom({
         <div className="space-y-2">
           <textarea
             autoFocus
-            className="w-full resize-none rounded-lg border border-indigo-400/40 bg-indigo-500/10 px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-indigo-400 min-h-[80px]"
+            className="w-full resize-none rounded-lg border border-white/10 bg-white/[0.025] px-3 py-2 text-sm text-white outline-none focus:ring-2 focus:ring-white/30 min-h-[80px]"
             value={draftContent}
             onChange={(e) => setDraftContent(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Escape") { onSaveContent(draftContent); setEditingContent(false); } }}
             placeholder="내용을 입력하세요..."
           />
           <div className="flex gap-2">
-            <button type="button" onClick={() => { onSaveContent(draftContent); setEditingContent(false); }} className="rounded-md bg-indigo-500 px-2.5 py-1 text-xs font-semibold text-white hover:bg-indigo-400">저장</button>
+            <button type="button" onClick={() => { onSaveContent(draftContent); setEditingContent(false); }} className="rounded-md bg-white px-2.5 py-1 text-xs font-semibold text-white hover:bg-zinc-100">저장</button>
             <button type="button" onClick={() => { setDraftContent(content); setEditingContent(false); }} className="rounded-md bg-white/[0.04] px-2.5 py-1 text-xs font-semibold text-zinc-400 border border-white/15 hover:bg-white/[0.04]/5">취소</button>
           </div>
         </div>
@@ -271,7 +271,7 @@ const _GOVERNMENT_PROGRAMS_DEPRECATED = [
 const DECISION_META: Record<string, { label: string; cls: string }> = {
   PENDING: { label: "검증 중",  cls: "bg-amber-500/10 text-amber-300 border-amber-500/30" },
   GO:      { label: "GO ✓",    cls: "bg-emerald-500/10 text-emerald-300 border-emerald-500/30" },
-  PIVOT:   { label: "PIVOT ↻", cls: "bg-indigo-500/15 text-indigo-300 border-indigo-400/40" },
+  PIVOT:   { label: "PIVOT ↻", cls: "bg-white/[0.04] text-zinc-300 border-white/10" },
   HOLD:    { label: "HOLD ✗",  cls: "bg-rose-500/15 text-rose-300 border-rose-500/30" },
 };
 
@@ -725,13 +725,13 @@ export default function IdeaWorkspacePage() {
         {idea.status === "SELECTED" ? (
           <Link
             href={`/workspace/${idea.id}`}
-            className="group flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-violet-400/40 bg-gradient-to-br from-violet-500/[0.10] to-violet-500/[0.02] px-5 py-4 transition-all hover:border-violet-400/60"
+            className="group flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/[0.02] px-5 py-4 transition-colors hover:border-white/20 hover:bg-white/[0.04]"
           >
             <div>
-              <p className="text-xs font-semibold text-violet-300">실행 시작</p>
-              <p className="mt-0.5 text-base font-bold text-white">워크스페이스 열기 — 6단계 33개 작업으로 창업 진행</p>
+              <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">실행 시작</p>
+              <p className="mt-1 text-base font-semibold text-white">워크스페이스 열기 · 6단계 작업으로 창업 진행</p>
             </div>
-            <span className="rounded-xl bg-violet-500 px-4 py-2 text-sm font-bold text-white shadow-[0_4px_24px_-4px_rgba(124,58,237,0.5)] group-hover:bg-violet-400">
+            <span className="rounded-md bg-white px-4 py-2 text-sm font-semibold text-zinc-950 group-hover:bg-zinc-100">
               열기 →
             </span>
           </Link>
@@ -747,8 +747,8 @@ export default function IdeaWorkspacePage() {
                 onClick={() => setTab(t.id)}
                 className={`shrink-0 border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
                   tab === t.id
-                    ? "border-indigo-400 text-indigo-300"
-                    : "border-transparent text-zinc-400 hover:text-zinc-200"
+                    ? "border-white text-white"
+                    : "border-transparent text-zinc-500 hover:text-zinc-200"
                 }`}
               >
                 {t.label}
@@ -821,7 +821,7 @@ export default function IdeaWorkspacePage() {
             <button
               type="button"
               onClick={addCustomSection}
-              className="flex w-full items-center gap-2 rounded-xl border border-dashed border-white/15 px-4 py-3 text-sm text-zinc-500 hover:border-indigo-400/60 hover:text-indigo-300 transition-colors"
+              className="flex w-full items-center gap-2 rounded-xl border border-dashed border-white/15 px-4 py-3 text-sm text-zinc-500 hover:border-white/30 hover:text-zinc-300 transition-colors"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
@@ -868,7 +868,7 @@ export default function IdeaWorkspacePage() {
                           type="checkbox"
                           checked={!!checked[item]}
                           onChange={() => toggleDoc(item)}
-                          className="h-4 w-4 rounded accent-indigo-500"
+                          className="h-4 w-4 rounded accent-white"
                         />
                         <span className={`text-sm ${checked[item] ? "text-zinc-500 line-through" : "text-zinc-100"}`}>
                           {item}
@@ -1173,7 +1173,7 @@ export default function IdeaWorkspacePage() {
                                   setVlEditId(v.id);
                                   setVlEditResult(String((v.resultData as Record<string, unknown> | null)?.note ?? ""));
                                 }}
-                                className="text-xs text-indigo-300 hover:underline"
+                                className="text-xs text-zinc-300 hover:underline"
                               >
                                 {v.resultData ? "결과 수정" : "+ 결과 메모 추가"}
                               </button>
@@ -1270,7 +1270,7 @@ export default function IdeaWorkspacePage() {
                     {OUTSOURCE_RATES.map((row) => (
                       <tr key={row.item} className="hover:bg-white/[0.03]">
                         <td className="px-4 py-3 text-zinc-200">{row.item}</td>
-                        <td className="px-4 py-3 font-semibold text-indigo-200">{row.range}</td>
+                        <td className="px-4 py-3 font-semibold text-white">{row.range}</td>
                         <td className="px-4 py-3 text-xs text-zinc-500">{row.source}</td>
                       </tr>
                     ))}
@@ -1282,7 +1282,7 @@ export default function IdeaWorkspacePage() {
                   href="https://kmong.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs font-medium text-indigo-300 hover:text-indigo-200"
+                  className="text-xs font-medium text-zinc-300 hover:text-white"
                 >
                   크몽에서 견적 받기 →
                 </a>
@@ -1290,7 +1290,7 @@ export default function IdeaWorkspacePage() {
                   href="https://www.wishket.com"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs font-medium text-indigo-300 hover:text-indigo-200"
+                  className="text-xs font-medium text-zinc-300 hover:text-white"
                 >
                   위시켓에서 견적 받기 →
                 </a>
@@ -1304,8 +1304,8 @@ export default function IdeaWorkspacePage() {
             <div className="grid gap-4 sm:grid-cols-2">
               <Surface className="space-y-3">
                 <div className="flex items-start gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-500/15">
-                    <svg className="h-5 w-5 text-indigo-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.04]">
+                    <svg className="h-5 w-5 text-zinc-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" />
                     </svg>
                   </div>

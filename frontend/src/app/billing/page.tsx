@@ -197,15 +197,15 @@ export default function BillingPage() {
                     key={plan.planType}
                     className={`relative flex flex-col justify-between rounded-2xl border p-5 transition-colors ${
                       isCurrent
-                        ? "border-indigo-400/50 bg-indigo-500/10 ring-1 ring-indigo-400/30"
+                        ? "border-white/30 bg-white/[0.04] ring-1 ring-white/10"
                         : isRecommended
-                          ? "border-indigo-400/30 bg-white/[0.04] hover:border-indigo-400/50"
-                          : "border-white/10 bg-white/[0.04] hover:border-indigo-400/30"
+                          ? "border-white/10 bg-white/[0.04] hover:border-white/20"
+                          : "border-white/10 bg-white/[0.04] hover:border-white/10"
                     }`}
                   >
                     {(isCurrent || isRecommended) ? (
                       <span className={`absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-0.5 text-xs font-semibold text-white shadow ${
-                        isCurrent ? "bg-zinc-700" : "bg-indigo-500"
+                        isCurrent ? "bg-zinc-700" : "bg-white"
                       }`}>
                         {isCurrent ? "현재 플랜" : "Recommended"}
                       </span>

@@ -18,7 +18,14 @@ export const metadata: Metadata = {
     template: "%s | Widea",
   },
   description:
-    "글로벌 사례 검색, 한국형 실행 전략, 아이디어 매칭을 한 흐름으로 묶은 AI 창업 워크스페이스",
+    "검증된 해외 사례로 한국형 사업 아이디어를 만들고, 6단계 워크스페이스로 실행까지 안내하는 창업 도구",
+};
+
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#08080B",
 };
 
 export default function RootLayout({

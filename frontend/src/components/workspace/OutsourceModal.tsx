@@ -121,8 +121,8 @@ export default function OutsourceModal({
         <div className="flex h-full flex-col">
           <header className="flex items-start justify-between gap-4 border-b border-white/10 p-5">
             <div className="min-w-0">
-              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-violet-300">
-                🤝 외주·AC 컨설팅·팀 모집 자동 작성
+              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-zinc-400">
+                외주·AC 컨설팅·팀 모집 글 자동 작성
               </p>
               <p className="mt-1 text-sm text-zinc-300">{task.content}</p>
               {task.outsourceRole ? (
@@ -185,9 +185,9 @@ export default function OutsourceModal({
 
               {/* 추천 전문가 — 게시 안 하고 직접 컨택 */}
               {matched.length > 0 ? (
-                <div className="space-y-2 rounded-xl border border-violet-400/20 bg-violet-500/[0.04] p-4">
-                  <p className="text-xs font-bold text-violet-300">
-                    💡 이 task에 맞는 전문가 {matched.length}명 — 게시 없이 직접 컨택 가능
+                <div className="space-y-2 rounded-xl border border-white/10 bg-white/[0.02] p-4">
+                  <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">
+                    이 task에 맞는 전문가 {matched.length}명 · 게시 없이 직접 컨택 가능
                   </p>
                   <div className="space-y-1.5">
                     {matched.map((m) => (
@@ -196,10 +196,10 @@ export default function OutsourceModal({
                         href={`/u/${m.userId}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-between gap-3 rounded-lg border border-white/5 bg-white/[0.02] px-3 py-2 transition-colors hover:border-violet-400/40 hover:bg-violet-500/[0.06]"
+                        className="flex items-center justify-between gap-3 rounded-md border border-white/5 bg-white/[0.02] px-3 py-2 transition-colors hover:border-white/20 hover:bg-white/[0.04]"
                       >
                         <div className="min-w-0">
-                          <p className="text-sm font-bold text-white">
+                          <p className="text-sm font-semibold text-white">
                             {m.user?.name || "익명"}
                           </p>
                           <p className="truncate text-[0.7rem] text-zinc-400">{m.headline}</p>
@@ -209,7 +209,7 @@ export default function OutsourceModal({
                             </p>
                           ) : null}
                         </div>
-                        <span className="shrink-0 text-[0.7rem] font-semibold text-violet-300">
+                        <span className="shrink-0 text-[0.7rem] font-medium text-zinc-300">
                           프로필 →
                         </span>
                       </Link>

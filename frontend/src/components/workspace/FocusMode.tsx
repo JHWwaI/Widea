@@ -101,18 +101,16 @@ export default function FocusMode({
   // 모든 task 완료 — 축하 화면
   if (!currentTask || !currentStage) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 text-center">
-        <div className="text-7xl">🎉</div>
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-5 text-center">
         <h2 className="text-3xl font-bold text-white sm:text-4xl">
           모든 단계 완료
         </h2>
         <p className="max-w-md text-base leading-7 text-zinc-400">
-          {ideaTitle} — 6단계 {totalTasks}개 작업을 모두 처리했습니다.<br/>
-          이제 진짜 시작이에요.
+          {ideaTitle} — 6단계 {totalTasks}개 작업을 모두 처리했습니다.
         </p>
         <div className="flex flex-wrap justify-center gap-2">
           <Link href={`/show/${ideaId}`} className="btn-primary px-5 py-2">
-            🌐 사업 페이지 공유하기
+            사업 페이지 공유하기
           </Link>
           <button type="button" onClick={onSwitchToGrid} className="btn-ghost px-4 py-2 text-sm">
             전체 보기
@@ -263,9 +261,9 @@ export default function FocusMode({
             type="button"
             onClick={() => action("DONE")}
             disabled={busy}
-            className="w-full rounded-xl bg-emerald-400 px-6 py-5 text-lg font-extrabold tracking-tight text-zinc-950 shadow-[0_8px_32px_-8px_rgba(52,211,153,0.5)] transition-all hover:bg-emerald-300 hover:shadow-[0_12px_40px_-8px_rgba(52,211,153,0.6)] disabled:opacity-60"
+            className="w-full rounded-md bg-white px-6 py-4 text-base font-semibold tracking-tight text-zinc-950 transition-colors hover:bg-zinc-100 disabled:opacity-60"
           >
-            ✓ 이거 다 했어요
+            이거 다 했어요
           </button>
 
           {currentTask.outsourceRole ? (
@@ -273,9 +271,9 @@ export default function FocusMode({
               type="button"
               onClick={() => setOutsourceTask(currentTask)}
               disabled={busy}
-              className="w-full rounded-xl border border-violet-400/40 bg-violet-500/10 px-6 py-3.5 text-sm font-bold text-violet-200 transition-colors hover:border-violet-400/60 hover:bg-violet-500/20 disabled:opacity-60"
+              className="w-full rounded-md border border-white/10 bg-white/[0.03] px-6 py-3.5 text-sm font-semibold text-zinc-200 transition-colors hover:border-white/20 hover:bg-white/[0.06] disabled:opacity-60"
             >
-              🤝 도움받기 — 외주·AC 컨설팅·팀 모집 자동 작성
+              도움받기 · 외주·AC 컨설팅·팀 모집 글 작성
             </button>
           ) : null}
 

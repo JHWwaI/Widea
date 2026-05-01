@@ -64,7 +64,7 @@ export default function BillingSuccessPage() {
     return (
       <div className="flex min-h-screen items-center justify-center" style={{ background: "var(--bg)" }}>
         <div className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-8 py-6">
-          <span className="inline-flex h-2.5 w-2.5 animate-pulse rounded-full bg-indigo-400" />
+          <span className="inline-flex h-2.5 w-2.5 animate-pulse rounded-full bg-white" />
           <span className="text-sm text-zinc-400">결제를 확인하는 중입니다...</span>
         </div>
       </div>
@@ -118,7 +118,7 @@ export default function BillingSuccessPage() {
             </div>
             <div className="flex justify-between">
               <span className="text-zinc-400">현재 잔액</span>
-              <span className="font-semibold text-indigo-300">{result.creditBalance.toLocaleString()} cr</span>
+              <span className="font-semibold text-zinc-300">{result.creditBalance.toLocaleString()} cr</span>
             </div>
           </div>
         )}

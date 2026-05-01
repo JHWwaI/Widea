@@ -48,6 +48,7 @@ export default function WorkspacePage() {
   const [error, setError] = useState("");
   const [openStageId, setOpenStageId] = useState<string | null>(null);
   const [view, setView] = useState<"focus" | "grid">("grid");
+  const [activeTab, setActiveTab] = useState<"stages" | "help">("stages");
 
   async function refresh() {
     if (!token || !ideaId) return;
@@ -179,166 +180,269 @@ export default function WorkspacePage() {
 
   return (
     <AuthGuard>
-      <div className="mx-auto max-w-5xl space-y-10 fade-up py-4 pb-12">
-        {/* 헤더 */}
-        <header className="space-y-3">
-          <Link href={`/ideas/${idea.id}`} className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-300">
-            ← 아이디어 상세
-          </Link>
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div className="space-y-2">
+      <div className="mx-auto max-w-5xl fade-up py-4 pb-16">
+        {/* Breadcrumb */}
+        <Link
+          href={`/ideas/${idea.id}`}
+          className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-300"
+        >
+          ← 아이디어 상세
+        </Link>
+
+        {/* 헤더 — 한 줄 layout: 제목 좌 / 진척률 우 */}
+        <header className="mt-6 border-b border-white/[0.06] pb-8">
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <div className="min-w-0 flex-1">
               <p className="eyebrow">워크스페이스</p>
-              <h1 className="editorial-h1">{idea.titleKo}</h1>
+              <h1 className="mt-2 text-balance text-2xl font-bold leading-[1.15] tracking-tight text-white sm:text-3xl">
+                {idea.titleKo}
+              </h1>
               {idea.oneLinerKo ? (
-                <p className="text-sm text-zinc-400">{idea.oneLinerKo}</p>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-400">
+                  {idea.oneLinerKo}
+                </p>
               ) : null}
             </div>
-            <div className="text-right">
-              <p className="display-num text-4xl text-emerald-300 sm:text-5xl">{overallPct}%</p>
-              <p className="mt-1 text-xs text-zinc-500">전체 진척 ({done}/{total})</p>
+            <div className="text-right shrink-0">
+              <div className="flex items-baseline justify-end gap-1">
+                <span className="display-num text-3xl text-white sm:text-4xl">{overallPct}</span>
+                <span className="text-base font-semibold text-zinc-600">%</span>
+              </div>
+              <p className="mt-1 text-xs text-zinc-500">{done} / {total} 작업</p>
+            </div>
+          </div>
+
+          {/* 가로 진척 바 + 6단계 stepper */}
+          <div className="mt-6 space-y-2">
+            <div className="h-1 overflow-hidden rounded-full bg-white/[0.06]">
+              <div
+                className="h-full rounded-full bg-white transition-all"
+                style={{ width: `${overallPct}%` }}
+              />
+            </div>
+            <div className="grid grid-cols-6 gap-1">
+              {stages.map((s) => {
+                const sTotal = s.tasks.filter((t) => t.orderIndex < 100).length;
+                const sDone = s.tasks.filter(
+                  (t) => t.orderIndex < 100 && t.status !== "PENDING",
+                ).length;
+                const sPct = sTotal === 0 ? 0 : (sDone / sTotal) * 100;
+                const isComplete = sTotal > 0 && sDone === sTotal;
+                return (
+                  <div
+                    key={s.id}
+                    className="h-0.5 overflow-hidden rounded-full bg-white/[0.04]"
+                  >
+                    <div
+                      className={`h-full rounded-full ${
+                        isComplete ? "bg-white" : "bg-white/40"
+                      }`}
+                      style={{ width: `${sPct}%` }}
+                    />
+                  </div>
+                );
+              })}
             </div>
           </div>
         </header>
 
-        {/* 다음 할 일 Hero — 가장 큰 CTA */}
+        {/* 다음 할 일 Hero — 가장 큰 CTA, dramatic */}
         {allDone ? (
-          <section className="rounded-2xl border border-emerald-400/30 bg-emerald-500/[0.06] p-6 text-center">
-            <p className="text-3xl">🎉</p>
-            <h2 className="mt-2 text-xl font-bold text-emerald-200">모든 단계 완료!</h2>
-            <p className="mt-1 text-sm text-zinc-400">{total}개 작업을 모두 처리했어요.</p>
+          <section className="mt-10 border-b border-white/[0.06] pb-10 text-center">
+            <p className="eyebrow">완료</p>
+            <h2 className="mt-3 text-2xl font-bold text-white sm:text-3xl">
+              모든 단계 완료
+            </h2>
+            <p className="mt-2 text-sm text-zinc-400">
+              {total}개 작업을 모두 처리했습니다
+            </p>
             <Link
               href={`/show/${idea.id}`}
-              className="mt-4 inline-flex rounded-xl bg-emerald-400 px-5 py-2.5 text-sm font-bold text-zinc-950 hover:bg-emerald-300"
+              className="mt-6 inline-flex rounded-md bg-white px-6 py-3 text-sm font-semibold text-zinc-950 hover:bg-zinc-100"
             >
-              🌐 사업 페이지 공유하기
+              사업 페이지 공유하기
             </Link>
           </section>
         ) : nextTask && nextStage ? (
-          <section className="space-y-4 rounded-2xl border border-violet-400/30 bg-gradient-to-br from-violet-500/[0.08] to-violet-500/[0.02] p-6">
-            <div className="flex items-baseline justify-between">
-              <p className="text-xs font-semibold text-violet-300">
-                지금 할 일 · 0{nextStage.stageNumber} {nextStage.name}
+          <section className="mt-12 border-b border-white/[0.06] pb-12">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <p className="eyebrow">지금 할 일</p>
+              <p className="text-xs text-zinc-500">
+                0{nextStage.stageNumber} {nextStage.name}
               </p>
-              <p className="text-xs text-zinc-500">{done}/{total} 진행</p>
             </div>
-            <h2 className="text-balance text-2xl font-extrabold leading-tight text-white sm:text-3xl">
+            <h2 className="mt-3 text-balance text-xl font-bold leading-[1.2] tracking-tight text-white sm:text-2xl">
               {nextTask.content}
             </h2>
+            {nextTask.outsourceRole ? (
+              <p className="mt-3 text-sm text-zinc-500">
+                외주 가능 · {nextTask.outsourceRole}
+              </p>
+            ) : null}
             <button
               type="button"
               onClick={() => setView("focus")}
-              className="w-full rounded-xl bg-violet-500 px-6 py-4 text-base font-bold text-white shadow-[0_8px_32px_-8px_rgba(124,58,237,0.5)] transition-all hover:bg-violet-400 hover:shadow-[0_12px_40px_-8px_rgba(124,58,237,0.6)] sm:w-auto"
+              className="mt-6 rounded-md bg-white px-6 py-3 text-sm font-semibold text-zinc-950 transition-colors hover:bg-zinc-100"
             >
               이 작업 시작하기 →
             </button>
           </section>
         ) : null}
 
-        {/* 3-허브: 외주·AC 컨설팅·팀 모집 — 도움받기 진입 */}
-        <section className="space-y-3">
-          <div className="flex items-baseline justify-between">
-            <h2 className="text-base font-semibold text-white">도움이 필요하면</h2>
-            <span className="text-xs text-zinc-500">커뮤니티에 게시 → 응답 받기</span>
+        {/* 탭: 6단계 여정 / 도움받기 */}
+        <section className="mt-12">
+          <div className="flex items-center gap-1 border-b border-white/[0.06]">
+            <button
+              type="button"
+              onClick={() => setActiveTab("stages")}
+              className={`relative px-4 py-3 text-sm font-medium transition-colors ${
+                activeTab === "stages"
+                  ? "text-white"
+                  : "text-zinc-500 hover:text-zinc-300"
+              }`}
+            >
+              6단계 여정
+              {activeTab === "stages" ? (
+                <span className="absolute bottom-[-1px] left-0 right-0 h-px bg-white" />
+              ) : null}
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("help")}
+              className={`relative px-4 py-3 text-sm font-medium transition-colors ${
+                activeTab === "help"
+                  ? "text-white"
+                  : "text-zinc-500 hover:text-zinc-300"
+              }`}
+            >
+              도움받기
+              {activeTab === "help" ? (
+                <span className="absolute bottom-[-1px] left-0 right-0 h-px bg-white" />
+              ) : null}
+            </button>
+            <span className="ml-auto text-xs text-zinc-500">
+              {activeTab === "stages"
+                ? "단계 클릭 · 체크리스트 열기"
+                : "커뮤니티에 게시 · 응답 받기"}
+            </span>
           </div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <Link
-              href={`/community/new?category=OUTSOURCE_REQUEST&title=${encodeURIComponent(`[${idea.titleKo}] 외주 의뢰`)}`}
-              className="group rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition-all hover:border-amber-400/40 hover:bg-amber-500/[0.05]"
-            >
-              <p className="text-2xl">🛠</p>
-              <h3 className="mt-2 text-sm font-bold text-white group-hover:text-amber-200">외주 의뢰</h3>
-              <p className="mt-1 text-xs leading-5 text-zinc-400">
-                디자이너·개발자·마케터에게 작업 요청
-              </p>
-              <p className="mt-3 text-xs font-semibold text-amber-300">글 작성하기 →</p>
-            </Link>
 
-            <Link
-              href={`/community/new?category=AC_REQUEST&title=${encodeURIComponent(`[${idea.titleKo}] AC·멘토 컨설팅 요청`)}`}
-              className="group rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition-all hover:border-violet-400/40 hover:bg-violet-500/[0.05]"
-            >
-              <p className="text-2xl">🎓</p>
-              <h3 className="mt-2 text-sm font-bold text-white group-hover:text-violet-200">AC 컨설팅</h3>
-              <p className="mt-1 text-xs leading-5 text-zinc-400">
-                엑셀러레이터·멘토 매칭으로 검증
-              </p>
-              <p className="mt-3 text-xs font-semibold text-violet-300">글 작성하기 →</p>
-            </Link>
+          {/* 6단계 그리드 */}
+          {activeTab === "stages" ? (
+            <div className="mt-6 grid gap-px overflow-hidden rounded-xl bg-white/[0.06] sm:grid-cols-2 lg:grid-cols-3">
+              {stages.map((s) => {
+                const stageTotal = s.tasks.filter((t) => t.orderIndex < 100).length;
+                const stageDone = s.tasks.filter(
+                  (t) =>
+                    t.orderIndex < 100 &&
+                    (t.status === "DONE" || t.status === "OUTSOURCED" || t.status === "SKIPPED"),
+                ).length;
+                const stagePct = stageTotal === 0 ? 0 : Math.round((stageDone / stageTotal) * 100);
+                const isComplete = stageTotal > 0 && stageDone === stageTotal;
+                const isActive = s.status === "ACTIVE";
 
-            <Link
-              href={`/community/new?category=TEAM_RECRUIT&title=${encodeURIComponent(`[${idea.titleKo}] 팀원 모집`)}`}
-              className="group rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition-all hover:border-emerald-400/40 hover:bg-emerald-500/[0.05]"
-            >
-              <p className="text-2xl">🤝</p>
-              <h3 className="mt-2 text-sm font-bold text-white group-hover:text-emerald-200">팀원 모집</h3>
-              <p className="mt-1 text-xs leading-5 text-zinc-400">
-                공동창업자·개발자·기획자 영입
-              </p>
-              <p className="mt-3 text-xs font-semibold text-emerald-300">글 작성하기 →</p>
-            </Link>
-          </div>
-        </section>
-
-        {/* 6단계 카드 그리드 */}
-        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {stages.map((s) => {
-            const stageTotal = s.tasks.length;
-            const stageDone = s.tasks.filter(
-              (t) => t.status === "DONE" || t.status === "OUTSOURCED" || t.status === "SKIPPED",
-            ).length;
-            const stagePct = stageTotal === 0 ? 0 : Math.round((stageDone / stageTotal) * 100);
-            const statusBadge =
-              s.status === "DONE"
-                ? { label: "완료", color: "text-emerald-300", bg: "bg-emerald-500/10", ring: "ring-emerald-400/30" }
-                : s.status === "ACTIVE"
-                  ? { label: "진행 중", color: "text-violet-300", bg: "bg-violet-500/10", ring: "ring-violet-400/30" }
-                  : { label: "대기", color: "text-zinc-500", bg: "bg-white/[0.03]", ring: "ring-white/10" };
-
-            return (
-              <button
-                key={s.id}
-                type="button"
-                onClick={() => setOpenStageId(s.id)}
-                className={`group relative overflow-hidden rounded-2xl border bg-white/[0.02] p-5 text-left transition-all hover:bg-white/[0.05] ${
-                  s.status === "ACTIVE" ? "border-violet-400/40" : "border-white/10"
-                }`}
-              >
-                <div className="flex items-baseline justify-between">
-                  <span className="text-3xl font-black tabular-nums text-white/[0.15]">
-                    0{s.stageNumber}
-                  </span>
-                  <span
-                    className={`rounded-md px-2 py-0.5 text-[0.65rem] font-bold uppercase tracking-wider ring-1 ${statusBadge.bg} ${statusBadge.color} ${statusBadge.ring}`}
+                return (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setOpenStageId(s.id)}
+                    className="group flex min-h-[160px] flex-col bg-zinc-950 p-6 text-left transition-colors hover:bg-white/[0.025]"
                   >
-                    {statusBadge.label}
-                  </span>
-                </div>
+                    <div className="flex items-baseline justify-between">
+                      <span className="display-num text-3xl text-white/[0.18]">
+                        0{s.stageNumber}
+                      </span>
+                      <span
+                        className={`text-[0.65rem] font-medium uppercase tracking-wider ${
+                          isComplete
+                            ? "text-white"
+                            : isActive
+                              ? "text-zinc-300"
+                              : "text-zinc-600"
+                        }`}
+                      >
+                        {isComplete ? "완료" : isActive ? "진행 중" : "대기"}
+                      </span>
+                    </div>
 
-                <h3 className="mt-3 text-base font-bold text-white">{s.name}</h3>
-                <p className="mt-1 text-xs text-zinc-500">
-                  {stageDone}/{stageTotal} 완료
+                    <h3 className="mt-3 text-sm font-semibold text-white">{s.name}</h3>
+                    <p className="mt-1 text-xs text-zinc-500">
+                      {stageDone} / {stageTotal} 작업
+                    </p>
+
+                    <div className="mt-auto pt-5">
+                      <div className="h-px overflow-hidden bg-white/[0.06]">
+                        <div
+                          className={`h-full transition-all ${
+                            isComplete
+                              ? "bg-white"
+                              : isActive
+                                ? "bg-white/70"
+                                : "bg-white/30"
+                          }`}
+                          style={{ width: `${stagePct}%` }}
+                        />
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
+
+          {/* 도움받기 3-허브 */}
+          {activeTab === "help" ? (
+            <div className="mt-6 grid gap-px overflow-hidden rounded-xl bg-white/[0.06] sm:grid-cols-3">
+              <Link
+                href={`/community/new?category=OUTSOURCE_REQUEST&title=${encodeURIComponent(`[${idea.titleKo}] 외주 의뢰`)}`}
+                className="group bg-zinc-950 p-6 transition-colors hover:bg-white/[0.025]"
+              >
+                <p className="text-[0.65rem] font-medium uppercase tracking-wider text-zinc-500">외주</p>
+                <h3 className="mt-2 text-base font-semibold text-white">외주 의뢰</h3>
+                <p className="mt-1.5 text-xs leading-5 text-zinc-400">
+                  디자이너·개발자·마케터에게 작업 요청
                 </p>
+                <p className="mt-4 text-xs font-medium text-zinc-300 group-hover:text-white">
+                  글 작성하기 →
+                </p>
+              </Link>
 
-                <div className="mt-4 h-1 overflow-hidden rounded-full bg-white/[0.06]">
-                  <div
-                    className={`h-full rounded-full transition-all ${
-                      s.status === "DONE"
-                        ? "bg-emerald-400"
-                        : s.status === "ACTIVE"
-                          ? "bg-violet-400"
-                          : "bg-zinc-600"
-                    }`}
-                    style={{ width: `${stagePct}%` }}
-                  />
-                </div>
-              </button>
-            );
-          })}
+              <Link
+                href={`/community/new?category=AC_REQUEST&title=${encodeURIComponent(`[${idea.titleKo}] AC·멘토 컨설팅 요청`)}`}
+                className="group bg-zinc-950 p-6 transition-colors hover:bg-white/[0.025]"
+              >
+                <p className="text-[0.65rem] font-medium uppercase tracking-wider text-zinc-500">컨설팅</p>
+                <h3 className="mt-2 text-base font-semibold text-white">AC·멘토</h3>
+                <p className="mt-1.5 text-xs leading-5 text-zinc-400">
+                  엑셀러레이터·멘토 매칭으로 검증
+                </p>
+                <p className="mt-4 text-xs font-medium text-zinc-300 group-hover:text-white">
+                  글 작성하기 →
+                </p>
+              </Link>
+
+              <Link
+                href={`/community/new?category=TEAM_RECRUIT&title=${encodeURIComponent(`[${idea.titleKo}] 팀원 모집`)}`}
+                className="group bg-zinc-950 p-6 transition-colors hover:bg-white/[0.025]"
+              >
+                <p className="text-[0.65rem] font-medium uppercase tracking-wider text-zinc-500">팀원</p>
+                <h3 className="mt-2 text-base font-semibold text-white">팀원 모집</h3>
+                <p className="mt-1.5 text-xs leading-5 text-zinc-400">
+                  공동창업자·개발자·기획자 영입
+                </p>
+                <p className="mt-4 text-xs font-medium text-zinc-300 group-hover:text-white">
+                  글 작성하기 →
+                </p>
+              </Link>
+            </div>
+          ) : null}
         </section>
 
         {/* 안내 */}
-        <p className="text-xs text-zinc-500">
-          단계 카드를 클릭하면 체크리스트가 열립니다. 각 항목 옆 [🤝 도움받기] 버튼으로 외주·AC 컨설팅·팀 모집 글을 AI가 자동 작성해 커뮤니티에 게시합니다.
+        <p className="mt-6 text-xs text-zinc-500">
+          {activeTab === "stages"
+            ? "단계 카드를 클릭하면 체크리스트가 열립니다. 각 항목 옆 [도움받기] 버튼으로 외주·AC 컨설팅·팀 모집 글 초안이 자동 작성됩니다."
+            : "글 작성하면 커뮤니티에 게시되어 다른 사용자가 응답·지원할 수 있습니다."}
         </p>
       </div>
 

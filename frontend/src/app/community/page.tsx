@@ -198,18 +198,18 @@ export default function CommunityPage() {
                         <span className="badge badge-accent">
                           {communityCategoryOptions.find((o) => o.value === post.category)?.label || post.category}
                         </span>
-                        <span className="text-xs text-gray-400">{formatDate(post.createdAt)}</span>
+                        <span className="text-xs text-zinc-500">{formatDate(post.createdAt)}</span>
                       </div>
                       <Link href={`/community/${post.id}`}>
-                        <h3 className="text-lg font-semibold text-white hover:text-violet-200">
+                        <h3 className="text-lg font-semibold text-white hover:text-zinc-200">
                           {post.title}
                         </h3>
                       </Link>
-                      <p className="text-sm leading-6 text-zinc-400">
+                      <p className="text-sm leading-6 text-zinc-300">
                         {clampText(post.content, 160)}
                       </p>
                       <div className="flex flex-wrap items-center gap-3 text-xs text-zinc-500">
-                        <span>{post.author?.name || post.author?.email || "익명"}</span>
+                        <span className="text-zinc-400">{post.author?.name || post.author?.email || "익명"}</span>
                         <span>조회 {post.viewCount}</span>
                         <span>댓글 {post._count?.comments || 0}</span>
                       </div>
@@ -218,11 +218,11 @@ export default function CommunityPage() {
                       <button
                         type="button"
                         onClick={() => handleLike(post.id)}
-                        className="btn-ghost px-3 py-1.5 text-sm"
+                        className="rounded-md border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm text-zinc-300 hover:border-white/20 hover:bg-white/[0.06]"
                       >
                         ♡ {post._count?.likes || 0}
                       </button>
-                      <Link href={`/community/${post.id}`} className="text-xs text-blue-500 hover:underline">
+                      <Link href={`/community/${post.id}`} className="text-xs font-medium text-zinc-400 hover:text-white">
                         읽기 →
                       </Link>
                     </div>

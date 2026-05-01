@@ -236,26 +236,23 @@ export default function IdeaMatchResultsPage() {
                 <>
                   {/* 잠금 오버레이 */}
                   {!isUnlocked ? (
-                    <div
-                      className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 backdrop-blur-md"
-                      style={{ background: "rgba(7,6,15,0.85)" }}
-                    >
-                      <svg className="h-7 w-7 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-zinc-950/80 backdrop-blur-md">
+                      <svg className="h-6 w-6 text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z" />
                       </svg>
-                      <p className="text-sm font-semibold text-white">잠긴 아이디어</p>
+                      <p className="text-xs font-medium uppercase tracking-wider text-zinc-400">잠긴 아이디어</p>
                       {canUnlock ? (
                         <span
                           role="button"
                           tabIndex={0}
                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleUnlock(index); }}
                           onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); e.stopPropagation(); handleUnlock(index); } }}
-                          className="btn-primary cursor-pointer px-4 py-2 text-xs"
+                          className="cursor-pointer rounded-md bg-white px-4 py-2 text-xs font-semibold text-zinc-950 hover:bg-zinc-100"
                         >
                           {unlockingIndex === index ? "처리 중..." : `${unlockCost} 크레딧으로 열기`}
                         </span>
                       ) : (
-                        <Link href="/pricing" onClick={(e) => e.stopPropagation()} className="btn-secondary px-4 py-2 text-xs">
+                        <Link href="/pricing" onClick={(e) => e.stopPropagation()} className="rounded-md border border-white/10 bg-white/[0.03] px-4 py-2 text-xs font-semibold text-zinc-200 hover:border-white/20 hover:bg-white/[0.06]">
                           크레딧 충전
                         </Link>
                       )}
@@ -264,19 +261,19 @@ export default function IdeaMatchResultsPage() {
 
                   {/* 상단: 번호 + 점수 */}
                   <div className="flex items-start justify-between">
-                    <span className="text-3xl font-bold tracking-tight text-zinc-600">
+                    <span className="display-num text-3xl text-white/[0.18]">
                       {String(index + 1).padStart(2, "0")}
                     </span>
-                    <ScoreRing score={score} size={48} />
+                    <ScoreRing score={score} size={44} />
                   </div>
 
                   {/* 타이틀 */}
-                  <h3 className="mt-4 text-lg font-bold leading-snug text-white">
+                  <h3 className="mt-4 text-lg font-semibold leading-snug text-white">
                     {idea.title || `아이디어 ${index + 1}`}
                   </h3>
 
                   {/* 한 줄 요약 */}
-                  <p className="mt-2 line-clamp-3 text-sm leading-6 text-zinc-300">
+                  <p className="mt-2 line-clamp-3 text-sm leading-6 text-zinc-400">
                     {getIdeaHighlight(idea) || idea.summary || "핵심 가치 제안"}
                   </p>
 
@@ -289,14 +286,14 @@ export default function IdeaMatchResultsPage() {
 
                   {/* 액션 라벨 */}
                   {isUnlocked ? (
-                    <p className="mt-4 inline-flex items-center gap-1 text-xs font-semibold text-indigo-300">
+                    <p className="mt-auto pt-4 inline-flex items-center gap-1 text-xs font-medium text-zinc-300 group-hover:text-white">
                       자세히 보기 →
                     </p>
                   ) : null}
                 </>
               );
 
-              const baseClass = "group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-5 text-left transition-all hover:border-indigo-400/40 hover:bg-white/[0.05] hover:shadow-[0_0_24px_rgba(93,93,255,0.12)]";
+              const baseClass = "group relative flex flex-col overflow-hidden rounded-xl border border-white/[0.06] bg-zinc-950 p-6 text-left transition-colors hover:border-white/15 hover:bg-white/[0.025]";
 
               if (isUnlocked && generated?.id) {
                 return (

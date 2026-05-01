@@ -798,12 +798,12 @@ export function registerIdeaMatchRoutes(
             }
           );
 
-          // Top 3 free, bottom 2 paid
+          // Top 1만 free, 나머지는 잠금 (사용자 5 크레딧으로 unlock)
           ideasWithSimilarityScores.sort(
             (a, b) => b.avgSimilarity - a.avgSimilarity
           );
           const freeIdeaIndices = new Set(
-            ideasWithSimilarityScores.slice(0, 3).map((x) => x.ideaIndex)
+            ideasWithSimilarityScores.slice(0, 1).map((x) => x.ideaIndex)
           );
 
           const generatedIdeas = [];

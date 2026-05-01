@@ -1,11 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { api } from "@/lib/api";
 import { planLabels, userTypeLabels } from "@/lib/product";
 
 export default function Navbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
-  const { user, logout } = useAuth();
+  const { user, logout, token } = useAuth();
+  const [inboxCount, setInboxCount] = useState(0);
+
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    api<{ count: number }>("GET", "/api/inbox/count", undefined, token)
+      .then((res) => { if (!cancelled) setInboxCount(res.count); })
+      .catch(() => { /* ignore */ });
+    return () => { cancelled = true; };
+  }, [token]);
 
   return (
     <header
@@ -59,47 +71,52 @@ export default function Navbar({ onMenuToggle }: { onMenuToggle?: () => void }) 
         {user ? (
           <div className="flex items-center gap-2 sm:gap-3">
             {user.isAdmin && (
-              <span
-                className="hidden rounded-md px-2.5 py-1 text-xs font-semibold sm:inline-flex"
-                style={{ background: "rgba(245,158,11,0.12)", border: "1px solid rgba(245,158,11,0.22)", color: "#FCD34D" }}
-              >
+              <span className="hidden rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1 text-xs font-medium text-zinc-300 sm:inline-flex">
                 Admin
               </span>
             )}
-            <span
-              className="hidden rounded-md px-2.5 py-1 text-xs font-semibold sm:inline-flex"
-              style={{ background: "rgba(124,58,237,0.12)", border: "1px solid rgba(124,58,237,0.22)", color: "#C4B5FD" }}
-            >
+            <span className="hidden rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1 text-xs font-medium text-zinc-300 sm:inline-flex">
               {planLabels[user.planType] || user.planType}
             </span>
-            <span
-              className="hidden rounded-md px-2.5 py-1 text-xs font-semibold sm:inline-flex"
-              style={{ background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", color: "#A8AACC" }}
-            >
+            <span className="hidden rounded-md border border-white/10 bg-white/[0.03] px-2.5 py-1 text-xs font-medium text-zinc-300 sm:inline-flex">
               {user.isAdmin ? "∞ cr" : `${user.creditBalance} cr`}
             </span>
+
+            {/* 알림 종 — 인박스로 이동 */}
+            <Link
+              href="/mypage/inbox"
+              aria-label={`알림${inboxCount > 0 ? ` ${inboxCount}건` : ""}`}
+              title="알림"
+              className="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-zinc-400 transition-colors hover:bg-white/[0.04] hover:text-white"
+            >
+              <svg className="h-[18px] w-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.6}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
+              </svg>
+              {inboxCount > 0 ? (
+                <span className="absolute right-1.5 top-1.5 flex h-2 w-2 items-center justify-center">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500" />
+                </span>
+              ) : null}
+            </Link>
+
             <Link
               href="/mypage"
-              className="group hidden min-w-[120px] rounded-lg px-2 py-1 text-right transition-colors hover:bg-white/[0.04] lg:block"
+              className="group hidden min-w-[120px] rounded-md px-2 py-1 text-right transition-colors hover:bg-white/[0.04] lg:block"
               aria-label="내 정보 (마이페이지)"
               title="마이페이지로 이동"
             >
-              <p className="text-sm font-semibold text-white group-hover:text-violet-200">
+              <p className="text-sm font-semibold text-white">
                 {user.name || user.email}
               </p>
-              <p className="text-xs" style={{ color: "var(--ink-3)" }}>
+              <p className="text-xs text-zinc-500">
                 {user.userType ? userTypeLabels[user.userType] : "역할 선택 필요"}
               </p>
             </Link>
             <button
               type="button"
               onClick={logout}
-              className="rounded-lg px-3 py-1.5 text-sm font-medium transition-all"
-              style={{
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.1)",
-                color: "#A8AACC",
-              }}
+              className="rounded-md border border-white/10 bg-white/[0.03] px-3 py-1.5 text-sm font-medium text-zinc-300 transition-colors hover:border-white/20 hover:bg-white/[0.06]"
             >
               로그아웃
             </button>

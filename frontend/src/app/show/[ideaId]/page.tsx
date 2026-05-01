@@ -82,15 +82,11 @@ export default function ShowPage() {
   return (
     <main className="min-h-screen bg-zinc-950 text-zinc-100">
       {/* HERO */}
-      <section className="relative overflow-hidden border-b border-white/10 px-6 py-20 sm:py-28">
-        {/* 배경 그라디언트 */}
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(124,58,237,0.15),transparent_60%)]" />
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(16,185,129,0.10),transparent_60%)]" />
-
+      <section className="relative overflow-hidden border-b border-white/[0.06] px-6 py-20 sm:py-28">
         <div className="relative mx-auto max-w-3xl space-y-8 text-center">
           {benchmark?.similarityPct ? (
-            <p className="inline-flex items-center gap-2 rounded-full border border-violet-400/30 bg-violet-500/10 px-4 py-1.5 text-xs font-semibold text-violet-200">
-              ✦ {benchmark.companyName}와 {benchmark.similarityPct}% 유사 · 검증된 모델
+            <p className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5 text-xs font-medium text-zinc-300">
+              {benchmark.companyName}와 {benchmark.similarityPct}% 유사 · 검증된 모델
             </p>
           ) : null}
 
@@ -105,7 +101,7 @@ export default function ShowPage() {
           ) : null}
 
           {hookLine ? (
-            <blockquote className="editorial-quote mx-auto max-w-xl text-violet-200">
+            <blockquote className="editorial-quote mx-auto max-w-xl text-zinc-300">
               "{hookLine}"
             </blockquote>
           ) : null}
@@ -120,13 +116,10 @@ export default function ShowPage() {
             <h2 className="editorial-h2 mt-3 text-white">
               어떻게 작동하나요
             </h2>
-            <div className="mt-10 grid gap-4 sm:grid-cols-3">
+            <div className="mt-10 grid gap-px overflow-hidden rounded-xl bg-white/[0.06] sm:grid-cols-3">
               {mvpFeatures.slice(0, 3).map((f, i) => (
-                <div
-                  key={i}
-                  className="rounded-2xl border border-white/10 bg-white/[0.03] p-6"
-                >
-                  <p className="text-3xl font-black tabular-nums text-white/[0.12]">
+                <div key={i} className="bg-zinc-950 p-6">
+                  <p className="display-num text-3xl text-white/[0.18]">
                     0{i + 1}
                   </p>
                   <p className="mt-3 text-base leading-7 text-zinc-100">{f}</p>
@@ -141,7 +134,7 @@ export default function ShowPage() {
       {idea.whyNowInKoreaKo ? (
         <section className="border-b border-white/10 px-6 py-16">
           <div className="mx-auto max-w-3xl">
-            <p className="eyebrow text-amber-300">⏰ 지금 한국에서</p>
+            <p className="eyebrow">지금 한국에서</p>
             <p className="editorial-body mt-3 text-zinc-200">
               {idea.whyNowInKoreaKo}
             </p>
@@ -154,30 +147,29 @@ export default function ShowPage() {
         <section className="border-b border-white/10 px-6 py-16">
           <div className="mx-auto max-w-3xl">
             <div className="flex items-baseline justify-between">
-              <p className="eyebrow text-emerald-300">현재 진척</p>
-              <p className="display-num text-3xl text-emerald-300 sm:text-4xl">
+              <p className="eyebrow">현재 진척</p>
+              <p className="display-num text-3xl text-white sm:text-4xl">
                 {progress.overallPct}%
               </p>
             </div>
-            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+            <div className="mt-3 h-1 overflow-hidden rounded-full bg-white/[0.06]">
               <div
-                className="h-full rounded-full bg-gradient-to-r from-violet-500 to-emerald-400 transition-all"
+                className="h-full rounded-full bg-white transition-all"
                 style={{ width: `${progress.overallPct}%` }}
               />
             </div>
             <div className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-6">
               {progress.stages.map((s) => {
                 const pct = s.taskTotal === 0 ? 0 : (s.taskDone / s.taskTotal) * 100;
+                const complete = pct === 100;
                 return (
                   <div key={s.stageNumber} className="space-y-1.5">
-                    <p className="text-[0.65rem] font-semibold text-zinc-500">
+                    <p className="text-[0.65rem] font-medium text-zinc-500">
                       0{s.stageNumber}
                     </p>
-                    <div className="h-1 overflow-hidden rounded-full bg-white/[0.04]">
+                    <div className="h-0.5 overflow-hidden rounded-full bg-white/[0.04]">
                       <div
-                        className={`h-full rounded-full ${
-                          pct === 100 ? "bg-emerald-400" : "bg-violet-400"
-                        }`}
+                        className={`h-full rounded-full ${complete ? "bg-white" : "bg-white/40"}`}
                         style={{ width: `${pct}%` }}
                       />
                     </div>
@@ -202,21 +194,21 @@ export default function ShowPage() {
           <div className="flex flex-wrap justify-center gap-3">
             <a
               href={`mailto:?subject=${encodeURIComponent(idea.titleKo)}&body=${encodeURIComponent(`${idea.oneLinerKo ?? ""}\n\n${typeof window !== "undefined" ? window.location.href : ""}`)}`}
-              className="rounded-full bg-violet-500 px-6 py-3 text-sm font-bold text-white hover:bg-violet-400"
+              className="rounded-md bg-white px-6 py-3 text-sm font-semibold text-zinc-950 hover:bg-zinc-100"
             >
-              💬 연락하기 (이메일)
+              연락하기 (이메일)
             </a>
             <button
               type="button"
               onClick={() => {
                 if (typeof window !== "undefined" && navigator.clipboard) {
                   navigator.clipboard.writeText(window.location.href);
-                  alert("링크 복사됨!");
+                  alert("링크 복사됨");
                 }
               }}
-              className="rounded-full border border-white/15 px-6 py-3 text-sm font-medium text-zinc-200 hover:bg-white/5"
+              className="rounded-md border border-white/15 px-6 py-3 text-sm font-medium text-zinc-200 hover:bg-white/5"
             >
-              🔗 링크 복사
+              링크 복사
             </button>
           </div>
         </div>
@@ -226,11 +218,11 @@ export default function ShowPage() {
       <footer className="border-t border-white/10 px-6 py-8">
         <div className="mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 text-xs text-zinc-500">
           <Link href="/" className="hover:text-zinc-300">
-            ⚡ Powered by Widea
+            Powered by Widea
           </Link>
           <p>
-            AI 창업 워크스페이스 ·{" "}
-            <Link href="/idea-match" className="text-violet-300 hover:text-violet-200">
+            한국 창업 워크스페이스 ·{" "}
+            <Link href="/idea-match" className="text-zinc-300 hover:text-white">
               내 사업도 시작하기 →
             </Link>
           </p>

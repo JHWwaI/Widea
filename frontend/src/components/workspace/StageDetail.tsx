@@ -177,7 +177,7 @@ export default function StageDetail({
                       <div className="mt-1 flex flex-wrap items-center gap-2">
                         {t.outsourceRole ? (
                           <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[0.65rem] text-zinc-300">
-                            🛠 {t.outsourceRole}
+                            {t.outsourceRole}
                           </span>
                         ) : null}
                         {t.isCustom ? (
@@ -211,7 +211,7 @@ export default function StageDetail({
                           onClick={() => setOutsourceTask(t)}
                           className="rounded-md border border-violet-400/30 bg-violet-500/10 px-2 py-1 text-[0.7rem] font-semibold text-violet-200 hover:bg-violet-500/20"
                         >
-                          🤝 도움받기
+                          도움받기
                         </button>
                       ) : null}
                       {t.status !== "SKIPPED" && t.status !== "DONE" ? (

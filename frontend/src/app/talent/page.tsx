@@ -205,7 +205,7 @@ export default function TalentPage() {
                       {e.user?.name || "익명 전문가"}
                     </p>
                     {e.location ? (
-                      <p className="text-[0.7rem] text-zinc-500">📍 {e.location}</p>
+                      <p className="text-[0.7rem] text-zinc-500">{e.location}</p>
                     ) : null}
                   </div>
                   <span

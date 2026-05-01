@@ -1,36 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
 import { useAuth } from "@/context/AuthContext";
-import { api } from "@/lib/api";
 import { planLabels, userTypeLabels } from "@/lib/product";
 import FounderHome from "@/components/mypage/FounderHome";
 import AcceleratorHome from "@/components/mypage/AcceleratorHome";
 import InvestorHome from "@/components/mypage/InvestorHome";
 
 export default function MyPage() {
-  const { user, token } = useAuth();
+  const { user } = useAuth();
   const role = user?.userType ?? "FOUNDER";
-  const [inboxCount, setInboxCount] = useState(0);
 
-  useEffect(() => {
-    if (!token) return;
-    let cancelled = false;
-    api<{ count: number }>("GET", "/api/inbox/count", undefined, token)
-      .then((res) => { if (!cancelled) setInboxCount(res.count); })
-      .catch(() => { /* 인박스 실패는 조용히 무시 */ });
-    return () => { cancelled = true; };
-  }, [token]);
-
-  // CTA 버튼 — 역할별 라벨만 다름, 모두 아이디어/커뮤니티로 진입
   const cta =
     role === "ACCELERATOR"
       ? { href: "/community?category=TEAM_RECRUIT", label: "팀 모집 피드 보기" }
       : role === "INVESTOR"
         ? { href: "/community?category=TEAM_RECRUIT", label: "진행 중인 팀 둘러보기" }
-        : { href: "/idea-match", label: "새 아이디어 탐색" };
+        : { href: "/idea-match", label: "새 아이디어 만들기" };
 
   return (
     <AuthGuard>
@@ -56,25 +43,12 @@ export default function MyPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Link
-              href="/mypage/inbox"
-              className="relative rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-semibold text-zinc-200 hover:border-white/20 hover:bg-white/[0.06]"
-              aria-label="인박스"
-              title="받은 응답"
-            >
-              📥 인박스
-              {inboxCount > 0 ? (
-                <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[0.625rem] font-bold text-white">
-                  {inboxCount > 99 ? "99+" : inboxCount}
-                </span>
-              ) : null}
-            </Link>
-            <Link
               href="/mypage/edit"
-              className="rounded-md border border-violet-400/30 bg-violet-500/10 px-3 py-2 text-xs font-semibold text-violet-200 hover:border-violet-400/50 hover:bg-violet-500/20"
+              className="rounded-md border border-white/10 bg-white/[0.03] px-3 py-2 text-xs font-semibold text-zinc-200 hover:border-white/20 hover:bg-white/[0.06]"
               aria-label="내 정보 편집"
               title="내 정보 편집"
             >
-              ⚙ 내 정보 편집
+              내 정보 편집
             </Link>
             <Link href={cta.href} className="btn-primary">
               {cta.label}

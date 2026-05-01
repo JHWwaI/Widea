@@ -205,8 +205,8 @@ export default function AdminPage() {
       <AuthGuard>
         <div className="workspace-grid fade-up">
           <Surface className="py-16 text-center">
-            <p className="text-lg font-semibold text-gray-900">접근 권한이 없습니다</p>
-            <p className="mt-2 text-sm text-gray-500">관리자 계정으로 로그인해주세요.</p>
+            <p className="text-lg font-semibold text-white">접근 권한이 없습니다</p>
+            <p className="mt-2 text-sm text-zinc-400">관리자 계정으로 로그인해주세요.</p>
           </Surface>
         </div>
       </AuthGuard>
@@ -223,7 +223,7 @@ export default function AdminPage() {
         />
 
         {/* 탭 */}
-        <div className="flex gap-2 border-b border-gray-100 pb-0">
+        <div className="flex gap-2 border-b border-white/[0.06] pb-0">
           {([
             { id: "stats", label: "통계" },
             { id: "users", label: `유저 목록${usersTotal ? ` (${usersTotal})` : ""}` },
@@ -235,8 +235,8 @@ export default function AdminPage() {
               onClick={() => setTab(t.id)}
               className={`border-b-2 px-4 py-2.5 text-sm font-medium transition-colors ${
                 tab === t.id
-                  ? "border-gray-900 text-gray-900"
-                  : "border-transparent text-gray-400 hover:text-gray-600"
+                  ? "border-white text-white"
+                  : "border-transparent text-zinc-500 hover:text-zinc-300"
               }`}
             >
               {t.label}
@@ -247,24 +247,24 @@ export default function AdminPage() {
         {/* ── 통계 탭 ── */}
         {tab === "stats" && (
           <div className="space-y-4">
-            {statsError ? <Surface className="text-sm text-red-600">{statsError}</Surface> : null}
+            {statsError ? <Surface className="text-sm text-rose-300">{statsError}</Surface> : null}
             {statsLoading || !stats ? (
               <Surface><EmptyState title="불러오는 중..." description="" /></Surface>
             ) : (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-px overflow-hidden rounded-xl bg-white/[0.06] sm:grid-cols-2 lg:grid-cols-3">
                 {[
                   { label: "전체 가입자", value: stats.totalUsers, sub: `이번 주 +${stats.recentUsers}명` },
-                  { label: "프로젝트", value: stats.totalProjects },
-                  { label: "Blueprint", value: stats.totalBlueprints },
-                  { label: "Idea Match 세션", value: stats.totalIdeaSessions },
-                  { label: "커뮤니티 글", value: stats.totalCommunityPosts },
-                  { label: "글로벌 케이스 DB", value: stats.totalCases },
+                  { label: "프로젝트", value: stats.totalProjects, sub: null },
+                  { label: "Blueprint", value: stats.totalBlueprints, sub: null },
+                  { label: "Idea Match 세션", value: stats.totalIdeaSessions, sub: null },
+                  { label: "커뮤니티 글", value: stats.totalCommunityPosts, sub: null },
+                  { label: "글로벌 케이스 DB", value: stats.totalCases, sub: null },
                 ].map(({ label, value, sub }) => (
-                  <Surface key={label} className="space-y-1">
-                    <p className="text-xs text-gray-400">{label}</p>
-                    <p className="text-3xl font-bold text-gray-900">{value.toLocaleString()}</p>
-                    {sub ? <p className="text-xs text-emerald-600">{sub}</p> : null}
-                  </Surface>
+                  <div key={label} className="flex flex-col gap-2 bg-zinc-950 p-6">
+                    <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{label}</p>
+                    <p className="display-num text-4xl text-white sm:text-5xl">{value.toLocaleString()}</p>
+                    {sub ? <p className="text-xs font-medium text-zinc-400">{sub}</p> : null}
+                  </div>
                 ))}
               </div>
             )}
@@ -294,7 +294,7 @@ export default function AdminPage() {
               <Surface className="overflow-x-auto p-0">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-100 text-left text-xs text-gray-400">
+                    <tr className="border-b border-white/[0.06] text-left text-xs text-zinc-500">
                       <th className="px-4 py-3">이메일 / 이름</th>
                       <th className="px-4 py-3">플랜</th>
                       <th className="px-4 py-3">유형</th>
@@ -306,10 +306,10 @@ export default function AdminPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {users.map((u) => (
-                      <tr key={u.id} className="hover:bg-gray-50">
+                      <tr key={u.id} className="hover:bg-white/[0.025]">
                         <td className="px-4 py-3">
-                          <p className="font-medium text-gray-900">{u.email}</p>
-                          {u.name ? <p className="text-xs text-gray-400">{u.name}</p> : null}
+                          <p className="font-medium text-white">{u.email}</p>
+                          {u.name ? <p className="text-xs text-zinc-500">{u.name}</p> : null}
                         </td>
                         <td className="px-4 py-3">
                           {editUserId === u.id ? (
@@ -335,12 +335,12 @@ export default function AdminPage() {
                               {USER_TYPE_OPTIONS.map((t) => <option key={t} value={t}>{t}</option>)}
                             </select>
                           ) : (
-                            <span className="text-gray-500">{u.userType ?? "—"}</span>
+                            <span className="text-zinc-400">{u.userType ?? "—"}</span>
                           )}
                         </td>
-                        <td className="px-4 py-3 font-medium text-gray-900">{u.creditBalance}</td>
-                        <td className="px-4 py-3 text-gray-500">{u._count.projectPolicies}</td>
-                        <td className="px-4 py-3 text-gray-400">{formatDate(u.createdAt)}</td>
+                        <td className="px-4 py-3 font-medium text-white">{u.creditBalance}</td>
+                        <td className="px-4 py-3 text-zinc-400">{u._count.projectPolicies}</td>
+                        <td className="px-4 py-3 text-zinc-500">{formatDate(u.createdAt)}</td>
                         <td className="px-4 py-3">
                           <div className="flex flex-wrap gap-1.5">
                             {editUserId === u.id ? (
@@ -410,7 +410,7 @@ export default function AdminPage() {
                 >
                   이전
                 </button>
-                <span className="text-sm text-gray-500">{usersPage} / {usersTotalPages}</span>
+                <span className="text-sm text-zinc-400">{usersPage} / {usersTotalPages}</span>
                 <button
                   type="button"
                   disabled={usersPage >= usersTotalPages}
@@ -446,7 +446,7 @@ export default function AdminPage() {
               <Surface className="overflow-x-auto p-0">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-100 text-left text-xs text-gray-400">
+                    <tr className="border-b border-white/[0.06] text-left text-xs text-zinc-500">
                       <th className="px-4 py-3">회사명</th>
                       <th className="px-4 py-3">업종</th>
                       <th className="px-4 py-3">타깃 마켓</th>
@@ -458,11 +458,11 @@ export default function AdminPage() {
                   </thead>
                   <tbody className="divide-y divide-gray-50">
                     {cases.map((c) => (
-                      <tr key={c.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 font-medium text-gray-900">{c.companyName}</td>
-                        <td className="px-4 py-3 text-gray-500">{c.industry ?? "—"}</td>
-                        <td className="px-4 py-3 text-gray-500">{c.targetMarket ?? "—"}</td>
-                        <td className="px-4 py-3 text-gray-500">{c.fundingStage ?? "—"}</td>
+                      <tr key={c.id} className="hover:bg-white/[0.025]">
+                        <td className="px-4 py-3 font-medium text-white">{c.companyName}</td>
+                        <td className="px-4 py-3 text-zinc-400">{c.industry ?? "—"}</td>
+                        <td className="px-4 py-3 text-zinc-400">{c.targetMarket ?? "—"}</td>
+                        <td className="px-4 py-3 text-zinc-400">{c.fundingStage ?? "—"}</td>
                         <td className="px-4 py-3">
                           {c.dataQualityScore !== null ? (
                             <span className={`font-medium ${c.dataQualityScore >= 0.8 ? "text-emerald-600" : c.dataQualityScore >= 0.5 ? "text-amber-600" : "text-red-500"}`}>
@@ -471,11 +471,11 @@ export default function AdminPage() {
                           ) : "—"}
                         </td>
                         <td className="px-4 py-3">
-                          <span className={`rounded px-1.5 py-0.5 text-xs font-medium ${c.isActive ? "bg-emerald-50 text-emerald-700" : "bg-gray-100 text-gray-400"}`}>
+                          <span className={`rounded px-1.5 py-0.5 text-xs font-medium ${c.isActive ? "bg-emerald-500/10 text-emerald-300" : "bg-white/[0.04] text-zinc-500"}`}>
                             {c.isActive ? "활성" : "비활성"}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-gray-400">{formatDate(c.createdAt)}</td>
+                        <td className="px-4 py-3 text-zinc-500">{formatDate(c.createdAt)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -493,7 +493,7 @@ export default function AdminPage() {
                 >
                   이전
                 </button>
-                <span className="text-sm text-gray-500">{casesPage} / {casesTotalPages}</span>
+                <span className="text-sm text-zinc-400">{casesPage} / {casesTotalPages}</span>
                 <button
                   type="button"
                   disabled={casesPage >= casesTotalPages}
@@ -511,9 +511,9 @@ export default function AdminPage() {
       {/* ── 크레딧 지급 모달 ── */}
       {grantUserId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl">
-            <p className="text-lg font-semibold text-gray-900">크레딧 지급</p>
-            <p className="mt-1 text-sm text-gray-500">
+          <div className="w-full max-w-md rounded-2xl bg-zinc-950 p-6 shadow-xl">
+            <p className="text-lg font-semibold text-white">크레딧 지급</p>
+            <p className="mt-1 text-sm text-zinc-400">
               {users.find((u) => u.id === grantUserId)?.email}
             </p>
             <form onSubmit={handleGrant} className="mt-4 grid gap-3">
@@ -560,9 +560,9 @@ export default function AdminPage() {
       {/* ── 유저 삭제 확인 모달 ── */}
       {deleteUserId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-            <p className="text-lg font-semibold text-gray-900">유저 삭제</p>
-            <p className="mt-2 text-sm text-gray-600">
+          <div className="w-full max-w-sm rounded-2xl bg-zinc-950 p-6 shadow-xl">
+            <p className="text-lg font-semibold text-white">유저 삭제</p>
+            <p className="mt-2 text-sm text-zinc-300">
               <span className="font-medium">{users.find((u) => u.id === deleteUserId)?.email}</span>
               과 모든 관련 데이터가 영구 삭제됩니다. 되돌릴 수 없습니다.
             </p>

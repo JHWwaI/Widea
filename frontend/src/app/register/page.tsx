@@ -36,39 +36,10 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen" style={{ background: "#07060F" }}>
       {/* ── Left brand panel ── */}
-      <div
-        className="relative hidden overflow-hidden lg:flex lg:w-[420px] xl:w-[480px] shrink-0 flex-col justify-between px-12 py-14"
-        style={{
-          background: "linear-gradient(160deg, #0E0C1E 0%, #07060F 100%)",
-          borderRight: "1px solid rgba(255,255,255,0.07)",
-        }}
-      >
-        {/* Background glow */}
-        <div
-          className="pointer-events-none absolute left-0 top-0"
-          style={{
-            width: "500px",
-            height: "500px",
-            background: "radial-gradient(ellipse at 20% 20%, rgba(79,110,247,0.18) 0%, transparent 65%)",
-            filter: "blur(50px)",
-          }}
-        />
-        <div
-          className="pointer-events-none absolute bottom-0 right-0"
-          style={{
-            width: "400px",
-            height: "400px",
-            background: "radial-gradient(ellipse at 80% 80%, rgba(6,182,212,0.08) 0%, transparent 65%)",
-            filter: "blur(60px)",
-          }}
-        />
-
+      <div className="relative hidden overflow-hidden border-r border-white/[0.06] bg-zinc-950 lg:flex lg:w-[420px] xl:w-[480px] shrink-0 flex-col justify-between px-12 py-14">
         {/* Logo */}
         <Link href="/" className="relative z-10 flex items-center gap-2.5">
-          <span
-            className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-sm font-bold text-white"
-            style={{ background: "linear-gradient(135deg, #4F6EF7, #6366F1)", boxShadow: "0 4px 16px rgba(79,110,247,0.4)" }}
-          >
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-white text-sm font-bold text-zinc-950">
             W
           </span>
           <span className="text-lg font-bold text-white">Widea</span>
@@ -77,54 +48,45 @@ export default function RegisterPage() {
         {/* Content */}
         <div className="relative z-10 space-y-8">
           <div className="space-y-4">
-            <div
-              className="inline-flex items-center gap-2 rounded-full px-3 py-1.5"
-              style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.22)" }}
-            >
-              <span className="h-1.5 w-1.5 rounded-full" style={{ background: "#6EE7B7" }} />
-              <span className="text-xs font-semibold" style={{ color: "#6EE7B7" }}>
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-white" />
+              <span className="text-xs font-medium text-zinc-300">
                 가입 즉시 50 크레딧 지급
               </span>
             </div>
             <h2 className="text-3xl font-bold leading-snug text-white">
               아이디어를<br />실행으로 이어가세요
             </h2>
-            <p className="text-sm leading-relaxed" style={{ color: "var(--ink-3)" }}>
-              창업가, 투자자, 액셀러레이터를 위한 AI 워크스페이스. 글로벌 사례 탐색부터 한국형 전략 수립까지.
+            <p className="text-sm leading-relaxed text-zinc-400">
+              창업가, 투자자, 액셀러레이터를 위한 워크스페이스. 글로벌 사례 탐색부터 한국형 전략 수립까지.
             </p>
           </div>
 
           <div className="space-y-3">
             {[
-              { step: "01", label: "역할 선택", desc: "창업가·투자자·액셀러레이터", color: "#93AFFE" },
-              { step: "02", label: "Discovery", desc: "글로벌 사례 탐색 시작", color: "#67E8F9" },
-              { step: "03", label: "Blueprint & Idea Match", desc: "한국 전략 수립 & 아이디어 검증", color: "#6EE7B7" },
+              { step: "01", label: "역할 선택", desc: "창업가·투자자·액셀러레이터" },
+              { step: "02", label: "아이디어 매칭", desc: "글로벌 검증 사례에서 한국형 아이디어" },
+              { step: "03", label: "워크스페이스 실행", desc: "6단계 작업으로 검증·실행" },
             ].map((s) => (
               <div key={s.step} className="flex items-start gap-3">
-                <span className="mt-0.5 text-xs font-black" style={{ color: s.color }}>{s.step}</span>
+                <span className="mt-0.5 text-xs font-medium text-zinc-500">{s.step}</span>
                 <div>
                   <p className="text-sm font-semibold text-white">{s.label}</p>
-                  <p className="text-xs" style={{ color: "var(--ink-4)" }}>{s.desc}</p>
+                  <p className="text-xs text-zinc-500">{s.desc}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        <p className="relative z-10 text-xs" style={{ color: "var(--ink-4)" }}>© 2025 Widea</p>
+        <p className="relative z-10 text-xs text-zinc-600">© 2025 Widea</p>
       </div>
 
       {/* ── Right form ── */}
-      <div
-        className="flex flex-1 flex-col items-center justify-center px-6 py-16"
-        style={{ background: "rgba(7,6,15,0.6)" }}
-      >
+      <div className="flex flex-1 flex-col items-center justify-center bg-zinc-950 px-6 py-16">
         {/* Mobile logo */}
         <Link href="/" className="mb-10 flex items-center gap-2 lg:hidden">
-          <span
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold text-white"
-            style={{ background: "linear-gradient(135deg, #4F6EF7, #6366F1)" }}
-          >
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-md bg-white text-sm font-bold text-zinc-950">
             W
           </span>
           <span className="text-lg font-bold text-white">Widea</span>

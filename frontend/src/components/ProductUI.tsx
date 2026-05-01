@@ -18,7 +18,7 @@ export function PageHeader({
     <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
       <div className="max-w-3xl space-y-2">
         {eyebrow ? (
-          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#93AFFE" }}>{eyebrow}</p>
+          <p className="eyebrow">{eyebrow}</p>
         ) : null}
         <div className="flex flex-wrap items-center gap-3">
           <h1
@@ -55,7 +55,7 @@ export function SectionHeader({
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div className="max-w-2xl space-y-1.5">
         {eyebrow ? (
-          <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: "#93AFFE" }}>{eyebrow}</p>
+          <p className="eyebrow">{eyebrow}</p>
         ) : null}
         <h2 id={titleId} className="text-lg font-bold text-white sm:text-xl">
           {title}

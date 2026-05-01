@@ -117,15 +117,15 @@ export default function MeetingNoteDetailPage() {
           </div>
         </header>
 
-        {/* AI 요약 */}
+        {/* 요약 */}
         {s ? (
-          <section className="space-y-4 rounded-2xl border border-violet-400/25 bg-violet-500/[0.04] p-5">
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-violet-300">
-              ✨ AI 요약
+          <section className="space-y-5 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.2em] text-zinc-400">
+              요약
             </p>
             {Array.isArray(s.keyPoints) && s.keyPoints.length > 0 ? (
               <div>
-                <p className="text-xs font-semibold text-zinc-400">핵심 요약</p>
+                <p className="text-xs font-semibold text-zinc-300">핵심</p>
                 <ul className="mt-2 space-y-1.5 text-sm leading-7 text-zinc-100">
                   {s.keyPoints.map((p, i) => (
                     <li key={i}>• {p}</li>
@@ -135,7 +135,7 @@ export default function MeetingNoteDetailPage() {
             ) : null}
             {Array.isArray(s.decisions) && s.decisions.length > 0 ? (
               <div>
-                <p className="text-xs font-semibold text-amber-300">✅ 결정 사항</p>
+                <p className="text-xs font-semibold text-zinc-300">결정 사항</p>
                 <ul className="mt-2 space-y-1.5 text-sm leading-7 text-zinc-100">
                   {s.decisions.map((d, i) => (
                     <li key={i}>• {d}</li>
@@ -145,11 +145,11 @@ export default function MeetingNoteDetailPage() {
             ) : null}
             {Array.isArray(s.actions) && s.actions.length > 0 ? (
               <div>
-                <p className="text-xs font-semibold text-rose-300">📋 액션 아이템</p>
+                <p className="text-xs font-semibold text-zinc-300">액션 아이템</p>
                 <ul className="mt-2 space-y-1.5 text-sm leading-7 text-zinc-100">
                   {s.actions.map((a, i) => (
                     <li key={i}>
-                      {a.owner ? <span className="font-bold text-violet-300">{a.owner}</span> : null}
+                      {a.owner ? <span className="font-semibold text-zinc-100">{a.owner}</span> : null}
                       {a.owner ? ": " : ""}
                       {a.content}
                     </li>
@@ -159,7 +159,7 @@ export default function MeetingNoteDetailPage() {
             ) : null}
             {Array.isArray(s.nextSteps) && s.nextSteps.length > 0 ? (
               <div>
-                <p className="text-xs font-semibold text-emerald-300">🔜 다음 단계</p>
+                <p className="text-xs font-semibold text-zinc-300">다음 단계</p>
                 <ul className="mt-2 space-y-1.5 text-sm leading-7 text-zinc-100">
                   {s.nextSteps.map((n, i) => (
                     <li key={i}>• {n}</li>
@@ -169,8 +169,8 @@ export default function MeetingNoteDetailPage() {
             ) : null}
           </section>
         ) : (
-          <p className="rounded-lg border border-amber-500/20 bg-amber-500/[0.06] px-4 py-3 text-sm text-amber-200">
-            ⚠ AI 요약이 생성되지 않았습니다. 원본 transcript는 아래에서 볼 수 있습니다.
+          <p className="rounded-lg border border-white/10 bg-white/[0.02] px-4 py-3 text-sm text-zinc-400">
+            요약이 생성되지 않았습니다. 원본 transcript는 아래에서 볼 수 있습니다.
           </p>
         )}
 

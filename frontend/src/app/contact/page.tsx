@@ -48,7 +48,7 @@ export default function ContactPage() {
           <Surface className="space-y-5">
             <div>
               <p className="eyebrow">문의 양식</p>
-              <h2 className="text-2xl font-semibold text-gray-900">문의 양식</h2>
+              <h2 className="text-2xl font-semibold text-white">문의 양식</h2>
             </div>
 
             {sent ? (
@@ -107,7 +107,7 @@ export default function ContactPage() {
           <Surface className="space-y-5">
             <div>
               <p className="eyebrow">빠른 도움말</p>
-              <h2 className="text-2xl font-semibold text-gray-900">자주 묻는 질문</h2>
+              <h2 className="text-2xl font-semibold text-white">자주 묻는 질문</h2>
             </div>
 
             <div className="grid gap-3">
@@ -131,17 +131,17 @@ export default function ContactPage() {
               ].map((item) => (
                 <div
                   key={item.q}
-                  className="rounded-xl border border-gray-100 bg-gray-50 p-4"
+                  className="rounded-xl border border-white/[0.06] bg-white/[0.025] p-4"
                 >
-                  <p className="text-sm font-semibold text-gray-900">{item.q}</p>
-                  <p className="mt-1.5 text-sm text-gray-500">{item.a}</p>
+                  <p className="text-sm font-semibold text-white">{item.q}</p>
+                  <p className="mt-1.5 text-sm text-zinc-400">{item.a}</p>
                 </div>
               ))}
             </div>
 
             <div className="rounded-xl border border-blue-100 bg-blue-50 p-4">
               <p className="text-sm font-semibold text-blue-800">직접 연락</p>
-              <p className="mt-1 text-sm text-blue-600">
+              <p className="mt-1 text-sm text-zinc-300">
                 support@widea.kr
               </p>
             </div>
