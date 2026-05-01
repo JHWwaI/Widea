@@ -1,10 +1,9 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
+import { Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export default function BillingFailPage() {
+function BillingFailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const message = searchParams.get("message") || "결제가 취소되었거나 오류가 발생했습니다.";
@@ -41,5 +40,13 @@ export default function BillingFailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function BillingFailPage() {
+  return (
+    <Suspense fallback={null}>
+      <BillingFailContent />
+    </Suspense>
   );
 }

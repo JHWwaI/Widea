@@ -1,8 +1,6 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import AuthGuard from "@/components/AuthGuard";
@@ -12,7 +10,7 @@ import { api } from "@/lib/api";
 import { communityCategoryOptions, readError } from "@/lib/product";
 import type { CommunityPost } from "@/lib/types";
 
-export default function CommunityNewPage() {
+function CommunityNewContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { token } = useAuth();
@@ -148,5 +146,13 @@ export default function CommunityNewPage() {
         </Surface>
       </div>
     </AuthGuard>
+  );
+}
+
+export default function CommunityNewPage() {
+  return (
+    <Suspense fallback={null}>
+      <CommunityNewContent />
+    </Suspense>
   );
 }

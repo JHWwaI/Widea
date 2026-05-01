@@ -1,9 +1,7 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
 import { EmptyState, LoadingState } from "@/components/ProductUI";
@@ -113,7 +111,7 @@ function StatusPill({ status }: { status: string }) {
 
 /* ── Page ── */
 
-export default function IdeaMatchResultsPage() {
+function IdeaMatchResultsContent() {
   const searchParams = useSearchParams();
   const sessionId = searchParams.get("sessionId");
   const { token, user, updateCredit } = useAuth();
@@ -317,5 +315,13 @@ export default function IdeaMatchResultsPage() {
         )}
       </div>
     </AuthGuard>
+  );
+}
+
+export default function IdeaMatchResultsPage() {
+  return (
+    <Suspense fallback={null}>
+      <IdeaMatchResultsContent />
+    </Suspense>
   );
 }

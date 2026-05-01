@@ -1,9 +1,7 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
 import { Surface } from "@/components/ProductUI";
@@ -13,7 +11,7 @@ import { readError } from "@/lib/product";
 
 type State = "loading" | "success" | "error";
 
-export default function TeamAcceptPage() {
+function TeamAcceptContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const { token } = useAuth();
@@ -108,5 +106,13 @@ export default function TeamAcceptPage() {
         </div>
       </div>
     </AuthGuard>
+  );
+}
+
+export default function TeamAcceptPage() {
+  return (
+    <Suspense fallback={null}>
+      <TeamAcceptContent />
+    </Suspense>
   );
 }

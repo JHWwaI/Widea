@@ -1,9 +1,7 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
 import { EmptyState, PageHeader, StructuredData, Surface } from "@/components/ProductUI";
@@ -19,7 +17,7 @@ import type { BlueprintResponse, DiscoveryCase, ProjectListResponse, ProjectSumm
 
 const BLUEPRINT_CREDIT_COST = 5;
 
-export default function BlueprintPage() {
+function BlueprintContent() {
   const searchParams = useSearchParams();
   const { token, user, updateCredit } = useAuth();
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
@@ -413,5 +411,13 @@ export default function BlueprintPage() {
         </div>
       </div>
     </AuthGuard>
+  );
+}
+
+export default function BlueprintPage() {
+  return (
+    <Suspense fallback={null}>
+      <BlueprintContent />
+    </Suspense>
   );
 }

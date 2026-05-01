@@ -1,9 +1,7 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
 import { useAuth } from "@/context/AuthContext";
@@ -14,7 +12,7 @@ function genRoomCode(): string {
   return `widea-${part()}-${part()}`;
 }
 
-export default function MeetPage() {
+function MeetContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const wantJoin = searchParams.get("join") === "1";
@@ -174,5 +172,13 @@ export default function MeetPage() {
         </section>
       </div>
     </AuthGuard>
+  );
+}
+
+export default function MeetPage() {
+  return (
+    <Suspense fallback={null}>
+      <MeetContent />
+    </Suspense>
   );
 }

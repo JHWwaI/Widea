@@ -1,8 +1,6 @@
 "use client";
 
-export const dynamic = "force-dynamic";
-
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
@@ -15,6 +13,14 @@ type ConfirmResult = {
 };
 
 export default function BillingSuccessPage() {
+  return (
+    <Suspense fallback={null}>
+      <BillingSuccessContent />
+    </Suspense>
+  );
+}
+
+function BillingSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { token, refreshUser, updateCredit } = useAuth();
