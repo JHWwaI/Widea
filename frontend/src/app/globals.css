@@ -56,7 +56,7 @@
 
   /* Layout */
   --navbar-height: 64px;
-  --sidebar-width: 260px;
+  --sidebar-width: 200px;
 
   /* Typography — Pretendard 우선 (한국어 사용자 친화) + Inter (영문/숫자) fallback */
   --font-sans: "Pretendard Variable", "Pretendard", var(--font-geist-sans), var(--font-inter),
@@ -93,16 +93,15 @@ body {
   background: var(--bg);
   color: var(--ink-2);
   font-family: var(--font-sans);
-  font-size: 0.9375rem;       /* 15px */
+  font-size: 0.9375rem;       /* 15px — 가독 + 절제 균형 */
   line-height: 1.65;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.005em;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* Pretendard variable: 한글 글꼴 옵션 활성화 (자간·서체 자동 조정) */
   font-feature-settings: "ss01", "ss02", "ss03", "tnum";
   font-optical-sizing: auto;
-  word-break: keep-all;       /* 한글 줄바꿈 자연스럽게 */
+  word-break: keep-all;
 }
 
 /* 거대 숫자 / hero — 영문 폰트 우선 + tabular */
@@ -450,7 +449,10 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 /* ─────────────────────────────────────────────
    Workspace
 ───────────────────────────────────────────── */
-.workspace-grid { display: grid; gap: 1.25rem; }
+.workspace-grid {
+  display: grid;
+  gap: 1.5rem;     /* 24px — 섹션 사이 여백 표준 */
+}
 .page-shell { position: relative; min-height: 100vh; }
 
 /* ─────────────────────────────────────────────

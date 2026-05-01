@@ -21,8 +21,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }, [pathname]);
 
   useEffect(() => {
-    // localStorage에 저장된 사용자 선호 복원 (있다면)
-    const saved = typeof window !== "undefined" ? localStorage.getItem("widea_sidebar_visible") : null;
+    // 사이드바 자동 토글 X — 사용자가 햄버거 메뉴로만 직접 토글
+    if (typeof window === "undefined") return;
+    const saved = localStorage.getItem("widea_sidebar_visible");
     if (saved !== null) setSidebarVisible(saved === "1");
   }, []);
 
@@ -86,13 +87,13 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       ) : null}
       <main
         className={[
-          "px-4 pb-16 pt-[calc(var(--navbar-height)+1.5rem)] sm:px-6 md:px-8",
+          "px-4 pb-12 pt-[calc(var(--navbar-height)+1.25rem)] sm:px-6",
           user && sidebarVisible
-            ? "lg:pl-[calc(var(--sidebar-width)+2.5rem)] lg:pr-10 transition-[padding] duration-300"
-            : "lg:px-10 transition-[padding] duration-300",
+            ? "lg:pl-[calc(var(--sidebar-width)+1rem)] lg:pr-4 transition-[padding] duration-300"
+            : "lg:px-8 transition-[padding] duration-300",
         ].join(" ")}
       >
-        <div className="mx-auto w-full max-w-[1280px]">{children}</div>
+        <div className="mx-auto w-full max-w-[1080px]">{children}</div>
       </main>
     </div>
   );
