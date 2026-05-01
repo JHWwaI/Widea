@@ -81,8 +81,18 @@ export const getCorsConfig = () => {
         return callback(null, true);
       }
 
+      // Allow LAN IP ranges (192.168.x.x, 172.16-31.x.x, 10.x.x.x) — for testing from phones/other PCs on same network
+      if (origin.match(/^http:\/\/(?:10|192\.168|172\.(?:1[6-9]|2\d|3[01]))\.\d+\.\d+:\d+$/)) {
+        return callback(null, true);
+      }
+
       // Cloudflare Tunnel (개발·데모용)
       if (origin.match(/^https:\/\/[a-z0-9-]+\.trycloudflare\.com$/)) {
+        return callback(null, true);
+      }
+
+      // Vercel 배포 (본 프로젝트 + preview)
+      if (origin.match(/^https:\/\/[a-z0-9-]+\.vercel\.app$/)) {
         return callback(null, true);
       }
 

@@ -82,10 +82,8 @@ export default function Home() {
       {/* ── Nav ── */}
       <header className="fixed inset-x-0 top-0 z-50 flex items-center justify-between px-8 py-5 lg:px-16"
         style={{ background: "rgba(10,11,16,0.75)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
-        <Link href="/" className="flex items-center gap-2.5">
-          <span className="inline-flex h-8 w-8 items-center justify-center rounded-xl text-sm font-bold text-white"
-            style={{ background: "linear-gradient(135deg,#5D5DFF,#A855F7)" }}>W</span>
-          <span className="text-sm font-bold tracking-tight text-white">Widea</span>
+        <Link href="/" className="flex items-center">
+          <span className="text-base font-bold tracking-tight text-white">Widea</span>
         </Link>
         <nav className="hidden items-center gap-8 md:flex">
           {[{href:"/pricing",label:"요금제"},{href:"/community",label:"커뮤니티"},{href:"/contact",label:"문의"}].map((n) => (
@@ -338,9 +336,7 @@ export default function Home() {
         </div>
         <div className="absolute inset-x-0 bottom-0 flex flex-col items-center justify-between gap-3 px-8 py-5 sm:flex-row"
           style={{ borderTop:"1px solid rgba(255,255,255,0.05)" }}>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex h-6 w-6 items-center justify-center rounded-md text-[10px] font-bold text-white"
-              style={{ background:"linear-gradient(135deg,#5D5DFF,#A855F7)" }}>W</span>
+          <div className="flex items-center">
             <span className="text-sm font-bold tracking-tight text-white">Widea</span>
           </div>
           <div className="flex items-center gap-6">

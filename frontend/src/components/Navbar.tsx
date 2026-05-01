@@ -41,17 +41,8 @@ export default function Navbar({ onMenuToggle }: { onMenuToggle?: () => void }) 
             </button>
           ) : null}
 
-          <Link href={user ? "/idea-match" : "/"} className="flex items-center gap-2.5">
-            <span
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold text-white"
-              style={{
-                background: "linear-gradient(135deg, #7C3AED, #6366F1)",
-                boxShadow: "0 2px 12px rgba(124,58,237,0.35)",
-              }}
-            >
-              W
-            </span>
-            <span className="text-base font-bold text-white">Widea</span>
+          <Link href={user ? "/idea-match" : "/"} className="flex items-center">
+            <span className="text-lg font-bold tracking-tight text-white">Widea</span>
           </Link>
         </div>
 
