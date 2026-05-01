@@ -95,39 +95,36 @@ export default function Home() {
       {/* ══ 01 HERO ══ */}
       <section className="snap-section" data-idx="0">
         <div className="relative z-10 flex h-full flex-col items-center justify-center px-6 text-center lg:px-20">
-          <motion.div initial={{opacity:0,y:16}} animate={{opacity:1,y:0}} transition={{duration:0.6,ease:EASE}}
-            className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5">
+          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5">
             <span className="text-xs font-medium uppercase tracking-wider text-zinc-400">969개 검증 사례 · 의미 검색</span>
-          </motion.div>
+          </div>
 
-          <motion.h1 initial={{opacity:0,y:36}} animate={{opacity:1,y:0}} transition={{duration:0.82,ease:EASE,delay:0.08}}
+          <h1
             className="mt-7 font-bold tracking-tight text-white"
-            style={{ fontSize:"clamp(2.75rem,7vw,6rem)", letterSpacing:"-0.04em", lineHeight:1.05 }}>
+            style={{ fontSize:"clamp(2.75rem,7vw,6rem)", letterSpacing:"-0.04em", lineHeight:1.05 }}
+          >
             세계의 성공을<br />한국으로
-          </motion.h1>
+          </h1>
 
-          <motion.p initial={{opacity:0,y:24}} animate={{opacity:1,y:0}} transition={{duration:0.72,ease:EASE,delay:0.18}}
-            className="mx-auto mt-7 max-w-lg text-base leading-relaxed text-zinc-400">
+          <p className="mx-auto mt-7 max-w-lg text-base leading-relaxed text-zinc-400">
             969개 글로벌 스타트업 사례에서 본인 산업·예산에 맞는 한국형 실행 전략을 만들어냅니다.
-          </motion.p>
+          </p>
 
-          <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.7,ease:EASE,delay:0.28}}
-            className="mt-9 flex flex-wrap items-center justify-center gap-3">
+          <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
             <Link href="/register" className="group inline-flex items-center gap-2 rounded-md bg-white px-6 py-3 text-sm font-semibold text-zinc-950 transition-colors hover:bg-zinc-100">
               지금 무료로 시작하기 <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" />
             </Link>
             <Link href="/login" className="rounded-md border border-white/10 px-6 py-3 text-sm font-medium text-zinc-300 transition-colors hover:border-white/20 hover:text-white">로그인</Link>
-          </motion.div>
+          </div>
 
-          <motion.div initial={{opacity:0}} animate={{opacity:1}} transition={{delay:0.5,duration:0.6}}
-            className="mt-6 flex flex-wrap items-center justify-center gap-5">
+          <div className="mt-6 flex flex-wrap items-center justify-center gap-5">
             {["신용카드 불필요","가입 즉시 50 크레딧","즉시 사용 가능"].map((t) => (
               <div key={t} className="flex items-center gap-1.5">
                 <CheckCircle2 size={12} className="text-zinc-600" />
                 <span className="text-xs text-zinc-500">{t}</span>
               </div>
             ))}
-          </motion.div>
+          </div>
         </div>
 
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-zinc-800">

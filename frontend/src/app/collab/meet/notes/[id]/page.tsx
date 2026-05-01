@@ -34,6 +34,8 @@ const SOURCE_LABEL: Record<string, string> = {
   BOT: "🤖 봇",
 };
 
+type Stage = { id: string; name: string; stageNumber: number };
+
 export default function MeetingNoteDetailPage() {
   const { id: rawId } = useParams<{ id: string }>();
   const id = Array.isArray(rawId) ? rawId[0] : rawId;
@@ -43,16 +45,53 @@ export default function MeetingNoteDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [showFull, setShowFull] = useState(false);
+  const [stages, setStages] = useState<Stage[]>([]);
+  const [selectedStageId, setSelectedStageId] = useState("");
+  const [converting, setConverting] = useState(false);
+  const [convertResult, setConvertResult] = useState("");
 
   useEffect(() => {
     if (!token || !id) return;
     let cancelled = false;
     api<{ note: Note }>("GET", `/api/meetings/${id}`, undefined, token)
-      .then((res) => { if (!cancelled) setNote(res.note); })
+      .then((res) => {
+        if (cancelled) return;
+        setNote(res.note);
+        // 연결된 워크스페이스 stage 가져오기
+        if (res.note.ideaId) {
+          api<{ stages: Stage[] }>("GET", `/api/workspace/${res.note.ideaId}`, undefined, token)
+            .then((ws) => {
+              if (cancelled) return;
+              setStages(ws.stages ?? []);
+              const active = ws.stages?.find((s) => (s as Stage & { status?: string }).status === "ACTIVE");
+              setSelectedStageId(active?.id ?? ws.stages?.[0]?.id ?? "");
+            })
+            .catch(() => { /* 워크스페이스 없을 수 있음 */ });
+        }
+      })
       .catch((caught) => { if (!cancelled) setError(readError(caught, "불러오기 실패")); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [id, token]);
+
+  async function convertActionsToTasks() {
+    if (!token || !id || !selectedStageId) return;
+    setConverting(true);
+    setConvertResult("");
+    try {
+      const res = await api<{ created: number }>(
+        "POST",
+        `/api/meetings/${id}/to-tasks`,
+        { stageId: selectedStageId },
+        token,
+      );
+      setConvertResult(`${res.created}개 작업이 워크스페이스에 추가됐습니다.`);
+    } catch (caught) {
+      setConvertResult(readError(caught, "변환 실패"));
+    } finally {
+      setConverting(false);
+    }
+  }
 
   async function handleDelete() {
     if (!token || !id) return;
@@ -195,12 +234,47 @@ export default function MeetingNoteDetailPage() {
           )}
         </section>
 
+        {note.ideaId && Array.isArray(s?.actions) && s.actions.length > 0 && stages.length > 0 ? (
+          <section className="space-y-3 rounded-xl border border-white/10 bg-white/[0.025] p-5">
+            <div>
+              <p className="eyebrow">액션 아이템 → 워크스페이스</p>
+              <p className="mt-1 text-sm text-zinc-300">
+                위 액션 아이템 <span className="font-semibold text-white">{s.actions.length}건</span>을 워크스페이스 task로 자동 추가할 수 있습니다.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                className="select max-w-[240px]"
+                value={selectedStageId}
+                onChange={(e) => setSelectedStageId(e.target.value)}
+              >
+                {stages.map((stg) => (
+                  <option key={stg.id} value={stg.id}>
+                    0{stg.stageNumber} {stg.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={convertActionsToTasks}
+                disabled={converting || !selectedStageId}
+                className="rounded-md bg-white px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-zinc-100 disabled:opacity-60"
+              >
+                {converting ? "변환 중..." : "task로 추가"}
+              </button>
+            </div>
+            {convertResult ? (
+              <p className="text-sm text-zinc-300">{convertResult}</p>
+            ) : null}
+          </section>
+        ) : null}
+
         {note.ideaId ? (
           <Link
             href={`/workspace/${note.ideaId}`}
-            className="block rounded-xl border border-violet-400/30 bg-violet-500/10 p-4 text-sm font-semibold text-violet-200 hover:bg-violet-500/20"
+            className="block rounded-xl border border-white/10 bg-white/[0.025] p-4 text-sm font-semibold text-zinc-200 hover:border-white/20 hover:bg-white/[0.04]"
           >
-            🗂 이 회의가 연결된 워크스페이스로 이동 →
+            이 회의가 연결된 워크스페이스로 이동 →
           </Link>
         ) : null}
       </div>

@@ -10,13 +10,33 @@ import { formatDate, readError } from "@/lib/product";
 /* ── 타입 ─────────────────────────────────────────── */
 
 interface AdminStats {
+  // 사용자
   totalUsers: number;
-  totalProjects: number;
-  totalBlueprints: number;
-  totalIdeaSessions: number;
-  totalCommunityPosts: number;
-  totalCases: number;
   recentUsers: number;
+  totalExperts: number;
+  // 콘텐츠
+  totalProjects: number;
+  totalIdeas: number;
+  totalSelectedIdeas: number;
+  totalBlueprints: number;
+  totalCases: number;
+  // 활동
+  totalCommunityPosts: number;
+  totalComments: number;
+  totalLikes: number;
+  totalMeetingNotes: number;
+  // 워크스페이스
+  totalWorkspaces: number;
+  totalTasks: number;
+  completedTasks: number;
+  // 결제
+  totalSubscriptions: number;
+  activeSubscriptions: number;
+  totalCreditUnlocks: number;
+  // 최근 7일
+  recentPosts: number;
+  recentComments: number;
+  recentMeetingNotes: number;
 }
 
 interface AdminUser {
@@ -58,6 +78,33 @@ interface AdminCasesResponse {
 type Tab = "stats" | "users" | "cases";
 
 const PLAN_OPTIONS = ["FREE", "STARTER", "PRO", "TEAM", "ENTERPRISE"];
+
+type StatCard = { label: string; value: number; sub: string | null };
+
+function StatsGroup({ title, cards }: { title: string; cards: StatCard[] }) {
+  return (
+    <section className="space-y-3">
+      <p className="eyebrow">{title}</p>
+      <div
+        className={`grid gap-px overflow-hidden rounded-xl bg-white/[0.06] ${
+          cards.length === 2
+            ? "sm:grid-cols-2"
+            : cards.length === 3
+              ? "sm:grid-cols-3"
+              : "sm:grid-cols-2 lg:grid-cols-4"
+        }`}
+      >
+        {cards.map(({ label, value, sub }) => (
+          <div key={label} className="flex flex-col gap-2 bg-zinc-950 p-6">
+            <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{label}</p>
+            <p className="display-num text-3xl text-white sm:text-4xl">{value.toLocaleString()}</p>
+            {sub ? <p className="text-xs font-medium text-zinc-400">{sub}</p> : null}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
 const USER_TYPE_OPTIONS = ["FOUNDER", "INVESTOR", "ACCELERATOR"];
 
 /* ── 컴포넌트 ──────────────────────────────────────── */
@@ -251,21 +298,51 @@ export default function AdminPage() {
             {statsLoading || !stats ? (
               <Surface><EmptyState title="불러오는 중..." description="" /></Surface>
             ) : (
-              <div className="grid gap-px overflow-hidden rounded-xl bg-white/[0.06] sm:grid-cols-2 lg:grid-cols-3">
-                {[
-                  { label: "전체 가입자", value: stats.totalUsers, sub: `이번 주 +${stats.recentUsers}명` },
-                  { label: "프로젝트", value: stats.totalProjects, sub: null },
-                  { label: "Blueprint", value: stats.totalBlueprints, sub: null },
-                  { label: "Idea Match 세션", value: stats.totalIdeaSessions, sub: null },
-                  { label: "커뮤니티 글", value: stats.totalCommunityPosts, sub: null },
-                  { label: "글로벌 케이스 DB", value: stats.totalCases, sub: null },
-                ].map(({ label, value, sub }) => (
-                  <div key={label} className="flex flex-col gap-2 bg-zinc-950 p-6">
-                    <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">{label}</p>
-                    <p className="display-num text-4xl text-white sm:text-5xl">{value.toLocaleString()}</p>
-                    {sub ? <p className="text-xs font-medium text-zinc-400">{sub}</p> : null}
-                  </div>
-                ))}
+              <div className="space-y-8">
+                <StatsGroup
+                  title="사용자"
+                  cards={[
+                    { label: "전체 가입자", value: stats.totalUsers, sub: `이번 주 +${stats.recentUsers}명` },
+                    { label: "등록 전문가", value: stats.totalExperts, sub: "available=true" },
+                  ]}
+                />
+
+                <StatsGroup
+                  title="콘텐츠"
+                  cards={[
+                    { label: "프로젝트", value: stats.totalProjects, sub: null },
+                    { label: "생성된 아이디어", value: stats.totalIdeas, sub: `대표 ${stats.totalSelectedIdeas}건` },
+                    { label: "Blueprint", value: stats.totalBlueprints, sub: null },
+                    { label: "글로벌 케이스 DB", value: stats.totalCases, sub: "100건 시드" },
+                  ]}
+                />
+
+                <StatsGroup
+                  title="워크스페이스"
+                  cards={[
+                    { label: "활성 워크스페이스", value: stats.totalWorkspaces, sub: "선정된 아이디어 수" },
+                    { label: "전체 작업", value: stats.totalTasks, sub: null },
+                    { label: "완료 작업", value: stats.completedTasks, sub: stats.totalTasks > 0 ? `${Math.round((stats.completedTasks / stats.totalTasks) * 100)}%` : null },
+                  ]}
+                />
+
+                <StatsGroup
+                  title="활동 (이번 주)"
+                  cards={[
+                    { label: "커뮤니티 글", value: stats.totalCommunityPosts, sub: `+${stats.recentPosts} 신규` },
+                    { label: "댓글", value: stats.totalComments, sub: `+${stats.recentComments} 신규` },
+                    { label: "좋아요", value: stats.totalLikes, sub: null },
+                    { label: "회의록", value: stats.totalMeetingNotes, sub: `30일 +${stats.recentMeetingNotes}건` },
+                  ]}
+                />
+
+                <StatsGroup
+                  title="결제·잠금 해제"
+                  cards={[
+                    { label: "활성 구독", value: stats.activeSubscriptions, sub: `전체 ${stats.totalSubscriptions}건` },
+                    { label: "케이스 잠금 해제", value: stats.totalCreditUnlocks, sub: "유료 결제 누계" },
+                  ]}
+                />
               </div>
             )}
           </div>

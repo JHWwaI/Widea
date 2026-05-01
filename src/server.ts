@@ -20,6 +20,7 @@ import { registerShowRoutes } from "./routes/show.js";
 import { registerMeetingRoutes } from "./routes/meetings.js";
 import { registerExpertRoutes } from "./routes/experts.js";
 import { registerInboxRoutes } from "./routes/inbox.js";
+import { registerActivityRoutes } from "./routes/activity.js";
 import { getEnv } from "./lib/env.js";
 import { getCorsConfig, createApiLimiter, createAiOpLimiter, createAuthLimiter, errorHandler } from "./lib/middleware.js";
 
@@ -82,6 +83,7 @@ registerShowRoutes(app, { prisma });
 registerMeetingRoutes(app, { prisma });
 registerExpertRoutes(app, { prisma });
 registerInboxRoutes(app, { prisma });
+registerActivityRoutes(app, { prisma });
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

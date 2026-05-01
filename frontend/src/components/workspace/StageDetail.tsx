@@ -24,6 +24,27 @@ export default function StageDetail({
   const [error, setError] = useState("");
   const [newTask, setNewTask] = useState("");
   const [outsourceTask, setOutsourceTask] = useState<WorkspaceTask | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState("");
+
+  async function saveEdit(task: WorkspaceTask) {
+    const text = editingText.trim();
+    if (!token || !text || text === task.content) {
+      setEditingId(null);
+      return;
+    }
+    setBusy(task.id);
+    setError("");
+    try {
+      await api("PATCH", `/api/workspace/tasks/${task.id}`, { content: text }, token);
+      setEditingId(null);
+      onChanged();
+    } catch (caught) {
+      setError(readError(caught, "수정 실패."));
+    } finally {
+      setBusy(null);
+    }
+  }
 
   async function toggleStatus(task: WorkspaceTask, next: WorkspaceTask["status"]) {
     if (!token) return;
@@ -171,9 +192,57 @@ export default function StageDetail({
 
                     {/* Content */}
                     <div className="min-w-0 flex-1">
-                      <p className={`text-sm leading-6 ${checked ? "text-zinc-500 line-through" : "text-zinc-100"}`}>
-                        {t.content}
-                      </p>
+                      {editingId === t.id ? (
+                        <div className="flex gap-2">
+                          <input
+                            autoFocus
+                            className="input flex-1"
+                            value={editingText}
+                            onChange={(e) => setEditingText(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") saveEdit(t);
+                              if (e.key === "Escape") setEditingId(null);
+                            }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => saveEdit(t)}
+                            disabled={busy === t.id}
+                            className="rounded-md bg-white px-3 py-1.5 text-xs font-semibold text-zinc-950 hover:bg-zinc-100"
+                          >
+                            저장
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditingId(null)}
+                            className="rounded-md border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs font-medium text-zinc-300 hover:border-white/20 hover:bg-white/[0.06]"
+                          >
+                            취소
+                          </button>
+                        </div>
+                      ) : (
+                        <p
+                          className={`cursor-text text-sm leading-6 ${
+                            checked ? "text-zinc-500 line-through" : "text-zinc-100"
+                          }`}
+                          onClick={() => {
+                            setEditingId(t.id);
+                            setEditingText(t.content);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.preventDefault();
+                              setEditingId(t.id);
+                              setEditingText(t.content);
+                            }
+                          }}
+                          role="button"
+                          tabIndex={0}
+                          title="클릭하면 수정"
+                        >
+                          {t.content}
+                        </p>
+                      )}
                       <div className="mt-1 flex flex-wrap items-center gap-2">
                         {t.outsourceRole ? (
                           <span className="rounded bg-zinc-800 px-1.5 py-0.5 text-[0.65rem] text-zinc-300">
@@ -195,7 +264,7 @@ export default function StageDetail({
                             href={`/community/${t.communityPostId}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-[0.7rem] font-semibold text-violet-300 hover:underline"
+                            className="text-[0.7rem] font-semibold text-zinc-300 hover:text-white hover:underline"
                           >
                             외주 글 보기 →
                           </a>

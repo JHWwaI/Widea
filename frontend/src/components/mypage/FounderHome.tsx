@@ -117,21 +117,17 @@ export default function FounderHome() {
           <h2 className="text-base font-semibold text-white">
             내 프로젝트 <span className="text-zinc-500">({myIdeas.length})</span>
           </h2>
-          <Link href="/idea-match" className="text-xs font-medium text-indigo-300 hover:text-indigo-200">
-            새 아이디어 만들기 →
-          </Link>
+          {myIdeas.length > 0 ? (
+            <Link href="/idea-match" className="text-xs font-medium text-zinc-400 hover:text-white">
+              새 아이디어 만들기 →
+            </Link>
+          ) : null}
         </div>
 
         {loading ? (
           <LoadingState label="프로젝트를 불러오는 중..." />
         ) : myIdeas.length === 0 ? (
-          <EmptyState
-            title="아직 선정한 프로젝트가 없습니다"
-            description="아이디어 매칭에서 마음에 드는 아이디어를 골라보세요."
-            action={
-              <Link href="/idea-match" className="btn-primary text-sm">아이디어 탐색하기</Link>
-            }
-          />
+          <OnboardingHero />
         ) : (
           <div className="grid gap-px overflow-hidden rounded-xl bg-white/[0.06] sm:grid-cols-2">
             {myIdeas.map((idea) => {
@@ -231,13 +227,54 @@ export default function FounderHome() {
         <div className="grid gap-px overflow-hidden rounded-xl bg-white/[0.06] sm:grid-cols-2 lg:grid-cols-3">
           <QuickLink href="/community" title="커뮤니티" desc="아이디어 공유 · 질문 · 인사이트" />
           <QuickLink href="/talent" title="전문가 찾기" desc="개발자·디자이너·AC 멘토 매칭" />
-          <QuickLink href="/projects" title="내 프로젝트" desc="프로젝트 단위 관리" />
+          <QuickLink href="/mypage/activity" title="내 활동" desc="내가 쓴 글·댓글·좋아요" />
           <QuickLink href="/mypage/edit" title="프로필 편집" desc="이름·비밀번호·역할 변경" />
           <QuickLink href="/mypage/expert" title="전문가 등록" desc="내 프로필을 전문가 디렉토리에 노출" />
           <QuickLink href="/contact" title="문의하기" desc="버그 신고·문의·피드백" />
         </div>
       </section>
     </>
+  );
+}
+
+function OnboardingHero() {
+  return (
+    <div className="space-y-6 rounded-2xl border border-white/[0.06] bg-zinc-950 p-8">
+      <div className="space-y-2 text-center">
+        <p className="eyebrow">시작하기</p>
+        <h3 className="text-2xl font-bold text-white sm:text-3xl">
+          첫 아이디어를 만들어보세요
+        </h3>
+        <p className="mx-auto max-w-md text-sm leading-6 text-zinc-400">
+          본인의 산업·예산·팀 정보를 입력하면 검증된 글로벌 사례 기반의 한국형 사업 아이디어 3개가 생성됩니다.
+        </p>
+      </div>
+
+      <Link
+        href="/idea-match"
+        className="mx-auto block w-fit rounded-md bg-white px-6 py-3 text-sm font-semibold text-zinc-950 hover:bg-zinc-100"
+      >
+        아이디어 탐색하기 →
+      </Link>
+
+      <div className="grid gap-px overflow-hidden rounded-xl bg-white/[0.06] sm:grid-cols-3">
+        {[
+          { step: "01", title: "산업 선택", desc: "관심 산업·예산·팀 규모 입력 (5분)" },
+          { step: "02", title: "아이디어 3개 생성", desc: "100개 글로벌 사례에서 본인 컨텍스트로 의미 검색" },
+          { step: "03", title: "워크스페이스", desc: "선택한 아이디어 → 6단계 33개 작업으로 자동 변환" },
+        ].map((s) => (
+          <div key={s.step} className="bg-zinc-950 p-5">
+            <p className="display-num text-3xl text-white/[0.18]">{s.step}</p>
+            <p className="mt-3 text-sm font-semibold text-white">{s.title}</p>
+            <p className="mt-1 text-xs leading-5 text-zinc-400">{s.desc}</p>
+          </div>
+        ))}
+      </div>
+
+      <p className="text-center text-xs text-zinc-500">
+        가입 시 50 크레딧 지급 · 아이디어 매칭 1회 = 5 크레딧
+      </p>
+    </div>
   );
 }
 

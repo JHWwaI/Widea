@@ -44,36 +44,97 @@ export function registerAdminRoutes(
     adminGuard,
     async (_req: Request, res: Response): Promise<void> => {
       try {
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
         const [
+          // 사용자
           totalUsers,
-          totalProjects,
-          totalBlueprints,
-          totalIdeaSessions,
-          totalCommunityPosts,
-          totalCases,
           recentUsers,
+          totalExperts,
+          // 콘텐츠
+          totalProjects,
+          totalIdeas,
+          totalSelectedIdeas,
+          totalBlueprints,
+          totalCases,
+          // 활동
+          totalCommunityPosts,
+          totalComments,
+          totalLikes,
+          totalMeetingNotes,
+          // 워크스페이스
+          totalWorkspaces,
+          totalTasks,
+          completedTasks,
+          // 결제
+          totalSubscriptions,
+          activeSubscriptions,
+          totalCreditUnlocks,
+          // 최근 활동
+          recentPosts,
+          recentComments,
+          recentMeetingNotes,
         ] = await Promise.all([
           prisma.user.count(),
+          prisma.user.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
+          prisma.expertProfile.count({ where: { available: true } }),
+
           prisma.projectPolicy.count(),
+          prisma.generatedIdea.count(),
+          prisma.generatedIdea.count({ where: { status: "SELECTED" } }),
           prisma.kBlueprint.count(),
-          prisma.ideaMatchSession.count(),
-          prisma.communityPost.count(),
           prisma.globalCaseMeta.count(),
-          prisma.user.count({
-            where: {
-              createdAt: { gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) },
-            },
+
+          prisma.communityPost.count(),
+          prisma.postComment.count(),
+          prisma.postLike.count(),
+          prisma.meetingNote.count(),
+
+          prisma.workspaceStage.findMany({ select: { ideaId: true }, distinct: ["ideaId"] }).then((rows) => rows.length),
+          prisma.workspaceTask.count(),
+          prisma.workspaceTask.count({
+            where: { status: { in: ["DONE", "OUTSOURCED", "SKIPPED"] } },
           }),
+
+          prisma.subscription.count(),
+          prisma.subscription.count({ where: { active: true } }),
+          prisma.userCaseUnlock.count(),
+
+          prisma.communityPost.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
+          prisma.postComment.count({ where: { createdAt: { gte: sevenDaysAgo } } }),
+          prisma.meetingNote.count({ where: { createdAt: { gte: thirtyDaysAgo } } }),
         ]);
 
         res.json({
+          // 사용자
           totalUsers,
-          totalProjects,
-          totalBlueprints,
-          totalIdeaSessions,
-          totalCommunityPosts,
-          totalCases,
           recentUsers,
+          totalExperts,
+          // 콘텐츠
+          totalProjects,
+          totalIdeas,
+          totalSelectedIdeas,
+          totalBlueprints,
+          totalIdeaSessions: totalProjects, // 호환성
+          totalCases,
+          // 활동
+          totalCommunityPosts,
+          totalComments,
+          totalLikes,
+          totalMeetingNotes,
+          // 워크스페이스
+          totalWorkspaces,
+          totalTasks,
+          completedTasks,
+          // 결제
+          totalSubscriptions,
+          activeSubscriptions,
+          totalCreditUnlocks,
+          // 최근 (7일)
+          recentPosts,
+          recentComments,
+          recentMeetingNotes,
         });
       } catch (err) {
         handleRouteError(res, err, "어드민 통계 조회 오류");
