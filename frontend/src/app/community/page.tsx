@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
 import { EmptyState, PageHeader, Surface } from "@/components/ProductUI";
 import { useAuth } from "@/context/AuthContext";
@@ -18,8 +19,9 @@ const PAGE_SIZE = 20;
 
 export default function CommunityPage() {
   const { token } = useAuth();
+  const searchParams = useSearchParams();
   const [posts, setPosts] = useState<CommunityPost[]>([]);
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState(searchParams.get("category") ?? "");
   const [searchInput, setSearchInput] = useState("");
   const [q, setQ] = useState("");
   const [page, setPage] = useState(1);
@@ -122,7 +124,7 @@ export default function CommunityPage() {
         />
 
         {error ? (
-          <Surface className="border-red-100 bg-red-50 text-red-700">{error}</Surface>
+          <Surface className="border-rose-500/30 bg-rose-500/10 text-rose-200">{error}</Surface>
         ) : null}
 
         <Surface className="space-y-5">
@@ -189,7 +191,7 @@ export default function CommunityPage() {
               description="첫 번째 글을 작성해 시장 인사이트나 팀 모집 글을 남겨보세요."
             />
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-white/10">
               {posts.map((post) => (
                 <div key={post.id} className="py-5 first:pt-0 last:pb-0">
                   <div className="flex flex-wrap items-start justify-between gap-3">
@@ -198,7 +200,16 @@ export default function CommunityPage() {
                         <span className="badge badge-accent">
                           {communityCategoryOptions.find((o) => o.value === post.category)?.label || post.category}
                         </span>
-                        <span className="text-xs text-gray-400">{formatDate(post.createdAt)}</span>
+                        {post.idea ? (
+                          <Link
+                            href={`/workspace/${post.idea.id}`}
+                            className="inline-flex items-center gap-1 rounded-md border border-violet-400/25 bg-violet-500/10 px-2 py-0.5 text-[0.65rem] font-medium text-violet-300 hover:border-violet-400/50 hover:text-violet-200"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            💡 {post.idea.titleKo}
+                          </Link>
+                        ) : null}
+                        <span className="text-xs text-zinc-500">{formatDate(post.createdAt)}</span>
                       </div>
                       <Link href={`/community/${post.id}`}>
                         <h3 className="text-lg font-semibold text-white hover:text-violet-200">
@@ -222,7 +233,7 @@ export default function CommunityPage() {
                       >
                         ♡ {post._count?.likes || 0}
                       </button>
-                      <Link href={`/community/${post.id}`} className="text-xs text-blue-500 hover:underline">
+                      <Link href={`/community/${post.id}`} className="text-xs text-violet-300 hover:underline">
                         읽기 →
                       </Link>
                     </div>

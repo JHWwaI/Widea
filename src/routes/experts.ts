@@ -1,15 +1,42 @@
 import { type Express, type Request, type Response } from "express";
 import { type PrismaClient, Prisma, ExpertCategory } from "@prisma/client";
+import multer from "multer";
 import { requireAuth } from "../lib/auth.js";
 import { getAuthedUser, handleRouteError } from "../lib/http.js";
 
+/** 프로필 사진 업로드 — 5MB, 메모리 보관 후 base64로 DB 저장 */
+const avatarUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+});
+
+/** avatarB64는 너무 무거워서 JSON 응답에 포함 X — hasAvatar 플래그만 노출 */
+function stripAvatar<T extends { avatarB64?: string | null; avatarMime?: string | null }>(p: T) {
+  const { avatarB64, avatarMime, ...rest } = p;
+  return { ...rest, hasAvatar: !!avatarB64 };
+}
+
 const VALID_CATEGORIES: ExpertCategory[] = [
   "DEVELOPER",
+  "FRONTEND_DEV",
+  "BACKEND_DEV",
+  "FULLSTACK_DEV",
+  "MOBILE_DEV",
+  "AI_DEV",
+  "DEVOPS",
+  "DATA_ENGINEER",
   "DESIGNER",
+  "UI_UX_DESIGNER",
+  "GRAPHIC_DESIGNER",
   "MARKETER",
+  "GROWTH_MARKETER",
+  "CONTENT_MARKETER",
   "AC_MENTOR",
   "PLANNER",
   "PM",
+  "BUSINESS_DEV",
+  "LAWYER",
+  "ACCOUNTANT",
   "OTHER",
 ];
 
@@ -31,9 +58,20 @@ export function registerExpertRoutes(
         where.category = category as ExpertCategory;
       }
       if (q.length > 0) {
+        // 이름·이메일로도 검색되도록 user 테이블 매칭 → userId IN (...) 필터로 합산
+        const matchingUsers = await prisma.user.findMany({
+          where: {
+            OR: [
+              { name: { contains: q, mode: "insensitive" } },
+              { email: { contains: q, mode: "insensitive" } },
+            ],
+          },
+          select: { id: true },
+        });
         where.OR = [
           { headline: { contains: q, mode: "insensitive" } },
           { bio: { contains: q, mode: "insensitive" } },
+          { userId: { in: matchingUsers.map((u) => u.id) } },
         ];
       }
 
@@ -56,7 +94,7 @@ export function registerExpertRoutes(
       const userMap = new Map(users.map((u) => [u.id, u]));
 
       const data = experts.map((e) => ({
-        ...e,
+        ...stripAvatar(e),
         user: userMap.get(e.userId) ?? null,
       }));
 
@@ -77,7 +115,7 @@ export function registerExpertRoutes(
         const profile = await prisma.expertProfile.findUnique({
           where: { userId },
         });
-        res.json({ profile });
+        res.json({ profile: profile ? stripAvatar(profile) : null });
       } catch (err) {
         handleRouteError(res, err, "내 전문가 프로필 조회 오류");
       }
@@ -101,6 +139,15 @@ export function registerExpertRoutes(
           hourlyRateMax,
           links,
           location,
+          yearsOfExperience,
+          availability,
+          workMode,
+          languages,
+          industries,
+          careers,
+          portfolioItems,
+          education,
+          certifications,
           available,
         } = req.body ?? {};
 
@@ -132,6 +179,21 @@ export function registerExpertRoutes(
               : null,
           links: Array.isArray(links) ? links : [],
           location: typeof location === "string" ? location : null,
+          yearsOfExperience:
+            typeof yearsOfExperience === "number" && yearsOfExperience >= 0 && yearsOfExperience <= 60
+              ? yearsOfExperience
+              : null,
+          availability: typeof availability === "string" ? availability : null,
+          workMode:
+            workMode === "REMOTE" || workMode === "HYBRID" || workMode === "ONSITE"
+              ? workMode
+              : null,
+          languages: Array.isArray(languages) ? languages : [],
+          industries: Array.isArray(industries) ? industries : [],
+          careers: Array.isArray(careers) ? careers : [],
+          portfolioItems: Array.isArray(portfolioItems) ? portfolioItems : [],
+          education: Array.isArray(education) ? education : [],
+          certifications: Array.isArray(certifications) ? certifications : [],
           available: typeof available === "boolean" ? available : true,
         };
 
@@ -141,7 +203,7 @@ export function registerExpertRoutes(
           update: data,
         });
 
-        res.json({ profile });
+        res.json({ profile: stripAvatar(profile) });
       } catch (err) {
         handleRouteError(res, err, "전문가 프로필 저장 오류");
       }
@@ -173,6 +235,86 @@ export function registerExpertRoutes(
       }
     },
   );
+
+  /* ─── POST /api/experts/me/avatar ─────────────────────
+     프로필 사진 업로드 (multipart/form-data, field=avatar) */
+  app.post(
+    "/api/experts/me/avatar",
+    requireAuth,
+    avatarUpload.single("avatar"),
+    async (req: Request, res: Response): Promise<void> => {
+      try {
+        const { userId } = getAuthedUser(req);
+        const file = (req as Request & { file?: Express.Multer.File }).file;
+        if (!file) {
+          res.status(400).json({ error: "사진을 선택해주세요." });
+          return;
+        }
+        if (!file.mimetype.startsWith("image/")) {
+          res.status(400).json({ error: "이미지 파일만 업로드할 수 있습니다." });
+          return;
+        }
+
+        // 프로필이 없으면 생성 X — 먼저 PUT /me로 프로필 만든 다음 사진 업로드
+        const existing = await prisma.expertProfile.findUnique({ where: { userId } });
+        if (!existing) {
+          res.status(404).json({ error: "먼저 전문가 프로필을 등록해주세요." });
+          return;
+        }
+
+        await prisma.expertProfile.update({
+          where: { userId },
+          data: {
+            avatarB64: file.buffer.toString("base64"),
+            avatarMime: file.mimetype,
+          },
+        });
+        res.json({ ok: true, hasAvatar: true });
+      } catch (err) {
+        handleRouteError(res, err, "프로필 사진 업로드 오류");
+      }
+    },
+  );
+
+  /* ─── DELETE /api/experts/me/avatar ─────────────────── */
+  app.delete(
+    "/api/experts/me/avatar",
+    requireAuth,
+    async (req: Request, res: Response): Promise<void> => {
+      try {
+        const { userId } = getAuthedUser(req);
+        await prisma.expertProfile.update({
+          where: { userId },
+          data: { avatarB64: null, avatarMime: null },
+        });
+        res.json({ ok: true, hasAvatar: false });
+      } catch (err) {
+        handleRouteError(res, err, "프로필 사진 삭제 오류");
+      }
+    },
+  );
+
+  /* ─── GET /api/experts/:userId/avatar ─────────────────
+     프로필 사진 바이너리 직접 서빙 (이미지 태그용) */
+  app.get("/api/experts/:userId/avatar", async (req: Request, res: Response): Promise<void> => {
+    try {
+      const userId = String(req.params.userId);
+      const profile = await prisma.expertProfile.findUnique({
+        where: { userId },
+        select: { avatarB64: true, avatarMime: true },
+      });
+      if (!profile?.avatarB64) {
+        res.status(404).end();
+        return;
+      }
+      const buf = Buffer.from(profile.avatarB64, "base64");
+      res.setHeader("Content-Type", profile.avatarMime || "image/png");
+      res.setHeader("Cache-Control", "public, max-age=300");
+      res.end(buf);
+    } catch (err) {
+      handleRouteError(res, err, "프로필 사진 조회 오류");
+    }
+  });
 
   /* ─── GET /api/experts/match ──────────────────────────
      task 컨텍스트로 전문가 추천 (스킬·헤드라인 키워드 매칭, 상위 N) */
@@ -218,7 +360,7 @@ export function registerExpertRoutes(
       const top = scored
         .filter((s) => s.score > 0)
         .slice(0, limit)
-        .map((s) => ({ ...s.expert, user: userMap.get(s.expert.userId) ?? null, _score: s.score }));
+        .map((s) => ({ ...stripAvatar(s.expert), user: userMap.get(s.expert.userId) ?? null, _score: s.score }));
 
       res.json({ experts: top });
     } catch (err) {
@@ -246,7 +388,7 @@ export function registerExpertRoutes(
       prisma.expertProfile
         .update({ where: { userId }, data: { viewCount: { increment: 1 } } })
         .catch(() => {});
-      res.json({ profile, user });
+      res.json({ profile: stripAvatar(profile), user });
     } catch (err) {
       handleRouteError(res, err, "전문가 프로필 상세 오류");
     }

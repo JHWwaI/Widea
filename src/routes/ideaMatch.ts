@@ -614,7 +614,7 @@ export function registerIdeaMatchRoutes(
         const raw = (
           await geminiChat(ideaSystemPrompt, ideaPrompt, {
             temperature: 0.7,
-            maxOutputTokens: 16384,
+            maxOutputTokens: 32768,
             jsonMode: true,
           })
         )

@@ -1,0 +1,18 @@
+{
+  "founder": {
+    "email": "dolchi37@gmail.com",
+    "password": "widea1234",
+    "userId": "4d7693ec-3b1a-49b4-82bd-683cffe0f29b",
+    "name": "이재환",
+    "userCode": "UMEUUM"
+  },
+  "expert": {
+    "email": "expert.demo@widea.test",
+    "password": "expert1234",
+    "userId": "5b7b1701-15c8-4f81-9c14-c141a647a43a",
+    "name": "박준영",
+    "userCode": "EXPERTU4D"
+  },
+  "ideaId": "8f9885c5-2209-4ed0-9dc7-ebfaf43ecfb4",
+  "policyId": "ee6340fb-1a87-4fae-ad7d-082e5dc8a217"
+}

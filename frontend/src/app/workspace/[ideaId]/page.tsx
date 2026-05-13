@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
 import { LoadingState } from "@/components/ProductUI";
 import { useAuth } from "@/context/AuthContext";
@@ -10,6 +10,8 @@ import { api } from "@/lib/api";
 import { readError } from "@/lib/product";
 import StageDetail from "@/components/workspace/StageDetail";
 import FocusMode from "@/components/workspace/FocusMode";
+import WorkspaceMeetings from "@/components/workspace/WorkspaceMeetings";
+import WorkspaceMembers from "@/components/workspace/WorkspaceMembers";
 
 type TaskStatus = "PENDING" | "DONE" | "SKIPPED" | "OUTSOURCED";
 type StageStatus = "PENDING" | "ACTIVE" | "DONE";
@@ -23,6 +25,10 @@ export type WorkspaceTask = {
   communityPostId: string | null;
   isCustom: boolean;
   orderIndex: number;
+  assigneeId: string | null;
+  assignee: { id: string; name: string | null; email: string; userCode: string | null } | null;
+  dueDate: string | null;
+  notes: string | null;
 };
 
 export type WorkspaceStage = {
@@ -36,6 +42,7 @@ export type WorkspaceStage = {
 
 type WorkspaceResponse = {
   idea: { id: string; titleKo: string; oneLinerKo: string | null; status: string };
+  isOwner: boolean;
   stages: WorkspaceStage[];
 };
 
@@ -48,6 +55,20 @@ export default function WorkspacePage() {
   const [error, setError] = useState("");
   const [openStageId, setOpenStageId] = useState<string | null>(null);
   const [view, setView] = useState<"focus" | "grid">("grid");
+  const searchParams = useSearchParams();
+  const initialTab = (() => {
+    const t = searchParams?.get("tab");
+    if (t === "meetings" || t === "members" || t === "stages") return t;
+    return "stages" as const;
+  })();
+  const [tab, setTab] = useState<"stages" | "meetings" | "members">(initialTab);
+
+  // URL ?tab= 쿼리가 변하면 동기화
+  useEffect(() => {
+    const t = searchParams?.get("tab");
+    if (t === "meetings" || t === "members" || t === "stages") setTab(t);
+  }, [searchParams]);
+  const [isOwner, setIsOwner] = useState(false);
 
   async function refresh() {
     if (!token || !ideaId) return;
@@ -59,6 +80,7 @@ export default function WorkspacePage() {
         token,
       );
       setData(res);
+      setIsOwner(res.isOwner);
     } catch (caught) {
       setError(readError(caught, "워크스페이스를 불러오지 못했습니다."));
     } finally {
@@ -193,14 +215,74 @@ export default function WorkspacePage() {
                 <p className="text-sm text-zinc-400">{idea.oneLinerKo}</p>
               ) : null}
             </div>
-            <div className="text-right">
-              <p className="display-num text-4xl text-emerald-300 sm:text-5xl">{overallPct}%</p>
-              <p className="mt-1 text-xs text-zinc-500">전체 진척 ({done}/{total})</p>
+            <div className="flex items-center gap-3">
+              <Link
+                href={`/workspace/${idea.id}/office`}
+                className="inline-flex items-center gap-2 rounded-lg border border-amber-400/30 bg-amber-500/10 px-3 py-2 text-xs font-medium text-amber-200 transition-colors hover:bg-amber-500/15"
+                title="가상 사무실 — 개발 중 (프로토타입)"
+              >
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-amber-400" />
+                가상 사무실 (베타)
+              </Link>
+              <div className="text-right">
+                <p className="display-num text-4xl text-emerald-300 sm:text-5xl">{overallPct}%</p>
+                <p className="mt-1 text-xs text-zinc-500">전체 진척 ({done}/{total})</p>
+              </div>
             </div>
           </div>
         </header>
 
-        {/* 다음 할 일 Hero — 가장 큰 CTA */}
+        {/* 탭 바 — 단계 ↔ 회의록 토글 */}
+        <div
+          className="flex gap-1 rounded-xl border border-white/10 bg-white/[0.02] p-1"
+          role="tablist"
+          aria-label="워크스페이스 뷰"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "stages"}
+            onClick={() => setTab("stages")}
+            className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+              tab === "stages"
+                ? "bg-violet-500/15 text-violet-100 ring-1 ring-violet-400/30"
+                : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200"
+            }`}
+          >
+            단계 진행 (01~06)
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "meetings"}
+            onClick={() => setTab("meetings")}
+            className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+              tab === "meetings"
+                ? "bg-violet-500/15 text-violet-100 ring-1 ring-violet-400/30"
+                : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200"
+            }`}
+          >
+            회의록
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "members"}
+            onClick={() => setTab("members")}
+            className={`flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition-colors ${
+              tab === "members"
+                ? "bg-violet-500/15 text-violet-100 ring-1 ring-violet-400/30"
+                : "text-zinc-400 hover:bg-white/[0.04] hover:text-zinc-200"
+            }`}
+          >
+            공동 작업
+          </button>
+        </div>
+
+        {/* 다음 할 일 Hero — 가장 큰 CTA (단계 탭에서만) */}
+        {tab === "stages" ? (
+          <>
+
         {allDone ? (
           <section className="rounded-2xl border border-emerald-400/30 bg-emerald-500/[0.06] p-6 text-center">
             <p className="text-3xl">🎉</p>
@@ -227,7 +309,7 @@ export default function WorkspacePage() {
             <button
               type="button"
               onClick={() => setView("focus")}
-              className="w-full rounded-xl bg-violet-500 px-6 py-4 text-base font-bold text-white shadow-[0_8px_32px_-8px_rgba(124,58,237,0.5)] transition-all hover:bg-violet-400 hover:shadow-[0_12px_40px_-8px_rgba(124,58,237,0.6)] sm:w-auto"
+              className="inline-flex rounded-xl bg-violet-500 px-5 py-2.5 text-sm font-bold text-white shadow-[0_4px_18px_-6px_rgba(124,58,237,0.45)] transition-all hover:bg-violet-400"
             >
               이 작업 시작하기 →
             </button>
@@ -242,7 +324,7 @@ export default function WorkspacePage() {
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
             <Link
-              href={`/community/new?category=OUTSOURCE_REQUEST&title=${encodeURIComponent(`[${idea.titleKo}] 외주 의뢰`)}`}
+              href={`/community/new?category=OUTSOURCE_REQUEST&ideaId=${idea.id}&ideaTitle=${encodeURIComponent(idea.titleKo)}&title=${encodeURIComponent(`[${idea.titleKo}] 외주 의뢰`)}`}
               className="group rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition-all hover:border-amber-400/40 hover:bg-amber-500/[0.05]"
             >
               <p className="text-2xl">🛠</p>
@@ -254,11 +336,11 @@ export default function WorkspacePage() {
             </Link>
 
             <Link
-              href={`/community/new?category=AC_REQUEST&title=${encodeURIComponent(`[${idea.titleKo}] AC·멘토 컨설팅 요청`)}`}
+              href={`/community/new?category=AC_REQUEST&ideaId=${idea.id}&ideaTitle=${encodeURIComponent(idea.titleKo)}&title=${encodeURIComponent(`[${idea.titleKo}] 전문 컨설팅 요청`)}`}
               className="group rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition-all hover:border-violet-400/40 hover:bg-violet-500/[0.05]"
             >
               <p className="text-2xl">🎓</p>
-              <h3 className="mt-2 text-sm font-bold text-white group-hover:text-violet-200">AC 컨설팅</h3>
+              <h3 className="mt-2 text-sm font-bold text-white group-hover:text-violet-200">전문 컨설팅</h3>
               <p className="mt-1 text-xs leading-5 text-zinc-400">
                 엑셀러레이터·멘토 매칭으로 검증
               </p>
@@ -266,7 +348,7 @@ export default function WorkspacePage() {
             </Link>
 
             <Link
-              href={`/community/new?category=TEAM_RECRUIT&title=${encodeURIComponent(`[${idea.titleKo}] 팀원 모집`)}`}
+              href={`/community/new?category=TEAM_RECRUIT&ideaId=${idea.id}&ideaTitle=${encodeURIComponent(idea.titleKo)}&title=${encodeURIComponent(`[${idea.titleKo}] 팀원 모집`)}`}
               className="group rounded-2xl border border-white/10 bg-white/[0.02] p-5 transition-all hover:border-emerald-400/40 hover:bg-emerald-500/[0.05]"
             >
               <p className="text-2xl">🤝</p>
@@ -340,6 +422,18 @@ export default function WorkspacePage() {
         <p className="text-xs text-zinc-500">
           단계 카드를 클릭하면 체크리스트가 열립니다. 각 항목 옆 [🤝 도움받기] 버튼으로 외주·AC 컨설팅·팀 모집 글을 AI가 자동 작성해 커뮤니티에 게시합니다.
         </p>
+          </>
+        ) : null}
+
+        {/* 회의록 탭 */}
+        {tab === "meetings" ? <WorkspaceMeetings ideaId={idea.id} /> : null}
+
+        {/* 공동 작업 탭 */}
+        {tab === "members" ? (
+          <WorkspaceMembers ideaId={idea.id} isOwner={isOwner} stages={data?.stages} />
+        ) : null}
+
+        {/* 일정·채팅은 사이드바 단독 메뉴(/schedule, /messages)로 이전됨 */}
       </div>
 
       {/* 단계 상세 모달 */}

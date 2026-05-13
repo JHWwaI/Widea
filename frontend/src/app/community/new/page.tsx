@@ -21,15 +21,21 @@ function CommunityNewContent() {
     category: "FREE_TALK",
     content: "",
   });
+  const [ideaId, setIdeaId] = useState<string | null>(null);
+  const [ideaTitle, setIdeaTitle] = useState<string | null>(null);
 
   useEffect(() => {
-    const cat   = searchParams.get("category");
-    const title = searchParams.get("title");
+    const cat      = searchParams.get("category");
+    const title    = searchParams.get("title");
+    const idea     = searchParams.get("ideaId");
+    const ideaTitl = searchParams.get("ideaTitle");
     setForm((prev) => ({
       ...prev,
       ...(cat   ? { category: cat }   : {}),
       ...(title ? { title }           : {}),
     }));
+    if (idea) setIdeaId(idea);
+    if (ideaTitl) setIdeaTitle(decodeURIComponent(ideaTitl));
   }, [searchParams]);
 
   function handleChange(
@@ -49,7 +55,12 @@ function CommunityNewContent() {
       const created = await api<CommunityPost>(
         "POST",
         "/api/community/posts",
-        { title: form.title, category: form.category, content: form.content },
+        {
+          title: form.title,
+          category: form.category,
+          content: form.content,
+          ...(ideaId ? { ideaId } : {}),
+        },
         token,
       );
       router.push(`/community/${created.id}`);
@@ -62,12 +73,12 @@ function CommunityNewContent() {
   return (
     <AuthGuard>
       <div className="workspace-grid fade-up">
-        <div className="flex items-center gap-2 text-sm text-gray-400">
-          <Link href="/community" className="hover:text-gray-600">
+        <div className="flex items-center gap-2 text-sm text-zinc-500">
+          <Link href="/community" className="hover:text-zinc-300">
             커뮤니티
           </Link>
           <span>/</span>
-          <span className="text-gray-600">새 글 작성</span>
+          <span className="text-zinc-300">새 글 작성</span>
         </div>
 
         <PageHeader
@@ -78,8 +89,26 @@ function CommunityNewContent() {
 
         <Surface className="max-w-2xl space-y-6">
           {error ? (
-            <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">
+            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
               {error}
+            </div>
+          ) : null}
+
+          {/* 연결된 아이디어 배너 */}
+          {ideaId && ideaTitle ? (
+            <div className="flex items-center gap-3 rounded-xl border border-violet-400/30 bg-violet-500/[0.08] px-4 py-3">
+              <span className="text-lg">💡</span>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs text-violet-300">연결된 아이디어</p>
+                <p className="truncate text-sm font-semibold text-white">{ideaTitle}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setIdeaId(null); setIdeaTitle(null); }}
+                className="shrink-0 text-xs text-zinc-500 hover:text-zinc-300"
+              >
+                해제
+              </button>
             </div>
           ) : null}
 

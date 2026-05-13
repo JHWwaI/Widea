@@ -24,19 +24,32 @@ model User {
   updatedAt       DateTime              @updatedAt @map("updated_at")
   /// 사용자 유형 — 로그인 후 설정
   userType        UserType?             @map("user_type")
+  /// 개인 고유 초대 코드 (6자 대문자+숫자, 예: A1B2C3)
+  userCode        String?               @unique @map("user_code")
   /// 비밀번호 재설정 토큰 (1회용, 1시간 유효)
   passwordResetToken  String?           @map("password_reset_token")
   passwordResetExpiry DateTime?         @map("password_reset_expiry")
-  acBookmarks       AcceleratorBookmark[]
-  communityPosts    CommunityPost[]
-  creditLedgers     CreditLedger[]
-  postComments      PostComment[]
-  postLikes         PostLike[]
-  projectPolicies   ProjectPolicy[]
-  subscriptions     Subscription[]
-  caseUnlocks       UserCaseUnlock[]
-  teamMemberships   ProjectTeamMember[]
-  hostedMeetings    ProjectMeeting[]
+  acBookmarks          AcceleratorBookmark[]
+  communityPosts       CommunityPost[]
+  creditLedgers        CreditLedger[]
+  postComments         PostComment[]
+  postLikes            PostLike[]
+  projectPolicies      ProjectPolicy[]
+  subscriptions        Subscription[]
+  caseUnlocks          UserCaseUnlock[]
+  teamMemberships      ProjectTeamMember[]
+  hostedMeetings       ProjectMeeting[]
+  workspaceMembers     IdeaWorkspaceMember[]
+  assignedTasks        WorkspaceTask[]       @relation("TaskAssignee")
+  taskComments         WorkspaceTaskComment[] @relation("TaskComments")
+  workspaceMessages    WorkspaceMessage[]    @relation("WorkspaceMessages")
+  stageFileUploads     WorkspaceStageFile[]  @relation("StageFileUploads")
+  dmConversationsA     DirectConversation[]  @relation("DmUserA")
+  dmConversationsB     DirectConversation[]  @relation("DmUserB")
+  dmSent               DirectMessage[]       @relation("DmSender")
+  workspaceSubscriptions WorkspaceSubscription[] @relation("WorkspaceSubscriptionPayer")
+  sentCollabRequests   ExpertCollabRequest[] @relation("SentCollabRequests")
+  receivedCollabRequests ExpertCollabRequest[] @relation("ReceivedCollabRequests")
 
   @@map("users")
 }
@@ -433,6 +446,11 @@ model GeneratedIdea {
   /// 실행 도구 3종 (cached) — { recruitingPost, coffeeChatTemplate, investorChecklist }
   artifactsKo      Json?            @map("artifacts_ko")
   session          IdeaMatchSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  communityPosts    CommunityPost[]
+  workspaceMembers  IdeaWorkspaceMember[]
+  collabRequests    ExpertCollabRequest[]
+  workspaceMessages WorkspaceMessage[]
+  workspaceSubscription WorkspaceSubscription?
 
   @@unique([sessionId, rank])
   @@index([sessionId])
@@ -455,6 +473,7 @@ model WorkspaceStage {
   createdAt   DateTime             @default(now()) @map("created_at")
   updatedAt   DateTime             @updatedAt @map("updated_at")
   tasks       WorkspaceTask[]
+  files       WorkspaceStageFile[]
 
   @@unique([ideaId, stageNumber])
   @@index([ideaId])
@@ -475,14 +494,132 @@ model WorkspaceTask {
   isCustom        Boolean             @default(false) @map("is_custom")
   /// 정렬 순서
   orderIndex      Int                 @default(0) @map("order_index")
+  /// 담당자 (워크스페이스 멤버 중 한 명)
+  assigneeId      String?             @map("assignee_id")
+  /// 마감일
+  dueDate         DateTime?           @map("due_date")
+  /// 태스크 메모 / 작업 내용
+  notes           String?             @db.Text
   createdAt       DateTime            @default(now()) @map("created_at")
   updatedAt       DateTime            @updatedAt @map("updated_at")
   completedAt     DateTime?           @map("completed_at")
   stage           WorkspaceStage      @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  assignee        User?               @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  comments        WorkspaceTaskComment[]
 
   @@index([stageId])
   @@index([status])
+  @@index([assigneeId])
   @@map("workspace_tasks")
+}
+
+/// 워크스페이스 태스크 댓글
+model WorkspaceTaskComment {
+  id        String        @id @default(uuid())
+  taskId    String        @map("task_id")
+  authorId  String        @map("author_id")
+  content   String        @db.Text
+  createdAt DateTime      @default(now()) @map("created_at")
+  task      WorkspaceTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  author    User          @relation("TaskComments", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@map("workspace_task_comments")
+}
+
+/// 단계별 첨부 파일 (사업자등록증, 외주 견적서, 와이어프레임 등 — 단계 컨텍스트로 묶어서 보관)
+model WorkspaceStageFile {
+  id         String         @id @default(uuid())
+  stageId    String         @map("stage_id")
+  uploaderId String         @map("uploader_id")
+  filename   String
+  mimeType   String         @map("mime_type")
+  sizeBytes  Int            @map("size_bytes")
+  /// 파일 바이너리 (base64) — 데모/MVP. 추후 S3 등으로 이전.
+  dataB64    String         @map("data_b64") @db.Text
+  /// 사용자 메모 (선택)
+  note       String?        @db.Text
+  createdAt  DateTime       @default(now()) @map("created_at")
+  stage      WorkspaceStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  uploader   User           @relation("StageFileUploads", fields: [uploaderId], references: [id], onDelete: Cascade)
+
+  @@index([stageId])
+  @@map("workspace_stage_files")
+}
+
+/// 워크스페이스(아이디어) 단위 팀 구독.
+/// OWNER가 결제하며 멤버 한도(maxMembers)를 제공한다.
+/// 멤버 추가 시 한도 초과 시 차단·업그레이드 유도.
+model WorkspaceSubscription {
+  id           String        @id @default(uuid())
+  ideaId       String        @unique @map("idea_id")
+  payerId      String        @map("payer_id")
+  planType     PlanType      @map("plan_type")
+  /// 멤버 한도 (OWNER 포함)
+  maxMembers   Int           @map("max_members")
+  /// 월간 크레딧 boost (OWNER에게 매월 추가)
+  monthlyCredits Int         @default(0) @map("monthly_credits")
+  /// 현재 결제 주기 시작·종료
+  startedAt    DateTime      @default(now()) @map("started_at")
+  validUntil   DateTime      @map("valid_until")
+  /// 결제 사이클 자동 갱신
+  autoRenew    Boolean       @default(true) @map("auto_renew")
+  status       String        @default("ACTIVE") // ACTIVE / EXPIRED / CANCELLED
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  idea         GeneratedIdea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  payer        User          @relation("WorkspaceSubscriptionPayer", fields: [payerId], references: [id], onDelete: Cascade)
+
+  @@index([payerId])
+  @@index([validUntil])
+  @@map("workspace_subscriptions")
+}
+
+/// 1:1 다이렉트 메시지 대화방.
+/// 두 사용자 ID를 정렬해서 (userAId < userBId) 저장 → @@unique 보장.
+model DirectConversation {
+  id            String          @id @default(uuid())
+  userAId       String          @map("user_a_id")
+  userBId       String          @map("user_b_id")
+  lastMessageAt DateTime?       @map("last_message_at")
+  createdAt     DateTime        @default(now()) @map("created_at")
+  userA         User            @relation("DmUserA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB         User            @relation("DmUserB", fields: [userBId], references: [id], onDelete: Cascade)
+  messages      DirectMessage[]
+
+  @@unique([userAId, userBId])
+  @@index([userAId, lastMessageAt])
+  @@index([userBId, lastMessageAt])
+  @@map("direct_conversations")
+}
+
+/// 1:1 DM 메시지
+model DirectMessage {
+  id             String             @id @default(uuid())
+  conversationId String             @map("conversation_id")
+  senderId       String             @map("sender_id")
+  content        String             @db.Text
+  readAt         DateTime?          @map("read_at")
+  createdAt      DateTime           @default(now()) @map("created_at")
+  conversation   DirectConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User               @relation("DmSender", fields: [senderId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
+  @@map("direct_messages")
+}
+
+/// 워크스페이스 채팅 메시지
+model WorkspaceMessage {
+  id        String        @id @default(uuid())
+  ideaId    String        @map("idea_id")
+  authorId  String        @map("author_id")
+  content   String        @db.Text
+  createdAt DateTime      @default(now()) @map("created_at")
+  idea      GeneratedIdea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  author    User          @relation("WorkspaceMessages", fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([ideaId, createdAt])
+  @@map("workspace_messages")
 }
 
 /// 회의록 — 실시간 자막 또는 녹음 파일 업로드 후 Whisper 전사 + AI 요약
@@ -497,6 +634,8 @@ model MeetingNote {
   title           String              @default("회의록")
   /// 어떻게 만들었는가
   source          MeetingNoteSource
+  /// AI 요약 템플릿 키 (DEFAULT / STANDUP / ONE_ON_ONE / INVESTOR / USER_INTERVIEW / RETRO)
+  templateKey     String?             @map("template_key")
   /// 음성 길이 (초)
   durationSec     Int?                @map("duration_sec")
   /// 원본 transcript 전체 텍스트
@@ -541,8 +680,29 @@ model ExpertProfile {
   links           Json                @default("[]")
   /// 위치 (서울/부산/원격 등)
   location        String?
+  /// 경력 연차 (0~50)
+  yearsOfExperience Int?              @map("years_of_experience")
+  /// 가용성 (예: "풀타임", "주 20시간", "주말만")
+  availability    String?
+  /// 근무 형태 (REMOTE/HYBRID/ONSITE)
+  workMode        String?             @map("work_mode")
+  /// 사용 언어 ["한국어","영어"]
+  languages       Json                @default("[]")
+  /// 도메인 경험 ["핀테크","B2B SaaS","이커머스"]
+  industries      Json                @default("[]")
+  /// 경력 이력 [{company,role,period,summary}]
+  careers         Json                @default("[]")
+  /// 대표 프로젝트 [{title,role,stack:[],summary,url}]
+  portfolioItems  Json                @default("[]") @map("portfolio_items")
+  /// 학력 [{school,degree,period}]
+  education       Json                @default("[]")
+  /// 자격증·수상 [{name,issuer,year}]
+  certifications  Json                @default("[]")
   /// 현재 영입 가능 여부
   available       Boolean             @default(true)
+  /// 프로필 사진 (base64, 5MB 제한, 별도 GET 엔드포인트로 서빙)
+  avatarB64       String?             @db.Text @map("avatar_b64")
+  avatarMime      String?             @map("avatar_mime")
   /// 검색·정렬용
   viewCount       Int                 @default(0) @map("view_count")
   createdAt       DateTime            @default(now()) @map("created_at")
@@ -555,11 +715,25 @@ model ExpertProfile {
 
 enum ExpertCategory {
   DEVELOPER
+  FRONTEND_DEV
+  BACKEND_DEV
+  FULLSTACK_DEV
+  MOBILE_DEV
+  AI_DEV
+  DEVOPS
+  DATA_ENGINEER
   DESIGNER
+  UI_UX_DESIGNER
+  GRAPHIC_DESIGNER
   MARKETER
+  GROWTH_MARKETER
+  CONTENT_MARKETER
   AC_MENTOR
   PLANNER
   PM
+  BUSINESS_DEV
+  LAWYER
+  ACCOUNTANT
   OTHER
 }
 
@@ -617,14 +791,18 @@ model CommunityPost {
   createdAt   DateTime              @default(now()) @map("created_at")
   updatedAt   DateTime              @updatedAt @map("updated_at")
   authorId    String                @map("author_id")
+  /// 연결된 아이디어 (워크스페이스에서 게시 시 자동 연결)
+  ideaId      String?               @map("idea_id")
   acBookmarks AcceleratorBookmark[]
   author      User                  @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  idea        GeneratedIdea?        @relation(fields: [ideaId], references: [id], onDelete: SetNull)
   comments    PostComment[]
   likes       PostLike[]
 
   @@index([authorId])
   @@index([category])
   @@index([createdAt])
+  @@index([ideaId])
   @@map("community_posts")
 }
 
@@ -733,15 +911,16 @@ enum PlanType {
   FREE
   STARTER
   PRO
+  PRO_PLUS
   TEAM
+  TEAM_PLUS
   ENTERPRISE
 }
 
 /// 사용자 유형
 enum UserType {
-  INVESTOR
-  ACCELERATOR
   FOUNDER
+  EXPERT
 }
 
 /// 프로젝트 타겟 시장 유형
@@ -866,4 +1045,61 @@ enum TeamMemberStatus {
   INVITED
   ACTIVE
   LEFT
+}
+
+/// 워크스페이스 멤버 역할
+enum WorkspaceRole {
+  OWNER
+  EDITOR
+  VIEWER
+}
+
+/// 전문가 협업 요청 상태
+enum CollabRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  CANCELLED
+}
+
+/// 아이디어 워크스페이스 멤버 — 공동 작업 권한 관리
+model IdeaWorkspaceMember {
+  id        String        @id @default(uuid())
+  ideaId    String        @map("idea_id")
+  userId    String        @map("user_id")
+  role      WorkspaceRole @default(VIEWER)
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+  idea      GeneratedIdea @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([ideaId, userId])
+  @@index([ideaId])
+  @@index([userId])
+  @@map("idea_workspace_members")
+}
+
+/// 전문가 협업 요청 — 수락 시 워크스페이스에 자동 EDITOR 권한 부여
+model ExpertCollabRequest {
+  id          String              @id @default(uuid())
+  ideaId      String              @map("idea_id")
+  requesterId String              @map("requester_id")
+  /// ExpertProfile.userId — 요청받는 전문가
+  expertUserId String             @map("expert_user_id")
+  message     String?
+  status      CollabRequestStatus @default(PENDING)
+  /// 수락 시 부여할 워크스페이스 역할
+  grantRole   WorkspaceRole       @default(EDITOR)
+  createdAt   DateTime            @default(now()) @map("created_at")
+  updatedAt   DateTime            @updatedAt @map("updated_at")
+  idea        GeneratedIdea       @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+  requester   User                @relation("SentCollabRequests", fields: [requesterId], references: [id], onDelete: Cascade)
+  expert      User                @relation("ReceivedCollabRequests", fields: [expertUserId], references: [id], onDelete: Cascade)
+
+  @@unique([ideaId, requesterId, expertUserId])
+  @@index([ideaId])
+  @@index([requesterId])
+  @@index([expertUserId])
+  @@index([status])
+  @@map("expert_collab_requests")
 }

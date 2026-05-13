@@ -20,6 +20,10 @@ import { registerShowRoutes } from "./routes/show.js";
 import { registerMeetingRoutes } from "./routes/meetings.js";
 import { registerExpertRoutes } from "./routes/experts.js";
 import { registerInboxRoutes } from "./routes/inbox.js";
+import { registerWorkspaceCollabRoutes } from "./routes/workspaceCollab.js";
+import { registerDmRoutes } from "./routes/dm.js";
+import { registerOfficeRoutes } from "./routes/office.js";
+import { attachRealtime } from "./lib/realtime.js";
 import { getEnv } from "./lib/env.js";
 import { getCorsConfig, createApiLimiter, createAiOpLimiter, createAuthLimiter, errorHandler } from "./lib/middleware.js";
 
@@ -82,13 +86,24 @@ registerShowRoutes(app, { prisma });
 registerMeetingRoutes(app, { prisma });
 registerExpertRoutes(app, { prisma });
 registerInboxRoutes(app, { prisma });
+registerWorkspaceCollabRoutes(app, { prisma });
+registerDmRoutes(app, { prisma });
+registerOfficeRoutes(app, { prisma });
 
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
 // Start server
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
+const PORT = Number(process.env.PORT) || 3001;
+// Neon DB 워밍업 — 4분마다 가벼운 쿼리로 cold start 방지 (서버리스 Postgres가 5분 후 sleep)
+setInterval(() => {
+  prisma.$queryRaw`SELECT 1`.catch((err) => {
+    console.warn("[db-warm] ping failed:", err.message ?? err);
+  });
+}, 4 * 60 * 1000);
+
+const server = app.listen(PORT, () => {
+  attachRealtime(server);
   console.log("\n" + "=".repeat(52));
   console.log("  Widea API Server");
   console.log("=".repeat(52));
@@ -101,4 +116,29 @@ app.listen(PORT, () => {
   console.log("  POST /api/blueprints/:id/validations  Hypothesis tracking");
   console.log("  GET  /api/admin/stats    Admin dashboard stats");
   console.log("=".repeat(52) + "\n");
+});
+
+// 명시적 ref — 일부 환경에서 EventLoop가 비어 종료되는 것을 방지
+server.ref();
+
+// 종료 원인 노출용 핸들러
+server.on("error", (err) => {
+  console.error("[server] error:", err);
+});
+server.on("close", () => {
+  console.error("[server] HTTP server closed");
+});
+process.on("uncaughtException", (err) => {
+  console.error("[uncaughtException]", err);
+});
+process.on("unhandledRejection", (reason) => {
+  console.error("[unhandledRejection]", reason);
+});
+process.on("exit", (code) => {
+  console.error(`[process] exit with code=${code}`);
+});
+process.on("SIGTERM", () => console.error("[signal] SIGTERM received"));
+process.on("SIGINT", () => {
+  console.error("[signal] SIGINT received");
+  process.exit(0);
 });

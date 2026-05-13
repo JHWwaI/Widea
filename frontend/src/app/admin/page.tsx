@@ -58,7 +58,7 @@ interface AdminCasesResponse {
 type Tab = "stats" | "users" | "cases";
 
 const PLAN_OPTIONS = ["FREE", "STARTER", "PRO", "TEAM", "ENTERPRISE"];
-const USER_TYPE_OPTIONS = ["FOUNDER", "INVESTOR", "ACCELERATOR"];
+const USER_TYPE_OPTIONS = ["FOUNDER", "EXPERT"];
 
 /* ── 컴포넌트 ──────────────────────────────────────── */
 

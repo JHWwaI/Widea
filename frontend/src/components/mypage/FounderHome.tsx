@@ -103,12 +103,58 @@ export default function FounderHome() {
     return () => { cancelled = true; };
   }, [token]);
 
+  // 첫 진입 사용자 — SELECTED idea가 0개 (=워크스페이스 없음)
+  const selectedCount = myIdeas.filter((i) => i.status === "SELECTED").length;
+  const showOnboarding = !loading && selectedCount === 0;
+
   return (
     <>
       {error ? (
         <div className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
           {error}
         </div>
+      ) : null}
+
+      {/* Onboarding — 첫 사용자 가이드 */}
+      {showOnboarding ? (
+        <section className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+          <header>
+            <p className="text-[0.65rem] font-semibold uppercase tracking-[0.2em] text-violet-300">
+              시작 가이드
+            </p>
+            <h2 className="mt-1 text-base font-bold text-white">
+              {myIdeas.length === 0
+                ? "처음이시면 아래 3단계로 시작하세요"
+                : "이제 아이디어를 선정해 워크스페이스를 시작하세요"}
+            </h2>
+          </header>
+          <ol className="space-y-2">
+            <OnboardingStep
+              n={1}
+              title="아이디어 만들기"
+              desc="질문 몇 개에 답하면 한국 시장에 맞춘 후보 5개가 생성됩니다 (가입 크레딧 50 무료)"
+              done={myIdeas.length > 0}
+              ctaHref="/idea-match"
+              ctaLabel={myIdeas.length === 0 ? "시작" : "더 만들기"}
+            />
+            <OnboardingStep
+              n={2}
+              title="후보 중 1개 선정"
+              desc="마음에 드는 아이디어 카드에서 [선정 + 워크스페이스 만들기] 클릭"
+              done={selectedCount > 0}
+              ctaHref={myIdeas.length > 0 ? `/ideas/${myIdeas[0].id}` : undefined}
+              ctaLabel="후보 보기"
+            />
+            <OnboardingStep
+              n={3}
+              title="외주·전문가 협업"
+              desc="6단계별 task에서 [도움받기]로 모집 글 자동 작성, 또는 [전문가 찾기]에서 직접 컨택"
+              done={false}
+              ctaHref="/talent"
+              ctaLabel="전문가 보기"
+            />
+          </ol>
+        </section>
       ) : null}
 
       {/* 내 프로젝트 — 카드 보드 */}
@@ -243,6 +289,50 @@ export default function FounderHome() {
         </div>
       </section>
     </>
+  );
+}
+
+function OnboardingStep({
+  n,
+  title,
+  desc,
+  done,
+  ctaHref,
+  ctaLabel,
+}: {
+  n: number;
+  title: string;
+  desc: string;
+  done: boolean;
+  ctaHref?: string;
+  ctaLabel: string;
+}) {
+  return (
+    <li className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3">
+      <span
+        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+          done
+            ? "bg-emerald-500 text-white"
+            : "bg-violet-500/20 text-violet-200 ring-1 ring-violet-400/40"
+        }`}
+      >
+        {done ? "✓" : n}
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className={`text-sm font-bold ${done ? "text-zinc-400 line-through" : "text-white"}`}>
+          {title}
+        </p>
+        <p className="mt-0.5 text-[0.7rem] leading-relaxed text-zinc-400">{desc}</p>
+      </div>
+      {!done && ctaHref ? (
+        <Link
+          href={ctaHref}
+          className="shrink-0 rounded-md border border-violet-400/40 bg-violet-500/15 px-2.5 py-1 text-[0.65rem] font-bold text-violet-100 hover:bg-violet-500/25"
+        >
+          {ctaLabel}
+        </Link>
+      ) : null}
+    </li>
   );
 }
 

@@ -1,0 +1,13 @@
+company,tier,schemaB_filled_20,schemaB_pct,schemaA_filled_30,schemaA_pct,hard10_filled,hard10_pct
+Stripe,high,20,100,24,80,4,40
+Airbnb,high,20,100,24,80,4,40
+HubSpot,high,20,100,25,83,5,50
+Shopify,high,20,100,26,87,6,60
+Linear,mid,0,0,0,0,0,0
+Wiz,mid,20,100,0,0,0,0
+Faire,mid,0,0,0,0,0,0
+Lattice,mid,0,0,0,0,0,0
+Twelve,low,0,0,0,0,0,0
+Patch,low,0,0,0,0,0,0
+EvenUp,low,19,95,0,0,0,0
+Atlan,low,0,0,0,0,0,0

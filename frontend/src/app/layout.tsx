@@ -19,6 +19,17 @@ export const metadata: Metadata = {
   },
   description:
     "글로벌 사례 검색, 한국형 실행 전략, 아이디어 매칭을 한 흐름으로 묶은 AI 창업 워크스페이스",
+  manifest: "/manifest.webmanifest",
+  themeColor: "#7C3AED",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Widea",
+  },
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/icon.svg" }],
+  },
 };
 
 export default function RootLayout({

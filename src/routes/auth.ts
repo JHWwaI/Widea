@@ -22,6 +22,7 @@ function serializeUser(user: {
   userType?: string | null;
   planType: string;
   creditBalance: number;
+  userCode?: string | null;
   createdAt?: Date;
 }) {
   const isAdmin = isAdminEmail(user.email);
@@ -33,9 +34,23 @@ function serializeUser(user: {
     userType: user.userType ?? null,
     planType: user.planType,
     creditBalance: getVisibleCreditBalance(user),
+    userCode: user.userCode ?? null,
     isAdmin,
     ...(user.createdAt ? { createdAt: user.createdAt } : {}),
   };
+}
+
+/** 6자 대문자+숫자 고유 코드 생성 (충돌 시 재시도) */
+async function generateUniqueUserCode(prisma: import("@prisma/client").PrismaClient): Promise<string> {
+  const CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // 혼동 문자 제외 (0,O,1,I)
+  for (let attempt = 0; attempt < 10; attempt++) {
+    let code = "";
+    const buf = randomBytes(6);
+    for (let i = 0; i < 6; i++) code += CHARS[buf[i] % CHARS.length];
+    const existing = await prisma.user.findFirst({ where: { userCode: code }, select: { id: true } });
+    if (!existing) return code;
+  }
+  throw new Error("userCode 생성 실패 — 재시도 초과");
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -70,8 +85,9 @@ export function registerAuthRoutes(
       }
 
       const hashed = await hashPassword(password);
+      const userCode = await generateUniqueUserCode(prisma);
       const user = await prisma.user.create({
-        data: { email, password: hashed, name: name || null },
+        data: { email, password: hashed, name: name || null, userCode },
       });
 
       const token = signToken({ userId: user.id, email: user.email });
@@ -273,13 +289,40 @@ export function registerAuthRoutes(
     }
   });
 
+  /* ─── GET /api/auth/lookup?email=... ─────────────────────
+     이메일로 유저 ID 조회 (워크스페이스 멤버 추가용, 인증 필요) */
+  app.get("/api/auth/lookup", requireAuth, async (req: Request, res: Response): Promise<void> => {
+    try {
+      const email    = typeof req.query.email    === "string" ? req.query.email.toLowerCase().trim() : "";
+      const userCode = typeof req.query.userCode === "string" ? req.query.userCode.toUpperCase().trim() : "";
+
+      if (!email && !userCode) {
+        res.status(400).json({ error: "email 또는 userCode 파라미터가 필요합니다." });
+        return;
+      }
+
+      const user = email
+        ? await prisma.user.findUnique({ where: { email }, select: { id: true, name: true, email: true, userCode: true } })
+        : await prisma.user.findFirst({ where: { userCode }, select: { id: true, name: true, email: true, userCode: true } });
+
+      if (!user) {
+        res.status(404).json({ error: "해당 사용자를 찾을 수 없습니다." });
+        return;
+      }
+
+      res.json({ user });
+    } catch (err) {
+      handleRouteError(res, err, "사용자 조회 오류");
+    }
+  });
+
   app.post("/api/auth/set-user-type", requireAuth, async (req: Request, res: Response): Promise<void> => {
     try {
       const { userId } = getAuthedUser(req);
       const { userType } = req.body;
 
-      if (!userType || !["INVESTOR", "ACCELERATOR", "FOUNDER"].includes(userType)) {
-        res.status(400).json({ errorCode: "INVALID_USER_TYPE", error: "유효한 userType이 필요합니다: INVESTOR, ACCELERATOR, FOUNDER" });
+      if (!userType || !["FOUNDER", "EXPERT"].includes(userType)) {
+        res.status(400).json({ errorCode: "INVALID_USER_TYPE", error: "유효한 userType이 필요합니다: FOUNDER, EXPERT" });
         return;
       }
 

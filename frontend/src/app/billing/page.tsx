@@ -1,315 +1,349 @@
 "use client";
 
-import Link from "next/link";
-import { useEffect, useState } from "react";
+/**
+ * 구독 결제 페이지 — OpenAI 스타일.
+ * 상단 [개인 | 팀] 탭 토글 → 각 카테고리 플랜 카드 그리드.
+ */
+
+import { useCallback, useEffect, useState } from "react";
 import AuthGuard from "@/components/AuthGuard";
-import { LoadingState, PageHeader, Surface } from "@/components/ProductUI";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
-import { formatCurrency, planLabels, readError } from "@/lib/product";
-import type { PlanRecord } from "@/lib/types";
-import { loadTossPayments } from "@tosspayments/payment-sdk";
-import MockTossModal from "@/components/MockTossModal";
+import { readError } from "@/lib/product";
+import {
+  PERSONAL_PLANS,
+  TEAM_PLANS,
+  PLAN_META,
+  formatKrw,
+  type PlanMeta,
+  type PlanType,
+} from "@/lib/plans";
 
-const PLAN_FEATURES: Record<string, string[]> = {
-  FREE:       ["매월 50 크레딧", "Discovery 검색", "케이스 잠금 해제", "Blueprint 생성"],
-  STARTER:    ["매월 200 크레딧", "Discovery 검색", "케이스 잠금 해제", "Blueprint 생성"],
-  PRO:        ["매월 600 크레딧", "모든 AI 기능 활용", "Idea Match 포함", "우선 지원"],
-  TEAM:       ["매월 2,000 크레딧", "팀 협업 기능", "Slack/Discord 웹훅", "회의실 무제한"],
-  ENTERPRISE: ["크레딧 맞춤 설정", "전담 지원 및 SLA", "커스텀 통합", "Admin 콘솔"],
+type Tab = "personal" | "team";
+type WorkspaceItem = { ideaId: string; title: string; isOwner: boolean };
+type WsSubResponse = {
+  planType: PlanType;
+  maxMembers: number;
+  currentMembers: number;
 };
 
 export default function BillingPage() {
-  const { token, user, refreshUser, updateCredit } = useAuth();
-  const [plans, setPlans] = useState<PlanRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [pendingPlan, setPendingPlan] = useState("");
-  const [message, setMessage] = useState("");
-  const [error, setError] = useState("");
-  const [clientKey, setClientKey] = useState("");
-  const [mockOpen, setMockOpen] = useState(false);
-  const [mockPlan, setMockPlan] = useState<PlanRecord | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    Promise.all([
-      api<PlanRecord[]>("GET", "/api/plans"),
-      api<{ tossClientKey: string }>("GET", "/api/config/payment"),
-    ])
-      .then(([planData, paymentConfig]) => {
-        if (!cancelled) {
-          setPlans(planData);
-          setClientKey(paymentConfig.tossClientKey);
-        }
-      })
-      .catch((caught) => { if (!cancelled) setError(readError(caught, "플랜 정보를 불러오지 못했습니다.")); })
-      .finally(() => { if (!cancelled) setLoading(false); });
-    return () => { cancelled = true; };
-  }, []);
-
-  // 🎬 관리자 데모 우회
-  async function handleDemoSubscribe(plan: PlanRecord) {
-    if (!token) return;
-    setPendingPlan(plan.planType);
-    setError(""); setMessage("");
-    try {
-      const response = await api<{ creditBalance: number; planType: string }>(
-        "POST", "/api/admin/demo-subscribe", { planType: plan.planType }, token,
-      );
-      updateCredit(response.creditBalance);
-      await refreshUser();
-      setMessage(`🎬 데모 결제 완료 — ${planLabels[response.planType] || response.planType} 플랜 적용 (실거래 X)`);
-    } catch (caught) {
-      setError(readError(caught, "데모 결제에 실패했습니다."));
-    } finally {
-      setPendingPlan("");
-    }
-  }
-
-  // FREE 플랜 다운그레이드 — 결제 없이 즉시 적용
-  async function handleFreeSubscribe() {
-    if (!token) return;
-    setPendingPlan("FREE");
-    setError("");
-    setMessage("");
-    try {
-      const response = await api<{ creditBalance: number }>(
-        "POST", "/api/subscribe", { planType: "FREE" }, token,
-      );
-      updateCredit(response.creditBalance);
-      await refreshUser();
-      setMessage("Free 플랜으로 변경되었습니다.");
-    } catch (caught) {
-      setError(readError(caught, "플랜 변경에 실패했습니다."));
-    } finally {
-      setPendingPlan("");
-    }
-  }
-
-  // 유료 플랜 — Toss 결제창 열기
-  async function handleTossPayment(plan: PlanRecord) {
-    if (!token || !user) return;
-    if (!clientKey) {
-      setError("결제 모듈을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.");
-      return;
-    }
-    setPendingPlan(plan.planType);
-    setError("");
-    try {
-      const tossPayments = await loadTossPayments(clientKey);
-      const orderId = `widea-${plan.planType.toLowerCase()}-${Date.now()}`;
-      await tossPayments.requestPayment("카드", {
-        amount: plan.price,
-        orderId,
-        orderName: `Widea ${plan.label} 구독`,
-        customerName: user.name || user.email,
-        successUrl: `${window.location.origin}/billing/success?planType=${plan.planType}`,
-        failUrl: `${window.location.origin}/billing/fail`,
-      });
-    } catch (caught: unknown) {
-      // 사용자가 직접 창 닫은 경우 무시
-      if (caught && typeof caught === "object" && "code" in caught && (caught as { code: string }).code === "USER_CANCEL") {
-        setPendingPlan("");
-        return;
-      }
-      setError(readError(caught, "결제 요청에 실패했습니다."));
-    } finally {
-      setPendingPlan("");
-    }
-  }
-
   return (
     <AuthGuard>
-      <div className="workspace-grid fade-up">
-        <PageHeader
-          eyebrow="구독·결제"
-          title="구독 플랜 관리"
-          description="현재 플랜을 확인하고 필요에 맞게 업그레이드하세요."
-          badge={
-            user ? (
-              <span className="badge badge-accent">
-                현재 {planLabels[user.planType] || user.planType}
-              </span>
-            ) : undefined
-          }
-          actions={
-            <Link href="/billing/history" className="btn-secondary px-4 py-2 text-sm">
-              크레딧 이력
-            </Link>
-          }
-        />
+      <Inner />
+    </AuthGuard>
+  );
+}
 
-        {message ? (
-          <Surface className="border-emerald-500/30 bg-emerald-500/10 text-emerald-300">{message}</Surface>
-        ) : null}
-        {error ? (
-          <Surface className="border-rose-500/30 bg-rose-500/10 text-rose-300">{error}</Surface>
-        ) : null}
+function Inner() {
+  const { token, user } = useAuth();
+  const [tab, setTab] = useState<Tab>("personal");
+  const [workspaces, setWorkspaces] = useState<WorkspaceItem[]>([]);
+  const [selectedWs, setSelectedWs] = useState<string>("");
+  const [wsSub, setWsSub] = useState<WsSubResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
-        {/* 현재 상태 요약 */}
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Surface className="space-y-1">
-            <p className="eyebrow">현재 플랜</p>
-            <p className="text-3xl font-bold text-white">
-              {user ? planLabels[user.planType] || user.planType : "-"}
-            </p>
-          </Surface>
-          <Surface className="space-y-1 surface-card-accent">
-            <p className="eyebrow">크레딧 잔액</p>
-            <p className="text-3xl font-bold text-white">
-              {user?.isAdmin ? "∞" : (user?.creditBalance ?? 0).toLocaleString()}
-            </p>
-            <p className="text-xs text-zinc-500">크레딧 잔액</p>
-          </Surface>
-          <Surface className="space-y-1">
-            <p className="eyebrow">기능별 차감 크레딧</p>
-            <ul className="mt-1 space-y-0.5 text-xs text-zinc-400">
-              <li>Discovery 검색 — 1 cr</li>
-              <li>케이스 잠금 해제 — 2 cr</li>
-              <li>Blueprint 생성 — 5 cr</li>
-              <li>Idea Match — 10 cr</li>
-            </ul>
-          </Surface>
+  const refreshWs = useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await api<{ workspaces: WorkspaceItem[] }>(
+        "GET",
+        "/api/workspace/my-list",
+        undefined,
+        token,
+      );
+      const owned = res.workspaces.filter((w) => w.isOwner);
+      setWorkspaces(owned);
+      if (!selectedWs && owned[0]) setSelectedWs(owned[0].ideaId);
+    } catch {
+      // silent
+    }
+  }, [token, selectedWs]);
+
+  useEffect(() => {
+    refreshWs();
+  }, [refreshWs]);
+
+  // 선택된 워크스페이스 구독 fetch
+  useEffect(() => {
+    if (!token || !selectedWs) {
+      setWsSub(null);
+      return;
+    }
+    api<WsSubResponse>("GET", `/api/workspace/${selectedWs}/subscription`, undefined, token)
+      .then(setWsSub)
+      .catch(() => setWsSub(null));
+  }, [token, selectedWs]);
+
+  async function handleSubscribePersonal(plan: PlanMeta) {
+    if (!token) return;
+    setLoading(true);
+    setError("");
+    setSuccess("");
+    try {
+      // 개인 플랜은 기존 /api/subscribe (FREE) 또는 /api/admin/demo-subscribe (유료, 데모용)
+      if (plan.priceKrw === 0) {
+        await api("POST", "/api/subscribe", { planType: plan.key }, token);
+      } else {
+        await api("POST", "/api/admin/demo-subscribe", { planType: plan.key }, token);
+      }
+      setSuccess(`${plan.label} 플랜으로 변경됐습니다.`);
+    } catch (caught) {
+      setError(readError(caught, "구독 실패"));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSubscribeTeam(plan: PlanMeta) {
+    if (!token || !selectedWs) {
+      setError("워크스페이스를 선택해주세요.");
+      return;
+    }
+    if (plan.key === "ENTERPRISE") {
+      window.location.href = "/contact";
+      return;
+    }
+    setLoading(true);
+    setError("");
+    setSuccess("");
+    try {
+      await api(
+        "POST",
+        `/api/workspace/${selectedWs}/subscribe`,
+        { planType: plan.key },
+        token,
+      );
+      const wsName = workspaces.find((w) => w.ideaId === selectedWs)?.title ?? "워크스페이스";
+      setSuccess(`${wsName}에 ${plan.label} 플랜이 활성화됐습니다.`);
+      const subRes = await api<WsSubResponse>("GET", `/api/workspace/${selectedWs}/subscription`, undefined, token);
+      setWsSub(subRes);
+    } catch (caught) {
+      setError(readError(caught, "팀 구독 실패"));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const currentPersonalPlan = (user?.planType ?? "FREE") as PlanType;
+  const plans = tab === "personal" ? PERSONAL_PLANS : TEAM_PLANS;
+
+  return (
+    <div className="mx-auto max-w-6xl space-y-6 fade-up">
+      <header className="space-y-2 text-center">
+        <p className="eyebrow">구독·결제</p>
+        <h1 className="text-3xl font-bold text-white sm:text-4xl">플랜을 선택하세요</h1>
+        <p className="text-sm text-zinc-400">
+          개인 창업자부터 팀 단위까지 — 검증·실행·확장 단계별 맞춤 가격
+        </p>
+      </header>
+
+      {/* 탭 토글 */}
+      <div className="flex justify-center">
+        <div className="inline-flex items-center rounded-full border border-white/10 bg-white/[0.02] p-1">
+          <button
+            type="button"
+            onClick={() => setTab("personal")}
+            className={`rounded-full px-5 py-2 text-sm font-bold transition-colors ${
+              tab === "personal" ? "bg-violet-500 text-white" : "text-zinc-400 hover:text-zinc-200"
+            }`}
+          >
+            개인
+          </button>
+          <button
+            type="button"
+            onClick={() => setTab("team")}
+            className={`rounded-full px-5 py-2 text-sm font-bold transition-colors ${
+              tab === "team" ? "bg-violet-500 text-white" : "text-zinc-400 hover:text-zinc-200"
+            }`}
+          >
+            팀
+          </button>
         </div>
+      </div>
 
-        {/* 플랜 카드 */}
-        <Surface className="space-y-5">
-          <div>
-            <p className="eyebrow">구독 플랜</p>
-            <h2 className="text-xl font-semibold text-white">플랜 선택</h2>
-            <p className="mt-1 text-sm text-zinc-400">
-              구독을 변경하면 토스 결제창이 뜨고 승인 후 즉시 크레딧이 충전됩니다.
+      {/* 팀 탭 — 워크스페이스 선택 */}
+      {tab === "team" ? (
+        <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
+          {workspaces.length === 0 ? (
+            <p className="text-center text-sm text-zinc-400">
+              내가 OWNER인 워크스페이스가 없습니다. 먼저 [아이디어 만들기]로 만들어주세요.
             </p>
-          </div>
-
-          {loading ? (
-            <LoadingState label="플랜 정보를 불러오는 중..." />
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-              {plans.map((plan) => {
-                const isCurrent = user?.planType === plan.planType;
-                const isRecommended = plan.planType === "PRO";
-                const features = PLAN_FEATURES[plan.planType] ?? [];
-
-                return (
-                  <div
-                    key={plan.planType}
-                    className={`relative flex flex-col justify-between rounded-2xl border p-5 transition-colors ${
-                      isCurrent
-                        ? "border-indigo-400/50 bg-indigo-500/10 ring-1 ring-indigo-400/30"
-                        : isRecommended
-                          ? "border-indigo-400/30 bg-white/[0.04] hover:border-indigo-400/50"
-                          : "border-white/10 bg-white/[0.04] hover:border-indigo-400/30"
-                    }`}
-                  >
-                    {(isCurrent || isRecommended) ? (
-                      <span className={`absolute -top-3 left-1/2 -translate-x-1/2 rounded-full px-3 py-0.5 text-xs font-semibold text-white shadow ${
-                        isCurrent ? "bg-zinc-700" : "bg-indigo-500"
-                      }`}>
-                        {isCurrent ? "현재 플랜" : "Recommended"}
-                      </span>
-                    ) : null}
-
-                    <div className="space-y-4">
-                      <div>
-                        <p className="text-lg font-bold text-white">{plan.label}</p>
-                        <p className="mt-1 text-2xl font-bold text-white">
-                          {plan.price === 0 ? "무료" : formatCurrency(plan.price)}
-                          {plan.price > 0 ? (
-                            <span className="text-sm font-normal text-zinc-500">/월</span>
-                          ) : null}
-                        </p>
-                        <p className="mt-0.5 text-sm text-zinc-400">
-                          매월 {plan.credits.toLocaleString()} cr
-                        </p>
-                      </div>
-
-                      <ul className="space-y-1.5">
-                        {features.map((feat) => (
-                          <li key={feat} className="flex items-start gap-1.5 text-xs text-zinc-300">
-                            <svg className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
-                            </svg>
-                            {feat}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-
-                    <div className="mt-5 space-y-2">
-                      {token ? (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              plan.price === 0
-                                ? handleFreeSubscribe()
-                                : handleTossPayment(plan)
-                            }
-                            disabled={pendingPlan === plan.planType || isCurrent}
-                            className={`w-full ${isCurrent ? "btn-secondary" : "btn-primary"} disabled:opacity-50`}
-                          >
-                            {isCurrent
-                              ? "현재 플랜"
-                              : pendingPlan === plan.planType
-                                ? "처리 중..."
-                                : plan.price === 0
-                                  ? "무료로 시작"
-                                  : `${plan.label} 결제하기`}
-                          </button>
-                          {user?.isAdmin && plan.price > 0 && !isCurrent ? (
-                            <button
-                              type="button"
-                              onClick={() => { setMockPlan(plan); setMockOpen(true); }}
-                              disabled={pendingPlan === plan.planType}
-                              className="w-full rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-500/20 disabled:opacity-50"
-                              title="관리자 전용 — Toss 스타일 데모 결제"
-                            >
-                              🎬 데모 결제 (실거래 X)
-                            </button>
-                          ) : null}
-                        </>
-                      ) : (
-                        <Link href="/register" className="btn-primary block w-full text-center">
-                          가입하기
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <label className="text-xs font-semibold text-zinc-400">결제할 워크스페이스</label>
+              <select
+                value={selectedWs}
+                onChange={(e) => setSelectedWs(e.target.value)}
+                className="rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-200"
+              >
+                {workspaces.map((w) => (
+                  <option key={w.ideaId} value={w.ideaId}>
+                    {w.title}
+                  </option>
+                ))}
+              </select>
+              {wsSub ? (
+                <p className="text-xs text-zinc-500">
+                  현재: <strong className="text-violet-200">{PLAN_META[wsSub.planType].label}</strong>
+                  <span className="mx-1">·</span>
+                  멤버 {wsSub.currentMembers}/{wsSub.maxMembers === 0 ? "∞" : wsSub.maxMembers}
+                </p>
+              ) : null}
             </div>
           )}
-        </Surface>
-
-        {/* 크레딧 이력 바로가기 */}
-        <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.04] px-6 py-4">
-          <div>
-            <p className="text-sm font-semibold text-white">크레딧 사용 이력</p>
-            <p className="text-xs text-zinc-400">AI 기능 사용 내역과 충전 이력을 확인할 수 있습니다.</p>
-          </div>
-          <Link href="/billing/history" className="btn-secondary px-4 py-2 text-sm">
-            이력 보기 →
-          </Link>
         </div>
+      ) : null}
 
-        <p className="text-xs leading-relaxed text-zinc-500">
-          ⓘ 결제는 토스페이먼츠 테스트 환경으로 처리되며 실제 카드 청구는 발생하지 않습니다.
+      {error ? (
+        <p className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-4 py-2.5 text-center text-sm text-rose-200">
+          {error}
         </p>
+      ) : null}
+      {success ? (
+        <p className="rounded-lg border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-center text-sm text-emerald-200">
+          ✓ {success}
+        </p>
+      ) : null}
 
-        {mockPlan ? (
-          <MockTossModal
-            open={mockOpen}
-            planLabel={mockPlan.label}
-            amountKRW={mockPlan.price}
-            onClose={() => setMockOpen(false)}
-            onConfirm={async () => {
-              await handleDemoSubscribe(mockPlan);
-            }}
-          />
-        ) : null}
+      {/* 플랜 카드 그리드 */}
+      <div
+        className={`grid gap-4 ${
+          tab === "personal" ? "mx-auto max-w-5xl sm:grid-cols-3" : "sm:grid-cols-2 lg:grid-cols-4"
+        }`}
+      >
+        {plans.map((plan) => {
+          const isCurrent =
+            tab === "personal"
+              ? currentPersonalPlan === plan.key
+              : wsSub?.planType === plan.key;
+          return (
+            <PlanCard
+              key={plan.key}
+              plan={plan}
+              isCurrent={isCurrent}
+              onClick={() =>
+                tab === "personal" ? handleSubscribePersonal(plan) : handleSubscribeTeam(plan)
+              }
+              loading={loading}
+              showWsRequired={tab === "team" && !selectedWs && plan.key !== "ENTERPRISE"}
+            />
+          );
+        })}
       </div>
-    </AuthGuard>
+
+      <p className="text-center text-[0.7rem] text-zinc-500">
+        ⚠ 데모 환경 — 유료 플랜 결제는 시연용 우회 모드입니다. 실제 카드 결제는 발생하지 않습니다.
+      </p>
+    </div>
+  );
+}
+
+function PlanCard({
+  plan,
+  isCurrent,
+  onClick,
+  loading,
+  showWsRequired,
+}: {
+  plan: PlanMeta;
+  isCurrent: boolean;
+  onClick: () => void;
+  loading: boolean;
+  showWsRequired: boolean;
+}) {
+  const isFree = plan.priceKrw === 0 && plan.key !== "ENTERPRISE";
+  const isEnterprise = plan.key === "ENTERPRISE";
+
+  const badgeMeta =
+    plan.badge === "popular"
+      ? { text: "인기", cn: "bg-violet-500 text-white" }
+      : plan.badge === "best_value"
+        ? { text: "추천", cn: "bg-emerald-500 text-white" }
+        : null;
+
+  return (
+    <div
+      className={`relative flex flex-col gap-3 rounded-2xl border p-5 transition-all ${
+        isCurrent
+          ? "border-emerald-400/50 bg-emerald-500/[0.05] ring-1 ring-emerald-400/30"
+          : plan.badge
+            ? "border-violet-400/40 bg-violet-500/[0.04] ring-1 ring-violet-400/20"
+            : "border-white/10 bg-white/[0.02]"
+      }`}
+    >
+      {badgeMeta ? (
+        <span
+          className={`absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full px-2.5 py-0.5 text-[0.6rem] font-bold ${badgeMeta.cn}`}
+        >
+          {badgeMeta.text}
+        </span>
+      ) : null}
+      {isCurrent ? (
+        <span className="absolute -top-2.5 right-3 rounded-full bg-emerald-500 px-2.5 py-0.5 text-[0.6rem] font-bold text-white">
+          현재 플랜
+        </span>
+      ) : null}
+
+      <div className="space-y-1">
+        <p className="text-base font-bold text-white">{plan.label}</p>
+        <p className="text-[0.7rem] text-zinc-400">{plan.tagline}</p>
+      </div>
+
+      <div className="space-y-0.5">
+        {isEnterprise ? (
+          <p className="text-2xl font-black text-white">별도 견적</p>
+        ) : (
+          <>
+            <p className="text-3xl font-black text-white">
+              ₩{formatKrw(plan.priceKrw)}
+              <span className="ml-1 text-sm font-normal text-zinc-500">/월</span>
+            </p>
+            {plan.maxMembers > 0 ? (
+              <p className="text-[0.65rem] text-zinc-500">
+                멤버 {plan.maxMembers}명 한도
+                {plan.category === "team" && plan.priceKrw > 0
+                  ? ` · 1인당 약 ₩${formatKrw(Math.round(plan.priceKrw / plan.maxMembers))}`
+                  : ""}
+              </p>
+            ) : null}
+          </>
+        )}
+      </div>
+
+      <ul className="flex-1 space-y-1.5 border-t border-white/5 pt-3">
+        {plan.features.map((f) => (
+          <li key={f} className="flex items-start gap-1.5 text-[0.7rem] text-zinc-300">
+            <span className="text-emerald-400">✓</span>
+            <span>{f}</span>
+          </li>
+        ))}
+      </ul>
+
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={loading || isCurrent || showWsRequired}
+        className={`mt-1 w-full rounded-lg px-4 py-2.5 text-sm font-bold transition-colors disabled:opacity-50 ${
+          isCurrent
+            ? "bg-emerald-500/30 text-emerald-200 cursor-default"
+            : isEnterprise || isFree
+              ? "border border-white/15 bg-white/[0.04] text-white hover:bg-white/[0.08]"
+              : "bg-violet-500 text-white hover:bg-violet-400"
+        }`}
+      >
+        {isCurrent
+          ? "사용 중"
+          : isEnterprise
+            ? "영업팀 문의 →"
+            : showWsRequired
+              ? "워크스페이스 선택 필요"
+              : isFree
+                ? "FREE로 변경"
+                : `${plan.label} 시작`}
+      </button>
+    </div>
   );
 }

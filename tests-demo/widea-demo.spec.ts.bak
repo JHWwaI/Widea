@@ -1,0 +1,236 @@
+import { test, Page } from '@playwright/test';
+
+async function injectOverlay(page: Page) {
+  try {
+    await page.addStyleTag({
+      content: `
+        #__demo_sub {
+          position: fixed; left: 50%; bottom: 36px; transform: translateX(-50%);
+          background: rgba(15,15,20,0.92); color: #fff;
+          padding: 14px 28px; border-radius: 14px;
+          font-size: 19px; line-height: 1.45;
+          font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Apple SD Gothic Neo", sans-serif;
+          z-index: 999999; max-width: 80%; text-align: center;
+          box-shadow: 0 12px 32px rgba(0,0,0,0.35);
+          border: 1px solid rgba(255,255,255,0.08);
+          backdrop-filter: blur(6px);
+        }
+        #__demo_badge {
+          position: fixed; top: 24px; left: 24px;
+          background: linear-gradient(135deg,#6366f1,#8b5cf6);
+          color: #fff; padding: 8px 16px; border-radius: 999px;
+          font-size: 13px; font-weight: 600; letter-spacing: .3px;
+          font-family: -apple-system, sans-serif;
+          z-index: 999999; box-shadow: 0 6px 18px rgba(99,102,241,0.4);
+        }
+      `,
+    });
+    await page.evaluate(() => {
+      if (!document.getElementById('__demo_sub')) {
+        const sub = document.createElement('div');
+        sub.id = '__demo_sub';
+        document.body.appendChild(sub);
+      }
+      if (!document.getElementById('__demo_badge')) {
+        const b = document.createElement('div');
+        b.id = '__demo_badge';
+        b.textContent = '🎬 Widea 시연';
+        document.body.appendChild(b);
+      }
+    });
+  } catch {}
+}
+
+async function say(page: Page, text: string, holdMs = 0) {
+  await injectOverlay(page);
+  try {
+    await page.evaluate((t) => {
+      const el = document.getElementById('__demo_sub');
+      if (el) el.textContent = t;
+    }, text);
+  } catch {}
+  if (holdMs > 0) await page.waitForTimeout(holdMs);
+}
+
+async function tryClick(page: Page, fn: () => Promise<void>) {
+  try { await fn(); } catch {}
+}
+
+async function clickIfExists(locator: any, timeout = 4000) {
+  try {
+    if (await locator.count()) {
+      await locator.first().click({ timeout });
+      return true;
+    }
+  } catch {}
+  return false;
+}
+
+test('Widea — 첫 사용자 시연 (가입 → 아이디어 → 워크스페이스 → 커뮤니티/전문가/협업)', async ({ page }) => {
+  test.setTimeout(360_000);
+  const stamp = Date.now();
+  const email = `demo${stamp}@widea.test`;
+  const password = 'demo1234';
+
+  // ── Intro
+  await page.goto('/register');
+  await say(page, '안녕하세요! Widea 첫 사용자 시연을 시작합니다.', 2500);
+
+  // ── 1) 회원가입
+  await say(page, '먼저, 새 계정을 만들어 볼게요.', 1000);
+  await page.locator('#name').fill('데모 사용자');
+  await page.locator('#email').fill(email);
+  await page.locator('#password').fill(password);
+  await say(page, '이름·이메일·비밀번호만 넣으면 가입 완료.', 1300);
+  await tryClick(page, async () => {
+    await page.getByText('무료로 시작하기', { exact: false }).first().click();
+  });
+
+  // ── 2) 역할 선택
+  await page.waitForURL(/select-type/, { timeout: 12_000 }).catch(() => {});
+  await say(page, '창업가와 전문가 중 역할을 고릅니다.', 1800);
+  await tryClick(page, async () => {
+    await page.locator('button')
+      .filter({ hasText: '창업가' })
+      .filter({ hasText: /아이디어를 검증/ })
+      .first().click();
+  });
+  await say(page, '창업가로 시작.', 900);
+  await tryClick(page, async () => {
+    await page.getByRole('button', { name: '시작하기' }).click();
+  });
+
+  // ── 3) 아이디어 매칭 6단계
+  await page.waitForURL(/idea-match/, { timeout: 12_000 }).catch(() => {});
+  await say(page, '아이디어 생성 전, 6단계 입력을 빠르게.', 1500);
+
+  // Step 1 — 산업
+  await say(page, '1단계 — 관심 산업 분야.', 700);
+  await clickIfExists(page.getByRole('button', { name: /AI & Data/i }));
+  await clickIfExists(page.getByRole('button', { name: /SaaS & B2B/i }));
+  await page.waitForTimeout(500);
+  await clickIfExists(page.getByRole('button', { name: /^다음$/ }));
+
+  // Step 2 — 수익 모델
+  await say(page, '2단계 — 수익 모델.', 700);
+  await clickIfExists(page.getByRole('button', { name: /SaaS 구독/ }));
+  await page.waitForTimeout(400);
+  await clickIfExists(page.getByRole('button', { name: /^다음$/ }));
+
+  // Step 3 — 타깃 시장 (수정: B2B 카드 + 타깃 고객 입력)
+  await say(page, '3단계 — 벤치마크 단계와 타깃 시장.', 700);
+  // 'Series A' 단계 카드 (없으면 스킵)
+  await clickIfExists(
+    page.locator('button').filter({ hasText: /Series A|시리즈 A/ }).filter({ hasText: /시드|초기|성장|확장/i })
+  );
+  // B2B 카드 — label 'B2B' + desc '기업 고객' 동시 매칭
+  await clickIfExists(
+    page.locator('button').filter({ hasText: /^B2B$/ }).filter({ hasText: '기업' })
+  );
+  const tc = page.locator('#targetCustomer');
+  if (await tc.count()) await tc.fill('직원 50명 이하 IT 스타트업 팀');
+  await page.waitForTimeout(800);
+  await clickIfExists(page.getByRole('button', { name: /^다음$/ }));
+
+  // Step 4 — 문제
+  await say(page, '4단계 — 해결하고 싶은 문제.', 700);
+  const ta = page.locator('textarea').first();
+  if (await ta.count()) {
+    await ta.fill('아이디어 검증과 팀 협업 도구가 흩어져 있어 시간을 낭비하는 문제');
+  }
+  await page.waitForTimeout(1100);
+  await clickIfExists(page.getByRole('button', { name: /^다음$/ }));
+
+  // Step 5 — 실행 역량
+  await say(page, '5단계 — 팀 규모·예산·역량.', 700);
+  await clickIfExists(page.locator('button').filter({ hasText: /2~3인|2-3인/ }));
+  await clickIfExists(page.locator('button').filter({ hasText: /500만원 이하/ }));
+  const skills = page.locator('#skills');
+  if (await skills.count()) await skills.fill('React, Node.js, AI 프롬프트 설계');
+  await page.waitForTimeout(700);
+  await clickIfExists(page.getByRole('button', { name: /^다음$/ }));
+
+  // Step 6 — 확인 + 분석 시작
+  await say(page, '입력을 확인하고 AI 분석을 시작합니다.', 1700);
+  await tryClick(page, async () => {
+    await page.getByText(/아이디어 분석 시작/).first().click();
+  });
+
+  // ── 4) 결과 페이지
+  await say(page, 'AI가 5개 맞춤 아이디어를 생성 중...', 0);
+  const arrived = await page.waitForURL(/idea-match\/results/, { timeout: 45_000 }).then(() => true).catch(() => false);
+
+  if (arrived) {
+    await page.waitForLoadState('domcontentloaded').catch(() => {});
+    // 카드가 그려질 시간 (loading state) — 짧게만
+    await page.waitForTimeout(2000);
+    await say(page, '5개의 아이디어가 점수와 함께 제시됩니다.', 3000);
+
+    // 첫 카드 잠금 해제 (5크레딧)
+    await say(page, '관심 가는 아이디어를 5크레딧으로 열어봅니다.', 1300);
+    const unlocked = await clickIfExists(page.getByText(/크레딧으로 열기/).first(), 5000);
+    if (unlocked) {
+      await page.waitForTimeout(2200);
+      // 잠금 해제된 카드(Link)를 클릭
+      await say(page, '잠금 해제된 카드를 열어 상세를 확인합니다.', 1300);
+      await clickIfExists(page.locator('a[href^="/ideas/"]').first(), 6000);
+      await page.waitForLoadState('domcontentloaded').catch(() => {});
+      await page.waitForTimeout(1500);
+
+      await say(page, '아이디어 상세 — 심층 리포트·실행 도구를 한 곳에서 봅니다.', 3500);
+
+      // "워크스페이스 열기" CTA 클릭
+      const wsCta = page.getByText(/워크스페이스 열기/).first();
+      if (await wsCta.count()) {
+        await wsCta.click({ timeout: 5000 }).catch(() => {});
+        await page.waitForLoadState('domcontentloaded').catch(() => {});
+        await page.waitForTimeout(2000);
+      } else {
+        // 폴백: URL에서 ideaId 뽑아 직접 이동
+        const m = page.url().match(/\/ideas\/([^/?#]+)/);
+        if (m) await page.goto(`/workspace/${m[1]}`).catch(() => {});
+      }
+
+      // ── 5) 워크스페이스 내부
+      if (page.url().includes('/workspace/')) {
+        await say(page, '워크스페이스 — 6단계 33개 실행 과제를 체크리스트로 관리합니다.', 3500);
+        // 첫 단계 펼치기
+        await clickIfExists(page.locator('button').filter({ hasText: /1단계|발견|Discovery|시장 검증/ }).first(), 3000);
+        await page.waitForTimeout(1200);
+        await say(page, '단계를 펼치면 세부 작업·담당자·기한을 지정할 수 있어요.', 3000);
+
+        // 미팅 탭
+        await clickIfExists(page.getByRole('button', { name: /Meetings|미팅/i }).first(), 3000);
+        await page.waitForTimeout(800);
+        await say(page, '미팅 탭 — 팀과 일정을 잡고 화상 회의도 바로 시작합니다.', 3000);
+
+        // 멤버 탭
+        await clickIfExists(page.getByRole('button', { name: /Members|멤버/i }).first(), 3000);
+        await page.waitForTimeout(800);
+        await say(page, '멤버 탭 — 협업 멤버를 초대하고 역할을 지정합니다.', 3000);
+      }
+    }
+  } else {
+    await say(page, 'AI가 결과를 준비 중 — 다음 화면으로 이동합니다.', 1500);
+  }
+
+  // ── 6) 커뮤니티
+  await page.goto('/community').catch(() => {});
+  await page.waitForLoadState('domcontentloaded').catch(() => {});
+  await say(page, '커뮤니티 — 다른 창업가들과 아이디어를 공유하고 피드백 주고받기.', 4000);
+
+  // ── 7) 전문가 찾기
+  await page.goto('/talent').catch(() => {});
+  await page.waitForLoadState('domcontentloaded').catch(() => {});
+  await say(page, '전문가 찾기 — 분야별 전문가 풀에서 필요한 인재를 검색합니다.', 4000);
+
+  // ── 8) 협업 / 팀원 모집
+  await page.goto('/collab').catch(() => {});
+  await page.waitForLoadState('domcontentloaded').catch(() => {});
+  await say(page, '협업 — 팀원 모집·외주 의뢰로 함께할 동료를 모읍니다.', 3000);
+  await clickIfExists(page.getByText(/팀원 모집/).first(), 3000);
+  await say(page, '팀원 모집 글 한 번이면, 흩어진 인재가 우리 프로젝트로.', 3000);
+
+  // ── Outro
+  await say(page, 'Widea — 아이디어부터 실행까지, 한 번에 시작해보세요!', 3000);
+});

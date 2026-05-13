@@ -78,16 +78,10 @@ export const userTypeOptions: Array<SelectOption & { icon: string }> = [
     icon: "Founder",
   },
   {
-    value: "INVESTOR",
-    label: "투자자",
-    hint: "새로운 시장과 기회를 빠르게 스캔하고 싶을 때",
-    icon: "Investor",
-  },
-  {
-    value: "ACCELERATOR",
-    label: "액셀러레이터",
-    hint: "유망 팀을 발굴하고 육성 파이프라인을 만들 때",
-    icon: "Accelerator",
+    value: "EXPERT",
+    label: "전문가",
+    hint: "개발·디자인·마케팅·AC·투자 등 창업가에게 도움을 주는 역할",
+    icon: "Expert",
   },
 ];
 

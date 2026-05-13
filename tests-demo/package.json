@@ -1,0 +1,10 @@
+{
+  "name": "widea-demo-recording",
+  "private": true,
+  "scripts": {
+    "demo": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.47.0"
+  }
+}

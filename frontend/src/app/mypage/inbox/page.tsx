@@ -2,14 +2,25 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import AuthGuard from "@/components/AuthGuard";
 import { LoadingState, EmptyState } from "@/components/ProductUI";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/lib/api";
 import { formatRelativeTime, readError } from "@/lib/product";
+import CollabRequestsInbox from "@/components/CollabRequestsInbox";
 
 type Author = { id: string; name: string | null; email: string };
 type Post = { id: string; title: string; category: string };
+
+type DmPeer = { id: string; name: string | null; email: string; userCode: string | null };
+type DmConv = {
+  id: string;
+  peer: DmPeer;
+  lastMessage: { content: string; createdAt: string; senderId: string } | null;
+  lastMessageAt: string | null;
+  unreadCount: number;
+};
 
 type InboxComment = {
   id: string;
@@ -34,19 +45,44 @@ type InboxResponse = {
 
 export default function InboxPage() {
   const { token } = useAuth();
+  const router = useRouter();
   const [data, setData] = useState<InboxResponse | null>(null);
+  const [dms, setDms] = useState<DmConv[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!token) return;
     let cancelled = false;
-    api<InboxResponse>("GET", "/api/inbox", undefined, token)
-      .then((res) => { if (!cancelled) setData(res); })
-      .catch((caught) => { if (!cancelled) setError(readError(caught, "인박스 불러오기 실패")); })
+    Promise.all([
+      api<InboxResponse>("GET", "/api/inbox", undefined, token),
+      api<{ conversations: DmConv[] }>("GET", "/api/dm/conversations", undefined, token).catch(() => ({ conversations: [] as DmConv[] })),
+    ])
+      .then(([inboxRes, dmRes]) => {
+        if (cancelled) return;
+        setData(inboxRes);
+        setDms(dmRes.conversations);
+      })
+      .catch((caught) => { if (!cancelled) setError(readError(caught, "받은 메시지를 불러오지 못했습니다.")); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [token]);
+
+  function openDm(conversationId: string) {
+    router.push(`/messages?dm=${encodeURIComponent(conversationId)}`);
+  }
+
+  // 미독 DM 우선
+  const recentDms = [...dms]
+    .sort((a, b) => {
+      // 미독 카운트 우선, 다음 lastMessageAt 내림차순
+      if ((b.unreadCount ?? 0) !== (a.unreadCount ?? 0)) return (b.unreadCount ?? 0) - (a.unreadCount ?? 0);
+      const ta = a.lastMessageAt ? new Date(a.lastMessageAt).getTime() : 0;
+      const tb = b.lastMessageAt ? new Date(b.lastMessageAt).getTime() : 0;
+      return tb - ta;
+    })
+    .slice(0, 8);
+  const totalUnreadDm = dms.reduce((acc, c) => acc + (c.unreadCount ?? 0), 0);
 
   return (
     <AuthGuard>
@@ -55,12 +91,72 @@ export default function InboxPage() {
           <Link href="/mypage" className="text-xs text-zinc-500 hover:text-zinc-300">
             ← 마이페이지
           </Link>
-          <p className="eyebrow">인박스</p>
-          <h1 className="editorial-h2 text-white">최근 받은 응답</h1>
+          <p className="eyebrow">알림함</p>
+          <h1 className="editorial-h2 text-white">받은 메시지·요청</h1>
           <p className="text-sm text-zinc-400">
-            내 게시글에 달린 댓글·좋아요 (최근 30일)
+            1:1 메시지, 협업 요청, 댓글·좋아요를 한 곳에서
           </p>
         </header>
+
+        {/* 받은 DM (미독 우선) */}
+        {recentDms.length > 0 ? (
+          <section className="space-y-2 rounded-2xl border border-violet-400/25 bg-violet-500/[0.04] p-4">
+            <header className="flex items-baseline justify-between">
+              <p className="text-sm font-bold text-violet-200">
+                1:1 메시지
+                {totalUnreadDm > 0 ? (
+                  <span className="ml-2 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1.5 text-[0.65rem] font-bold text-white">
+                    {totalUnreadDm}
+                  </span>
+                ) : null}
+              </p>
+              <p className="text-[0.65rem] text-zinc-500">최근 {recentDms.length}개</p>
+            </header>
+            <ul className="space-y-1.5">
+              {recentDms.map((c) => {
+                const peerName = c.peer.name || c.peer.email || c.peer.userCode || "사용자";
+                const initial = peerName.trim()[0]?.toUpperCase() ?? "?";
+                return (
+                  <li key={c.id}>
+                    <button
+                      type="button"
+                      onClick={() => openDm(c.id)}
+                      className="flex w-full items-center gap-3 rounded-lg border border-white/5 bg-white/[0.03] px-3 py-2 text-left hover:border-violet-400/40 hover:bg-white/[0.05]"
+                    >
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/40 to-violet-700/30 text-xs font-bold text-white">
+                        {initial}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-baseline justify-between gap-2">
+                          <p className="truncate text-sm font-bold text-white">{peerName}</p>
+                          {c.lastMessageAt ? (
+                            <span className="shrink-0 text-[0.6rem] text-zinc-500">
+                              {formatRelativeTime(c.lastMessageAt)}
+                            </span>
+                          ) : null}
+                        </div>
+                        <p className="truncate text-xs text-zinc-400">
+                          {c.lastMessage?.content ?? "(메시지 없음)"}
+                        </p>
+                      </div>
+                      {c.unreadCount > 0 ? (
+                        <span className="ml-auto inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-rose-500 px-1.5 text-[0.65rem] font-bold text-white">
+                          {c.unreadCount}
+                        </span>
+                      ) : null}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+            <p className="text-[0.65rem] text-zinc-500">
+              클릭하면 채팅창으로 바로 연결됩니다.
+            </p>
+          </section>
+        ) : null}
+
+        {/* 협업 요청 */}
+        <CollabRequestsInbox />
 
         {error ? (
           <p className="rounded-lg border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300">
@@ -86,7 +182,7 @@ export default function InboxPage() {
             {data.comments.length > 0 ? (
               <section className="space-y-2">
                 <h2 className="text-sm font-bold text-violet-300">
-                  💬 댓글 {data.comments.length}건
+                  댓글 {data.comments.length}건
                 </h2>
                 <ul className="space-y-2">
                   {data.comments.map((c) => (
@@ -124,7 +220,7 @@ export default function InboxPage() {
             {data.likes.length > 0 ? (
               <section className="space-y-2">
                 <h2 className="text-sm font-bold text-rose-300">
-                  ❤ 좋아요 {data.likes.length}건
+                  좋아요 {data.likes.length}건
                 </h2>
                 <ul className="space-y-2">
                   {data.likes.map((l) => (

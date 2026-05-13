@@ -64,13 +64,7 @@ export default function RegisterPage() {
         />
 
         {/* Logo */}
-        <Link href="/" className="relative z-10 flex items-center gap-2.5">
-          <span
-            className="inline-flex h-9 w-9 items-center justify-center rounded-xl text-sm font-bold text-white"
-            style={{ background: "linear-gradient(135deg, #4F6EF7, #6366F1)", boxShadow: "0 4px 16px rgba(79,110,247,0.4)" }}
-          >
-            W
-          </span>
+        <Link href="/" className="relative z-10 flex items-center">
           <span className="text-lg font-bold text-white">Widea</span>
         </Link>
 
@@ -120,13 +114,7 @@ export default function RegisterPage() {
         style={{ background: "rgba(7,6,15,0.6)" }}
       >
         {/* Mobile logo */}
-        <Link href="/" className="mb-10 flex items-center gap-2 lg:hidden">
-          <span
-            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-sm font-bold text-white"
-            style={{ background: "linear-gradient(135deg, #4F6EF7, #6366F1)" }}
-          >
-            W
-          </span>
+        <Link href="/" className="mb-10 flex items-center lg:hidden">
           <span className="text-lg font-bold text-white">Widea</span>
         </Link>
 

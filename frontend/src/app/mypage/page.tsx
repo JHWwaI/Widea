@@ -8,7 +8,28 @@ import { api } from "@/lib/api";
 import { planLabels, userTypeLabels } from "@/lib/product";
 import FounderHome from "@/components/mypage/FounderHome";
 import AcceleratorHome from "@/components/mypage/AcceleratorHome";
-import InvestorHome from "@/components/mypage/InvestorHome";
+
+function UserCodeBadge({ code }: { code: string }) {
+  const [copied, setCopied] = useState(false);
+  function copy() {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    });
+  }
+  return (
+    <button
+      type="button"
+      onClick={copy}
+      title="클릭하면 복사됩니다"
+      className="flex items-center gap-2 rounded-lg border border-violet-400/25 bg-violet-500/[0.08] px-3 py-2 transition-colors hover:border-violet-400/50"
+    >
+      <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-violet-400">초대 코드</span>
+      <span className="font-mono text-sm font-bold tracking-[0.2em] text-white">{code}</span>
+      <span className="text-[0.65rem] text-zinc-500">{copied ? "✓ 복사됨" : "복사"}</span>
+    </button>
+  );
+}
 
 export default function MyPage() {
   const { user, token } = useAuth();
@@ -18,19 +39,20 @@ export default function MyPage() {
   useEffect(() => {
     if (!token) return;
     let cancelled = false;
-    api<{ count: number }>("GET", "/api/inbox/count", undefined, token)
-      .then((res) => { if (!cancelled) setInboxCount(res.count); })
-      .catch(() => { /* 인박스 실패는 조용히 무시 */ });
+    Promise.all([
+      api<{ count: number }>("GET", "/api/inbox/count", undefined, token).catch(() => ({ count: 0 })),
+      api<{ unreadTotal: number }>("GET", "/api/dm/unread-summary", undefined, token).catch(() => ({ unreadTotal: 0 })),
+    ]).then(([inboxRes, dmRes]) => {
+      if (!cancelled) setInboxCount((inboxRes.count ?? 0) + (dmRes.unreadTotal ?? 0));
+    });
     return () => { cancelled = true; };
   }, [token]);
 
   // CTA 버튼 — 역할별 라벨만 다름, 모두 아이디어/커뮤니티로 진입
   const cta =
-    role === "ACCELERATOR"
+    role === "EXPERT"
       ? { href: "/community?category=TEAM_RECRUIT", label: "팀 모집 피드 보기" }
-      : role === "INVESTOR"
-        ? { href: "/community?category=TEAM_RECRUIT", label: "진행 중인 팀 둘러보기" }
-        : { href: "/idea-match", label: "새 아이디어 탐색" };
+      : { href: "/idea-match", label: "새 아이디어 탐색" };
 
   return (
     <AuthGuard>
@@ -39,11 +61,7 @@ export default function MyPage() {
         <header className="flex flex-wrap items-end justify-between gap-4">
           <div className="space-y-2">
             <p className="eyebrow">
-              {role === "ACCELERATOR"
-                ? "엑셀레이터 워크스페이스"
-                : role === "INVESTOR"
-                  ? "투자자 워크스페이스"
-                  : "내 워크스페이스"}
+              {role === "EXPERT" ? "전문가 워크스페이스" : "내 워크스페이스"}
             </p>
             <h1 className="editorial-h1">
               안녕하세요{user?.name ? `, ${user.name}` : ""}
@@ -53,6 +71,7 @@ export default function MyPage() {
               {user ? planLabels[user.planType] || user.planType : "-"} 플랜 ·{" "}
               크레딧 {user?.isAdmin ? "Unlimited" : (user?.creditBalance ?? 0)}
             </p>
+            {user?.userCode ? <UserCodeBadge code={user.userCode} /> : null}
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Link
@@ -61,7 +80,7 @@ export default function MyPage() {
               aria-label="인박스"
               title="받은 응답"
             >
-              📥 인박스
+              알림함
               {inboxCount > 0 ? (
                 <span className="ml-1.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[0.625rem] font-bold text-white">
                   {inboxCount > 99 ? "99+" : inboxCount}
@@ -74,7 +93,7 @@ export default function MyPage() {
               aria-label="내 정보 편집"
               title="내 정보 편집"
             >
-              ⚙ 내 정보 편집
+              내 정보 편집
             </Link>
             <Link href={cta.href} className="btn-primary">
               {cta.label}
@@ -83,13 +102,7 @@ export default function MyPage() {
         </header>
 
         {/* 역할별 본문 */}
-        {role === "ACCELERATOR" ? (
-          <AcceleratorHome />
-        ) : role === "INVESTOR" ? (
-          <InvestorHome />
-        ) : (
-          <FounderHome />
-        )}
+        {role === "EXPERT" ? <AcceleratorHome /> : <FounderHome />}
       </div>
     </AuthGuard>
   );

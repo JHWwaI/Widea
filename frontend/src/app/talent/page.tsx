@@ -9,11 +9,25 @@ import { readError } from "@/lib/product";
 
 type ExpertCategory =
   | "DEVELOPER"
+  | "FRONTEND_DEV"
+  | "BACKEND_DEV"
+  | "FULLSTACK_DEV"
+  | "MOBILE_DEV"
+  | "AI_DEV"
+  | "DEVOPS"
+  | "DATA_ENGINEER"
   | "DESIGNER"
+  | "UI_UX_DESIGNER"
+  | "GRAPHIC_DESIGNER"
   | "MARKETER"
+  | "GROWTH_MARKETER"
+  | "CONTENT_MARKETER"
   | "AC_MENTOR"
   | "PLANNER"
   | "PM"
+  | "BUSINESS_DEV"
+  | "LAWYER"
+  | "ACCOUNTANT"
   | "OTHER";
 
 type Expert = {
@@ -32,33 +46,77 @@ type Expert = {
 };
 
 const CATEGORY_LABEL: Record<ExpertCategory, string> = {
-  DEVELOPER: "개발자",
-  DESIGNER: "디자이너",
-  MARKETER: "마케터",
+  DEVELOPER: "개발자(일반)",
+  FRONTEND_DEV: "프론트엔드 개발자",
+  BACKEND_DEV: "백엔드 개발자",
+  FULLSTACK_DEV: "풀스택 개발자",
+  MOBILE_DEV: "모바일 개발자",
+  AI_DEV: "AI/ML 개발자",
+  DEVOPS: "DevOps·인프라",
+  DATA_ENGINEER: "데이터 엔지니어",
+  DESIGNER: "디자이너(일반)",
+  UI_UX_DESIGNER: "UI/UX 디자이너",
+  GRAPHIC_DESIGNER: "그래픽·브랜드 디자이너",
+  MARKETER: "마케터(일반)",
+  GROWTH_MARKETER: "그로스 마케터",
+  CONTENT_MARKETER: "콘텐츠 마케터",
   AC_MENTOR: "AC·멘토",
   PLANNER: "기획자",
   PM: "PM",
+  BUSINESS_DEV: "사업개발",
+  LAWYER: "법무·변호사",
+  ACCOUNTANT: "세무·회계",
   OTHER: "기타",
 };
 
+const DEV_COLOR = "text-emerald-300 bg-emerald-500/10 ring-emerald-400/30";
+const DESIGN_COLOR = "text-violet-300 bg-violet-500/10 ring-violet-400/30";
+const MARKETING_COLOR = "text-amber-300 bg-amber-500/10 ring-amber-400/30";
+
 const CATEGORY_COLOR: Record<ExpertCategory, string> = {
-  DEVELOPER: "text-emerald-300 bg-emerald-500/10 ring-emerald-400/30",
-  DESIGNER: "text-violet-300 bg-violet-500/10 ring-violet-400/30",
-  MARKETER: "text-amber-300 bg-amber-500/10 ring-amber-400/30",
+  DEVELOPER: DEV_COLOR,
+  FRONTEND_DEV: DEV_COLOR,
+  BACKEND_DEV: DEV_COLOR,
+  FULLSTACK_DEV: DEV_COLOR,
+  MOBILE_DEV: DEV_COLOR,
+  AI_DEV: DEV_COLOR,
+  DEVOPS: DEV_COLOR,
+  DATA_ENGINEER: DEV_COLOR,
+  DESIGNER: DESIGN_COLOR,
+  UI_UX_DESIGNER: DESIGN_COLOR,
+  GRAPHIC_DESIGNER: DESIGN_COLOR,
+  MARKETER: MARKETING_COLOR,
+  GROWTH_MARKETER: MARKETING_COLOR,
+  CONTENT_MARKETER: MARKETING_COLOR,
   AC_MENTOR: "text-indigo-300 bg-indigo-500/10 ring-indigo-400/30",
   PLANNER: "text-rose-300 bg-rose-500/10 ring-rose-400/30",
   PM: "text-sky-300 bg-sky-500/10 ring-sky-400/30",
+  BUSINESS_DEV: "text-cyan-300 bg-cyan-500/10 ring-cyan-400/30",
+  LAWYER: "text-stone-300 bg-stone-500/10 ring-stone-400/30",
+  ACCOUNTANT: "text-stone-300 bg-stone-500/10 ring-stone-400/30",
   OTHER: "text-zinc-400 bg-white/[0.04] ring-white/10",
 };
 
 const CATEGORIES: Array<{ value: "" | ExpertCategory; label: string }> = [
   { value: "", label: "전체" },
-  { value: "DEVELOPER", label: "개발자" },
-  { value: "DESIGNER", label: "디자이너" },
+  { value: "FRONTEND_DEV", label: "프론트엔드" },
+  { value: "BACKEND_DEV", label: "백엔드" },
+  { value: "FULLSTACK_DEV", label: "풀스택" },
+  { value: "MOBILE_DEV", label: "모바일" },
+  { value: "AI_DEV", label: "AI/ML" },
+  { value: "DEVOPS", label: "DevOps" },
+  { value: "DATA_ENGINEER", label: "데이터" },
+  { value: "UI_UX_DESIGNER", label: "UI/UX" },
+  { value: "GRAPHIC_DESIGNER", label: "그래픽" },
+  { value: "GROWTH_MARKETER", label: "그로스" },
+  { value: "CONTENT_MARKETER", label: "콘텐츠" },
   { value: "PLANNER", label: "기획자" },
   { value: "PM", label: "PM" },
-  { value: "MARKETER", label: "마케터" },
+  { value: "BUSINESS_DEV", label: "사업개발" },
   { value: "AC_MENTOR", label: "AC·멘토" },
+  { value: "LAWYER", label: "법무" },
+  { value: "ACCOUNTANT", label: "세무" },
+  { value: "OTHER", label: "기타" },
 ];
 
 function formatRate(min: number | null, max: number | null) {

@@ -1,0 +1,19 @@
+{
+  "name": "Widea — AI 창업 워크스페이스",
+  "short_name": "Widea",
+  "description": "글로벌 사례 검색·한국형 실행 전략·아이디어 매칭을 한 흐름으로 묶은 AI 창업 워크스페이스",
+  "start_url": "/mypage",
+  "display": "standalone",
+  "background_color": "#08070E",
+  "theme_color": "#7C3AED",
+  "orientation": "portrait",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

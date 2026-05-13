@@ -216,4 +216,117 @@ export function registerBillingRoutes(
       handleRouteError(res, err, "크레딧 내역 조회 오류");
     }
   });
+
+  /* ═══════════════════════ 팀 구독 (워크스페이스 단위) ═══════════════════════ */
+
+  /** 워크스페이스 팀 구독 — 데모 모드: Toss 우회 즉시 활성. 실서비스에선 결제 후 호출. */
+  app.post("/api/workspace/:ideaId/subscribe", requireAuth, async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { userId } = getAuthedUser(req);
+      const ideaId = String(req.params.ideaId);
+      const { planType } = req.body;
+
+      const cfg = PLAN_CONFIG[planType];
+      if (!cfg || cfg.category !== "team") {
+        res.status(400).json({ error: "유효한 팀 플랜이 아닙니다." });
+        return;
+      }
+      if (planType === "ENTERPRISE") {
+        res.status(400).json({ error: "Enterprise는 별도 견적 — 영업팀 문의" });
+        return;
+      }
+
+      // OWNER 권한 확인
+      const idea = await prisma.generatedIdea.findUnique({
+        where: { id: ideaId },
+        include: { session: { include: { projectPolicy: true } } },
+      });
+      if (!idea || idea.session.projectPolicy.userId !== userId) {
+        res.status(403).json({ error: "OWNER만 팀 구독을 변경할 수 있습니다." });
+        return;
+      }
+
+      const validUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+
+      const sub = await prisma.workspaceSubscription.upsert({
+        where: { ideaId },
+        create: {
+          ideaId,
+          payerId: userId,
+          planType,
+          maxMembers: cfg.maxMembers,
+          monthlyCredits: cfg.credits,
+          validUntil,
+          status: "ACTIVE",
+        },
+        update: {
+          planType,
+          maxMembers: cfg.maxMembers,
+          monthlyCredits: cfg.credits,
+          validUntil,
+          status: "ACTIVE",
+          payerId: userId,
+        },
+      });
+
+      // OWNER에게 월간 크레딧 boost
+      const newBalance = await grantCredits(prisma, userId, cfg.credits, `team-subscription:${planType}:${ideaId}`);
+
+      console.log(`\n🏢 팀 구독: ${planType} (${ideaId}) — +${cfg.credits} 크레딧`);
+
+      res.json({
+        subscription: sub,
+        creditsGranted: cfg.credits,
+        creditBalance: newBalance,
+      });
+    } catch (err) {
+      handleRouteError(res, err, "팀 구독 오류");
+    }
+  });
+
+  /** 워크스페이스 현재 구독 + 멤버 수 + 한도 정보 */
+  app.get("/api/workspace/:ideaId/subscription", requireAuth, async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { userId } = getAuthedUser(req);
+      const ideaId = String(req.params.ideaId);
+
+      // 권한: OWNER 또는 멤버
+      const idea = await prisma.generatedIdea.findUnique({
+        where: { id: ideaId },
+        include: { session: { include: { projectPolicy: true } } },
+      });
+      if (!idea) {
+        res.status(404).json({ error: "아이디어 없음" });
+        return;
+      }
+      const isOwner = idea.session.projectPolicy.userId === userId;
+      if (!isOwner) {
+        const member = await prisma.ideaWorkspaceMember.findUnique({
+          where: { ideaId_userId: { ideaId, userId } },
+        });
+        if (!member) {
+          res.status(403).json({ error: "접근 권한 없음" });
+          return;
+        }
+      }
+
+      const sub = await prisma.workspaceSubscription.findUnique({ where: { ideaId } });
+      const memberCount = await prisma.ideaWorkspaceMember.count({ where: { ideaId } });
+      const totalIncludingOwner = memberCount + 1; // OWNER 포함
+
+      // 구독 없으면 FREE 기본
+      const planType = sub?.planType ?? "FREE";
+      const maxMembers = sub?.maxMembers ?? 1;
+
+      res.json({
+        subscription: sub,
+        planType,
+        maxMembers,
+        currentMembers: totalIncludingOwner,
+        canAddMember: maxMembers === 0 || totalIncludingOwner < maxMembers, // maxMembers 0 = 무제한
+      });
+    } catch (err) {
+      handleRouteError(res, err, "워크스페이스 구독 조회 오류");
+    }
+  });
 }

@@ -22,7 +22,10 @@ export async function api<T = unknown>(
   body?: unknown,
   token?: string,
 ): Promise<T> {
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = {
+    // ngrok 무료 플랜 브라우저 경고 페이지 우회 — 모든 API 요청에 자동 부착
+    "ngrok-skip-browser-warning": "true",
+  };
   if (token) headers.Authorization = `Bearer ${token}`;
   if (body !== undefined) headers["Content-Type"] = "application/json";
 

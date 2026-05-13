@@ -5,48 +5,48 @@
 ───────────────────────────────────────────── */
 :root {
   /* Background */
-  --bg: #0A0B10;
-  --bg-soft: #0F1018;
+  --bg: #0B0C10;
+  --bg-soft: #111217;
 
   /* Surfaces */
-  --surface: rgba(255, 255, 255, 0.05);
-  --surface-strong: rgba(255, 255, 255, 0.09);
-  --surface-muted: rgba(255, 255, 255, 0.03);
+  --surface: rgba(255, 255, 255, 0.04);
+  --surface-strong: rgba(255, 255, 255, 0.07);
+  --surface-muted: rgba(255, 255, 255, 0.02);
 
-  /* Text — 4 levels */
-  --ink:        #F1F3FF;   /* headings / primary */
-  --ink-2:      #C5CAE9;   /* body text */
-  --ink-3:      #8890B5;   /* secondary / descriptions */
-  --ink-4:      #565D80;   /* placeholders / decorative */
+  /* Text — 4 levels (중성 톤) */
+  --ink:        #ECEDEF;   /* headings */
+  --ink-2:      #C8CACE;   /* body */
+  --ink-3:      #8C8F95;   /* secondary */
+  --ink-4:      #5C5F65;   /* placeholders */
 
   /* Borders */
-  --line:       rgba(255, 255, 255, 0.09);
-  --line-soft:  rgba(255, 255, 255, 0.05);
-  --line-strong:rgba(255, 255, 255, 0.15);
+  --line:       rgba(255, 255, 255, 0.08);
+  --line-soft:  rgba(255, 255, 255, 0.04);
+  --line-strong:rgba(255, 255, 255, 0.13);
 
-  /* Accent — Electric Indigo + Purple */
-  --accent:      #5D5DFF;
-  --accent-deep: #4444EE;
-  --accent-soft: rgba(93, 93, 255, 0.12);
-  --accent-glow: rgba(93, 93, 255, 0.3);
+  /* Accent — 부드러운 단일 인디고 (그라디언트·글로우 X) */
+  --accent:      #6F86FF;
+  --accent-deep: #4F6EFF;
+  --accent-soft: rgba(111, 134, 255, 0.10);
+  --accent-glow: rgba(111, 134, 255, 0.18);
 
-  /* Purple */
-  --accent2:     #A855F7;
-  --accent2-soft:rgba(168, 85, 247, 0.12);
+  /* (legacy 호환) */
+  --accent2:     #6F86FF;
+  --accent2-soft:rgba(111, 134, 255, 0.10);
 
   /* Semantic */
-  --success:  #34D399;
-  --warning:  #FBBF24;
+  --success:  #4ADE80;
+  --warning:  #F5C158;
   --danger:   #F87171;
 
-  /* Gradients */
-  --gradient: linear-gradient(135deg, #5D5DFF 0%, #A855F7 100%);
-  --gradient-text: linear-gradient(135deg, #818CF8 0%, #A855F7 50%, #EC4899 100%);
+  /* Gradients — 색→투명만 사용 (다중 색상 그라디언트 폐기) */
+  --gradient: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0));
+  --gradient-text: none;
 
-  /* Shadows */
-  --shadow-card: 0 1px 0 rgba(255,255,255,0.06) inset, 0 8px 32px rgba(0,0,0,0.55);
-  --shadow-btn:  0 4px 20px rgba(93, 93, 255, 0.45);
-  --shadow-glow: 0 0 20px rgba(93, 93, 255, 0.5);
+  /* Shadows — 글로우 제거, 깊이감만 살림 */
+  --shadow-card: 0 1px 0 rgba(255,255,255,0.04) inset, 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  --shadow-btn:  0 1px 2px rgba(0,0,0,0.3);
+  --shadow-glow: none;
 
   /* Shape */
   --radius-xl: 24px;
@@ -93,13 +93,13 @@ body {
   background: var(--bg);
   color: var(--ink-2);
   font-family: var(--font-sans);
-  font-size: 0.9375rem;       /* 15px — 가독 + 절제 균형 */
-  line-height: 1.65;
-  letter-spacing: -0.005em;
+  font-size: 0.9375rem;       /* 15px */
+  line-height: 1.6;
+  letter-spacing: 0;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-feature-settings: "ss01", "ss02", "ss03", "tnum";
+  font-feature-settings: "tnum";
   font-optical-sizing: auto;
   word-break: keep-all;
 }
@@ -114,50 +114,49 @@ body {
 ─────────────────────────────────────────────── */
 .eyebrow {
   font-size: 0.7rem;
-  font-weight: 600;
+  font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.2em;
-  color: #C4B5FD;          /* violet-300 */
+  letter-spacing: 0.08em;
+  color: var(--ink-3);
 }
 
 .display-num {
   font-family: var(--font-display);
-  font-weight: 900;
-  letter-spacing: -0.04em;
+  font-weight: 700;
+  letter-spacing: -0.015em;
   line-height: 1;
   font-feature-settings: "tnum", "lnum";
 }
 
 .editorial-h1 {
-  font-size: clamp(1.875rem, 4vw + 0.5rem, 3.75rem);   /* 30 ~ 60 */
-  font-weight: 800;
-  line-height: 1.05;
-  letter-spacing: -0.025em;
-  color: #F1F3FF;
+  font-size: clamp(1.75rem, 3vw + 0.5rem, 3rem);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: var(--ink);
 }
 
 .editorial-h2 {
-  font-size: clamp(1.5rem, 2vw + 0.5rem, 2.25rem);     /* 24 ~ 36 */
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.015em;
-  color: #F1F3FF;
+  font-size: clamp(1.375rem, 1.5vw + 0.5rem, 1.875rem);
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.005em;
+  color: var(--ink);
 }
 
 .editorial-body {
-  font-size: 1.0625rem;       /* 17px */
-  line-height: 1.85;
-  color: #C5CAE9;
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--ink-2);
   max-width: 65ch;
 }
 
 .editorial-quote {
-  border-left: 2px solid #A855F7;
+  border-left: 2px solid var(--line-strong);
   padding-left: 1.25rem;
-  font-style: italic;
-  font-size: 1.0625rem;
+  font-size: 1rem;
   line-height: 1.7;
-  color: #C4B5FD;
+  color: var(--ink-3);
 }
 
 a { color: inherit; text-decoration: none; }
@@ -166,47 +165,36 @@ button, input, textarea, select { font: inherit; }
 
 a:focus-visible, button:focus-visible,
 input:focus-visible, textarea:focus-visible, select:focus-visible {
-  outline: 2px solid rgba(79, 110, 247, 0.6);
+  outline: 2px solid var(--line-strong);
   outline-offset: 2px;
 }
 
 ::selection {
-  background: rgba(79, 110, 247, 0.22);
-  color: #F1F3FF;
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--ink);
 }
 
 /* ─────────────────────────────────────────────
    Typography scale
 ───────────────────────────────────────────── */
 .display-title {
-  font-size: clamp(2.5rem, 5.5vw, 5rem);
-  line-height: 1.08;
-  letter-spacing: -0.035em;
-  font-weight: 800;
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
+  font-weight: 600;
   color: var(--ink);
 }
 
 .section-title {
-  font-size: clamp(1.75rem, 3vw, 2.5rem);
-  line-height: 1.15;
-  letter-spacing: -0.025em;
-  font-weight: 700;
+  font-size: clamp(1.5rem, 2.5vw, 2rem);
+  line-height: 1.25;
+  letter-spacing: -0.005em;
+  font-weight: 600;
   color: var(--ink);
 }
 
-.eyebrow {
-  font-size: 0.6875rem;        /* 11px */
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
-
 .gradient-text {
-  background: var(--gradient-text);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--ink);
 }
 
 /* ─────────────────────────────────────────────
@@ -240,33 +228,26 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 }
 
 .glass-card {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.09);
+  background: var(--surface);
+  border: 1px solid var(--line);
   border-radius: var(--radius-lg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  transition: border-color 250ms ease, box-shadow 250ms ease, transform 250ms ease;
+  transition: border-color 200ms ease, background 200ms ease;
 }
 .glass-card:hover {
-  border-color: rgba(93,93,255,0.35);
-  box-shadow: 0 0 32px rgba(93,93,255,0.12), 0 0 0 1px rgba(93,93,255,0.1) inset;
-  transform: translateY(-2px);
+  border-color: var(--line-strong);
+  background: var(--surface-strong);
 }
 
-/* Glow card — premium bordered card */
+/* Glow card — 이름은 유지, 글로우 제거 */
 .glow-card {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(93,93,255,0.18);
-  border-radius: var(--radius-xl);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 0 0 1px rgba(255,255,255,0.04) inset, 0 2px 40px rgba(0,0,0,0.4);
-  transition: border-color 250ms ease, box-shadow 250ms ease, transform 250ms cubic-bezier(0.16,1,0.3,1);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  transition: border-color 200ms ease, background 200ms ease;
 }
 .glow-card:hover {
-  border-color: rgba(93,93,255,0.45);
-  box-shadow: 0 0 28px rgba(93,93,255,0.18), 0 0 0 1px rgba(255,255,255,0.06) inset;
-  transform: translateY(-3px);
+  border-color: var(--line-strong);
+  background: var(--surface-strong);
 }
 
 /* ─────────────────────────────────────────────
@@ -290,16 +271,15 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #5D5DFF, #A855F7);
-  color: #fff;
-  border: none;
-  box-shadow: 0 4px 20px rgba(93,93,255,0.4), inset 0 1px 0 rgba(255,255,255,0.14);
-  transition: all 200ms ease;
+  background: var(--ink);
+  color: #0B0C10;
+  border: 1px solid var(--ink);
+  box-shadow: var(--shadow-btn);
+  transition: background 160ms ease, border-color 160ms ease;
 }
 .btn-primary:hover {
-  background: linear-gradient(135deg, #6E6EFF, #B866F8);
-  box-shadow: 0 0 28px rgba(93,93,255,0.6), 0 6px 24px rgba(93,93,255,0.35), inset 0 1px 0 rgba(255,255,255,0.16);
-  transform: translateY(-1px) scale(1.02);
+  background: #FFFFFF;
+  border-color: #FFFFFF;
 }
 
 .btn-secondary {
@@ -359,8 +339,8 @@ input:focus-visible, textarea:focus-visible, select:focus-visible {
 }
 
 .input:focus, .textarea:focus, .select:focus {
-  border-color: rgba(79,110,247,0.6);
-  box-shadow: 0 0 0 3px rgba(79,110,247,0.12);
+  border-color: var(--line-strong);
+  box-shadow: 0 0 0 3px rgba(255,255,255,0.04);
 }
 
 .select option { background: #0E1120; color: var(--ink); }

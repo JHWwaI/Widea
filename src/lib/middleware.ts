@@ -91,6 +91,11 @@ export const getCorsConfig = () => {
         return callback(null, true);
       }
 
+      // ngrok 무료 (개발·데모용)
+      if (origin.match(/^https:\/\/[a-z0-9-]+\.ngrok-free\.app$/) || origin.match(/^https:\/\/[a-z0-9-]+\.ngrok\.app$/)) {
+        return callback(null, true);
+      }
+
       // Vercel 배포 (본 프로젝트 + preview)
       if (origin.match(/^https:\/\/[a-z0-9-]+\.vercel\.app$/)) {
         return callback(null, true);
@@ -104,7 +109,7 @@ export const getCorsConfig = () => {
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "ngrok-skip-browser-warning"],
     maxAge: 86400, // 24 hours
   };
 };

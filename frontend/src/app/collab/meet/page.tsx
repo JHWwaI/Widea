@@ -16,6 +16,7 @@ function MeetContent() {
   const { user } = useAuth();
   const searchParams = useSearchParams();
   const wantJoin = searchParams.get("join") === "1";
+  const ideaId = searchParams.get("ideaId") || undefined;
 
   const [room, setRoom] = useState<string>("");
   const [joinCode, setJoinCode] = useState("");
@@ -107,7 +108,13 @@ function MeetContent() {
           </p>
 
           {/* 자동 회의록 섹션 */}
-          <MeetingNotesSection roomCode={room} />
+          {!ideaId ? (
+            <p className="rounded-lg border border-amber-400/30 bg-amber-500/[0.06] px-4 py-3 text-xs text-amber-200">
+              ⚠ 워크스페이스에서 회의를 시작하지 않으면 회의록이 어떤 아이디어와도 연결되지 않습니다. 보관함을 통합했기 때문에, 끝낸 회의록을 다시 보려면{" "}
+              <Link href="/idea-match" className="underline hover:text-amber-100">아이디어 → 워크스페이스</Link>에서 시작하세요.
+            </p>
+          ) : null}
+          <MeetingNotesSection roomCode={room} ideaId={ideaId} />
         </div>
       </AuthGuard>
     );

@@ -15,7 +15,7 @@ export function registerCommunityRoutes(
   app.post("/api/community/posts", requireAuth, async (req: Request, res: Response): Promise<void> => {
     try {
       const { userId } = getAuthedUser(req);
-      const { category = "FREE_TALK" } = req.body;
+      const { category = "FREE_TALK", ideaId } = req.body;
       const title = sanitizeText(req.body.title);
       const content = sanitizeText(req.body.content);
 
@@ -24,13 +24,21 @@ export function registerCommunityRoutes(
         return;
       }
 
-      const validCategories = ["IDEA_SHARE", "QUESTION", "CASE_STUDY", "TEAM_RECRUIT", "OUTSOURCE_REQUEST", "AC_REQUEST", "FREE_TALK"];
+      const validCategories = ["IDEA_SHARE", "QUESTION", "CASE_STUDY", "TEAM_RECRUIT", "OUTSOURCE_REQUEST", "AC_REQUEST", "MENTOR_REQUEST", "BETA_TESTER", "FREE_TALK"];
       const resolvedCategory = validCategories.includes(category) ? category : "FREE_TALK";
 
+      // ideaId 유효성 확인 (있을 때만)
+      let resolvedIdeaId: string | undefined;
+      if (ideaId && typeof ideaId === "string") {
+        const idea = await prisma.generatedIdea.findUnique({ where: { id: ideaId }, select: { id: true } });
+        if (idea) resolvedIdeaId = idea.id;
+      }
+
       const post = await prisma.communityPost.create({
-        data: { title, content, category: resolvedCategory, authorId: userId },
+        data: { title, content, category: resolvedCategory, authorId: userId, ideaId: resolvedIdeaId },
         include: {
           author: { select: { id: true, name: true, email: true } },
+          idea:   { select: { id: true, titleKo: true } },
           _count: { select: { comments: true, likes: true } },
         },
       });
@@ -66,6 +74,7 @@ export function registerCommunityRoutes(
           take: limit,
           include: {
             author: { select: { id: true, name: true, email: true } },
+            idea:   { select: { id: true, titleKo: true } },
             _count: { select: { comments: true, likes: true } },
           },
         }),
@@ -85,6 +94,7 @@ export function registerCommunityRoutes(
         data: { viewCount: { increment: 1 } },
         include: {
           author: { select: { id: true, name: true, email: true } },
+          idea:   { select: { id: true, titleKo: true } },
           comments: {
             orderBy: { createdAt: "asc" },
             include: { author: { select: { id: true, name: true, email: true } } },
@@ -188,6 +198,7 @@ export function registerCommunityRoutes(
           take: limit,
           include: {
             author: { select: { id: true, name: true, email: true } },
+            idea:   { select: { id: true, titleKo: true } },
             _count: { select: { comments: true, likes: true } },
           },
         }),
@@ -244,6 +255,7 @@ export function registerCommunityRoutes(
           post: {
             include: {
               author: { select: { id: true, name: true, email: true } },
+              idea:   { select: { id: true, titleKo: true } },
               _count: { select: { comments: true, likes: true } },
             },
           },

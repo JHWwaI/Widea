@@ -10,6 +10,7 @@ interface User {
   userType: string | null;
   planType: string;
   creditBalance: number;
+  userCode: string | null;
   isAdmin: boolean;
 }
 

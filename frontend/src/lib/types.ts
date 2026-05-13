@@ -411,6 +411,8 @@ export interface CommunityPost {
   viewCount: number;
   createdAt: string;
   updatedAt: string;
+  ideaId?: string | null;
+  idea?: { id: string; titleKo: string } | null;
   author?: {
     id: string;
     name: string | null;
